@@ -2301,6 +2301,12 @@ function renderSystemSettings() {
         </select>
       </div>
 
+      <div class="api-settings-section">
+        <label>CORS 代理地址（可选，浏览器调用大模型 API 时如遇跨域问题请填入）</label>
+        <input type="text" class="api-input" id="sysProxyUrl" value="${s.proxyUrl||''}" placeholder="留空直连；如有跨域问题，填入 https://your-proxy.com/">
+        <div style="font-size:11px;color:var(--fg-dim);margin-top:4px">免费代理推荐：<code style="background:var(--card-hover);padding:1px 4px;border-radius:3px">https://api.codetabs.com/v1/proxy?quest=</code> （末尾带 = 号）</div>
+      </div>
+
       <div style="display:flex;gap:10px;margin-top:16px">
         <button class="btn-primary" onclick="saveSystemApiSettings()">💾 保存 API 配置</button>
         <button class="btn-secondary" onclick="testApiConnection()">🧪 测试连接</button>
@@ -2347,6 +2353,7 @@ function switchSystemProvider(provider) {
 function saveSystemApiSettings() {
   apiSettings.apiKey = document.getElementById('sysApiKey').value.trim();
   apiSettings.model = document.getElementById('sysModel').value;
+  apiSettings.proxyUrl = document.getElementById('sysProxyUrl')?.value.trim() || '';
   if (apiSettings.provider === 'custom') {
     apiSettings.customBaseUrl = document.getElementById('sysCustomUrl').value;
     apiSettings.customModel = document.getElementById('sysCustomModel').value;
@@ -2372,7 +2379,7 @@ function clearAllSettings() {
   localStorage.removeItem('voc-brand-data');
   localStorage.removeItem('voc-benchmark-data');
   callLogs = [];
-  apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat' };
+  apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat', proxyUrl:'' };
   renderSystemSettings();
 }
 
@@ -2385,7 +2392,7 @@ function logAICall(model, tokens, latency, status) {
 // ==================== AI ANALYSIS SYSTEM ====================
 // API Settings
 const ENCRYPTION_KEY = 'voc-ai-analysis-' + (navigator.userAgent.length % 10000).toString();
-let apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat' };
+let apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat', proxyUrl:'' };
 let pipelineState = { step:0, status:'idle', results:{}, logs:[] };
 
 function loadApiSettings() {
@@ -2461,27 +2468,50 @@ async function testApiConnection() {
 async function callLLM(messages, maxTokens = 2000, short = false) {
   const s = apiSettings;
   let endpoint, model, headers;
+  const isDeepSeek = s.provider === 'deepseek' || (!s.provider || s.provider === '');
+
   if (s.provider === 'openai') {
     endpoint = 'https://api.openai.com/v1/chat/completions';
     model = s.model || 'gpt-4o';
-    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
   } else if (s.provider === 'custom') {
     endpoint = (s.customBaseUrl || 'https://api.openai.com/v1') + '/chat/completions';
     model = s.customModel || 'gpt-4o-mini';
-    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
   } else {
     endpoint = 'https://api.deepseek.com/v1/chat/completions';
     model = s.model || 'deepseek-chat';
-    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
   }
-  const resp = await fetch(endpoint, {
+  headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
+
+  // Use CORS proxy if configured
+  const proxy = s.proxyUrl || '';
+  const fetchUrl = proxy ? proxy + encodeURIComponent(endpoint) : endpoint;
+
+  const body = {
+    model, messages,
+    max_tokens: maxTokens,
+    temperature: short ? 0 : 0.3
+  };
+  // Only add response_format for OpenAI, skip for DeepSeek (unstable support)
+  if (!short && !isDeepSeek) {
+    body.response_format = { type: 'json_object' };
+  }
+
+  const startTime = Date.now();
+  const resp = await fetch(fetchUrl, {
     method:'POST', headers,
-    body: JSON.stringify({ model, messages, max_tokens:maxTokens, temperature:short?0:0.3, response_format:short?undefined:{type:'json_object'} })
+    body: JSON.stringify(body)
   });
-  if (!resp.ok) { const err = await resp.text(); logAICall(model, 0, 0, 'error'); throw new Error(`API Error ${resp.status}: ${err.substring(0,200)}`); }
+  const latency = Date.now() - startTime;
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    const errMsg = errText.length > 500 ? errText.substring(0, 500) + '...' : errText;
+    logAICall(model, 0, latency, 'error');
+    throw new Error(`API ${resp.status}: ${errMsg}`);
+  }
   const data = await resp.json();
   const tokens = data.usage?.total_tokens || 0;
-  logAICall(model, tokens, 0, 'success');
+  logAICall(model, tokens, latency, 'success');
   return data.choices[0].message.content;
 }
 
@@ -2533,6 +2563,7 @@ async function runAnalysisPipeline() {
   } catch(e) {
     addLog(`❌ 分析失败: ${e.message}`, 'error');
     pipelineState.status = 'error';
+    pipelineState.errorMsg = e.message;
     updatePipelineStep(pipelineState.step, 'error');
   }
   renderAIAnalysis();
@@ -2753,6 +2784,12 @@ function renderAIAnalysis() {
     ${pipelineState.logs.length > 0 ? `
     <div class="log-stream">
       ${pipelineState.logs.map(l => `<div class="log-line ${l.type==='error'?'highlight':''}">[${l.time}] ${l.msg}</div>`).join('')}
+    </div>` : ''}
+    ${pipelineState.status === 'error' && pipelineState.errorMsg ? `
+    <div class="import-result error" style="margin-top:12px">
+      <strong>⚠️ 分析中断</strong><br>
+      ${pipelineState.errorMsg}<br>
+      <span style="font-size:11px;margin-top:4px;display:block">常见原因：1) API Key 无效 2) 网络不通 3) CORS 跨域 — 请在系统设置中填入代理地址</span>
     </div>` : ''}
 
     <!-- Results: Overview -->
