@@ -1,0 +1,2869 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice of Consumer OS — 评论驱动的品牌内容投放决策系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+        surface: { dark: '#0a0a0f', card: '#12121a', hover: '#1a1a28', border: '#232335' }
+      }
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --glass-bg: rgba(18, 18, 26, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-highlight: rgba(255, 255, 255, 0.03);
+    --accent: #22c55e;
+    --accent-glow: rgba(34, 197, 94, 0.15);
+  }
+  .light { --glass-bg: rgba(255,255,255,0.8); --glass-border: rgba(0,0,0,0.06); --glass-highlight: rgba(0,0,0,0.02); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--fg); transition: background .3s, color .3s; }
+  .dark { --bg: #0a0a0f; --fg: #e4e4e7; --fg-dim: #71717a; --fg-muted: #a1a1aa; --card-bg: #12121a; --card-hover: #1a1a28; --border: #232335; --input-bg: #1a1a28; --tag-bg: rgba(34,197,94,0.1); --tag-fg: #4ade80; --badge-red: rgba(239,68,68,0.1); --badge-red-fg: #f87171; --badge-amber: rgba(251,191,36,0.1); --badge-amber-fg: #fbbf24; --badge-blue: rgba(96,165,250,0.1); --badge-blue-fg: #60a5fa; --badge-purple: rgba(167,139,250,0.1); --badge-purple-fg: #a78bfa; }
+  .light { --bg: #f8fafc; --fg: #1e293b; --fg-dim: #94a3b8; --fg-muted: #64748b; --card-bg: #ffffff; --card-hover: #f1f5f9; --border: #e2e8f0; --input-bg: #ffffff; --tag-bg: rgba(34,197,94,0.08); --tag-fg: #16a34a; --badge-red: rgba(239,68,68,0.06); --badge-red-fg: #dc2626; --badge-amber: rgba(251,191,36,0.08); --badge-amber-fg: #d97706; --badge-blue: rgba(37,99,235,0.08); --badge-blue-fg: #2563eb; --badge-purple: rgba(124,58,237,0.08); --badge-purple-fg: #7c3def; }
+
+  /* Layout */
+  .app { display:flex; min-height:100vh; }
+  .sidebar { width:240px; background:var(--card-bg); border-right:1px solid var(--border); padding:20px 0; position:fixed; top:0; left:0; bottom:0; z-index:100; transition:transform .3s; display:flex; flex-direction:column; }
+  .main { margin-left:240px; flex:1; padding:24px 32px; min-height:100vh; }
+  .sidebar-logo { padding:0 20px 20px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+  .sidebar-logo h1 { font-size:15px; font-weight:700; letter-spacing:-0.3px; background:linear-gradient(135deg, #4ade80, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .sidebar-logo span { font-size:11px; color:var(--fg-dim); display:block; margin-top:2px; }
+
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; margin:2px 8px; border-radius:8px; cursor:pointer; font-size:13.5px; color:var(--fg-muted); transition:all .2s; white-space:nowrap; border:none; background:none; width:calc(100% - 16px); text-align:left; }
+  .nav-item:hover { background:var(--card-hover); color:var(--fg); }
+  .nav-item.active { background:var(--accent-glow); color:var(--accent); font-weight:600; }
+  .nav-icon { width:18px; height:18px; flex-shrink:0; opacity:.7; }
+  .nav-item.active .nav-icon { opacity:1; }
+  .nav-section { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--fg-dim); padding:16px 20px 6px; font-weight:600; }
+
+  .sidebar-footer { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
+  .theme-toggle { display:flex; align-items:center; gap:8px; background:var(--card-hover); border:1px solid var(--border); border-radius:24px; padding:4px; cursor:pointer; width:100%; }
+  .theme-option { flex:1; text-align:center; padding:6px 8px; border-radius:20px; font-size:12px; transition:all .2s; color:var(--fg-dim); border:none; background:none; cursor:pointer; }
+  .theme-option.active-theme { background:var(--accent); color:#000; font-weight:600; }
+
+  /* Cards */
+  .glass-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px; transition:all .3s cubic-bezier(.16,1,.3,1); }
+  .glass-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.12); border-color:rgba(255,255,255,.1); }
+  .glass-card.accent-border { border-left:3px solid var(--accent); }
+  .card-sm { padding:16px; border-radius:12px; }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .card-title { font-size:16px; font-weight:700; }
+  .card-subtitle { font-size:12px; color:var(--fg-dim); margin-top:4px; }
+
+  /* Badges */
+  .badge { display:inline-flex; align-items:center; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-p0 { background:var(--badge-red); color:var(--badge-red-fg); }
+  .badge-p1 { background:var(--badge-amber); color:var(--badge-amber-fg); }
+  .badge-p2 { background:var(--badge-blue); color:var(--badge-blue-fg); }
+  .badge-tag { background:var(--tag-bg); color:var(--tag-fg); }
+  .badge-purple { background:var(--badge-purple); color:var(--badge-purple-fg); }
+
+  /* Metrics */
+  .metric-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; }
+  .metric-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; text-align:center; }
+  .metric-value { font-size:28px; font-weight:800; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
+  .metric-label { font-size:11px; color:var(--fg-dim); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+  .metric-change { font-size:12px; margin-top:4px; }
+  .metric-up { color:#4ade80; }
+  .metric-down { color:#f87171; }
+
+  /* Tables */
+  .data-table { width:100%; border-collapse:collapse; }
+  .data-table th { text-align:left; font-size:11px; font-weight:600; color:var(--fg-dim); text-transform:uppercase; letter-spacing:.5px; padding:10px 12px; border-bottom:1px solid var(--border); }
+  .data-table td { padding:10px 12px; font-size:13px; border-bottom:1px solid var(--border); }
+  .data-table tr:hover td { background:var(--card-hover); }
+
+  /* Inputs */
+  .search-input { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; padding:10px 16px 10px 38px; font-size:13px; color:var(--fg); outline:none; transition:all .2s; }
+  .search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+  .search-wrap { position:relative; }
+  .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.4; }
+
+  .filter-tag { display:inline-flex; align-items:center; gap:4px; padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; transition:all .2s; border:1px solid var(--border); background:transparent; color:var(--fg-muted); }
+  .filter-tag:hover, .filter-tag.active-filter { background:var(--accent-glow); border-color:var(--accent); color:var(--accent); }
+
+  /* Modals */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:200; display:flex; align-items:center; justify-content:center; animation:fadeIn .2s; }
+  .modal { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; width:90%; max-width:800px; max-height:85vh; overflow-y:auto; padding:32px; animation:slideUp .3s cubic-bezier(.16,1,.3,1); }
+  .modal-close { position:absolute; top:20px; right:24px; background:none; border:none; color:var(--fg-dim); cursor:pointer; font-size:24px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Page sections */
+  .page { display:none; animation:fadeIn .3s; }
+  .page.active { display:block; }
+  .page-header { margin-bottom:28px; }
+  .page-header h2 { font-size:26px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px; }
+  .page-header p { font-size:14px; color:var(--fg-dim); }
+  .section-title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--fg-dim); margin:28px 0 12px; }
+
+  /* Strategy card detail */
+  .strategy-detail-section { margin-bottom:20px; }
+  .strategy-detail-section h4 { font-size:14px; font-weight:700; margin-bottom:8px; color:var(--accent); }
+  .strategy-detail-section p, .strategy-detail-section li { font-size:13px; line-height:1.7; color:var(--fg-muted); }
+  .strategy-detail-section ul { padding-left:16px; }
+  .comment-quote { background:var(--card-hover); border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 8px 8px 0; font-size:12px; color:var(--fg-muted); font-style:italic; margin:4px 0; }
+
+  /* Grid layouts */
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px; }
+  .cards-grid-2 { display:grid; grid-template-columns:repeat(auto-fill, minmax(400px,1fr)); gap:16px; }
+  .cards-grid-3 { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
+
+  /* Stat bar */
+  .stat-bar { height:6px; background:var(--card-hover); border-radius:3px; overflow:hidden; margin-top:8px; }
+  .stat-bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.16,1,.3,1); }
+  .fill-green { background:linear-gradient(90deg, #22c55e, #4ade80); }
+  .fill-amber { background:linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .fill-red { background:linear-gradient(90deg, #ef4444, #f87171); }
+  .fill-blue { background:linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .fill-purple { background:linear-gradient(90deg, #8b5cf6, #a78bfa); }
+
+  /* Skeleton loading */
+  .skeleton { background:linear-gradient(90deg, var(--card-hover) 25%, var(--border) 50%, var(--card-hover) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* Mobile responsive */
+  @media (max-width:768px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; padding:16px; }
+    .cards-grid, .cards-grid-2, .cards-grid-3 { grid-template-columns:1fr; }
+    .metric-grid { grid-template-columns:repeat(2,1fr); }
+    .mobile-menu-btn { display:block !important; }
+  }
+  .mobile-menu-btn { display:none; position:fixed; top:16px; left:16px; z-index:110; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:8px; cursor:pointer; color:var(--fg); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg-dim); }
+
+  /* Tooltip / hover card */
+  .hover-card { transition:all .2s cubic-bezier(.16,1,.3,1); }
+  .hover-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.2); }
+
+  /* Gradient text */
+  .gradient-text { background:linear-gradient(135deg, #4ade80, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+  /* Pulse dot */
+  .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); display:inline-block; }
+  .pulse-dot::after { content:''; display:block; width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(3);opacity:0} }
+
+  /* Import modal */
+  .import-modal { max-width:640px; }
+  .import-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:20px; }
+  .import-tab { padding:10px 20px; font-size:13px; cursor:pointer; border:none; background:none; color:var(--fg-dim); border-bottom:2px solid transparent; transition:all .2s; }
+  .import-tab:hover { color:var(--fg); }
+  .import-tab.active-import-tab { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+  .drop-zone { border:2px dashed var(--border); border-radius:12px; padding:48px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--card-hover); }
+  .drop-zone:hover, .drop-zone.drag-over { border-color:var(--accent); background:var(--accent-glow); }
+  .drop-zone input[type=file] { display:none; }
+  .drop-zone-icon { font-size:40px; margin-bottom:12px; opacity:.6; }
+  .drop-zone p { font-size:13px; color:var(--fg-muted); margin-bottom:4px; }
+  .drop-zone span { font-size:11px; color:var(--fg-dim); }
+  .paste-area { width:100%; min-height:200px; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; padding:14px; font-size:13px; color:var(--fg); resize:vertical; font-family:monospace; outline:none; }
+  .paste-area:focus { border-color:var(--accent); }
+  .import-result { padding:12px 16px; border-radius:10px; font-size:13px; margin-top:16px; }
+  .import-result.success { background:rgba(34,197,94,.1); color:#4ade80; }
+  .import-result.error { background:rgba(239,68,68,.1); color:#f87171; }
+  .import-format-hint { background:var(--card-hover); padding:10px 14px; border-radius:8px; font-size:12px; color:var(--fg-dim); margin-top:12px; line-height:1.7; font-family:monospace; white-space:pre-wrap; }
+  .btn-primary { background:var(--accent); color:#000; border:none; padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); }
+  .btn-secondary { background:var(--card-hover); color:var(--fg); border:1px solid var(--border); padding:8px 20px; border-radius:8px; font-size:13px; cursor:pointer; transition:all .2s; }
+  .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+  .category-badge-content { background:rgba(59,130,246,.1); color:#60a5fa; }
+  .category-badge-product { background:rgba(168,85,247,.1); color:#a78bfa; }
+
+  /* AI Analysis Center */
+  .pipeline-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .pipeline-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px; transition:all .3s; position:relative; overflow:hidden; }
+  .pipeline-card.active { border-color:#60a5fa; box-shadow:0 0 20px rgba(59,130,246,.1); }
+  .pipeline-card.done { border-color:var(--accent); background:var(--accent-glow); }
+  .pipeline-card.error { border-color:#f87171; background:rgba(239,68,68,.05); }
+  .pipeline-step { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--fg-dim); margin-bottom:8px; }
+  .pipeline-card.active .pipeline-step { color:#60a5fa; }
+  .pipeline-card.done .pipeline-step { color:var(--accent); }
+  .pipeline-title { font-size:14px; font-weight:700; margin-bottom:8px; }
+  .pipeline-icon { font-size:24px; margin-bottom:8px; }
+  .pipeline-status { font-size:11px; margin-top:8px; }
+  .pipeline-progress { height:3px; background:var(--border); border-radius:2px; margin-top:12px; overflow:hidden; }
+  .pipeline-progress-bar { height:100%; background:linear-gradient(90deg,#3b82f6,#60a5fa); border-radius:2px; transition:width .3s; animation:progressPulse 1.5s infinite; }
+  @keyframes progressPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+  .spinner { width:16px;height:16px;border:2px solid var(--border);border-top-color:#60a5fa;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .insight-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:12px; }
+  .insight-card h5 { font-size:13px; font-weight:700; margin-bottom:6px; }
+  .insight-item { display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px; }
+  .insight-item:last-child { border-bottom:none; }
+  .insight-bar { flex:1; height:6px; background:var(--card-hover); border-radius:3px; overflow:hidden; }
+  .insight-bar-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+  .api-settings-section { margin-bottom:20px; }
+  .api-settings-section label { display:block; font-size:12px; font-weight:600; color:var(--fg-dim); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+  .api-input { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--fg); outline:none; font-family:monospace; transition:all .2s; }
+  .api-input:focus { border-color:var(--accent); }
+  .api-select { width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--fg); outline:none; cursor:pointer; }
+  .api-provider-card { background:var(--card-hover); border:2px solid var(--border); border-radius:10px; padding:14px; cursor:pointer; transition:all .2s; text-align:center; }
+  .api-provider-card:hover { border-color:var(--accent); }
+  .api-provider-card.selected { border-color:var(--accent); background:var(--accent-glow); }
+  .api-provider-card .provider-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .api-provider-card .provider-desc { font-size:11px; color:var(--fg-dim); }
+
+  .log-stream { background:#000; color:#4ade80; font-family:monospace; font-size:11px; padding:12px; border-radius:10px; max-height:200px; overflow-y:auto; line-height:1.6; margin-top:12px; }
+  .log-line { opacity:.8; }
+  .log-line.highlight { color:#fbbf24; opacity:1; }
+  .security-banner { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2); border-radius:10px; padding:12px 16px; font-size:12px; color:#fbbf24; margin-bottom:20px; display:flex;align-items:start;gap:8px; }
+
+  @media (max-width:900px) { .pipeline-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px) { .pipeline-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body class="dark">
+<div class="app" id="app">
+
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h1>Voice of Consumer</h1>
+      <span>评论驱动的投放决策系统</span>
+    </div>
+    <div class="nav-section">决策中心</div>
+    <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      本周决策台
+    </button>
+    <div class="nav-section">数据洞察</div>
+    <button class="nav-item" data-page="comments" onclick="navigateTo('comments', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      评论信号池
+    </button>
+    <button class="nav-item" data-page="demands" onclick="navigateTo('demands', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      用户需求地图
+    </button>
+    <button class="nav-item" data-page="barriers" onclick="navigateTo('barriers', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      购买障碍地图
+    </button>
+    <button class="nav-item" data-page="competitors" onclick="navigateTo('competitors', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="2" r="2"/></svg>
+      竞品机会地图
+    </button>
+    <div class="nav-section">内容策略</div>
+    <button class="nav-item" data-page="xhs-strategies" onclick="navigateTo('xhs-strategies', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      小红书策略卡
+    </button>
+    <button class="nav-item" data-page="dy-strategies" onclick="navigateTo('dy-strategies', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      抖音策略卡
+    </button>
+    <div class="nav-section">执行工具</div>
+    <button class="nav-item" data-page="lab" onclick="navigateTo('lab', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v4l4 8H5l4-8V3z"/><path d="M5 19h14"/></svg>
+      内容实验室
+    </button>
+    <button class="nav-item" data-page="reviews" onclick="navigateTo('reviews', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      复盘归因中心
+    </button>
+    <button class="nav-item" data-page="reports" onclick="navigateTo('reports', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      报告中心
+    </button>
+    <div class="nav-section">知识资产</div>
+    <button class="nav-item" data-page="brand-center" onclick="navigateTo('brand-center', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      品牌中心
+    </button>
+    <button class="nav-item" data-page="benchmark-center" onclick="navigateTo('benchmark-center', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      对标中心
+    </button>
+    <div class="nav-section">AI 引擎</div>
+    <button class="nav-item" data-page="ai-analysis" onclick="navigateTo('ai-analysis', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.1-.4 2.1-1.2 2.8l2.7 2.7a4 4 0 01-5.6 0L9.2 8.8A4 4 0 0112 2z"/><path d="M2 22l1.5-4.5L7 14l3 3-3.5 3.5L2 22z"/><path d="M22 22l-1.5-4.5L14 14l3 3 3.5 3.5L22 22z"/></svg>
+      AI 分析中心
+    </button>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" data-page="system-settings" onclick="navigateTo('system-settings', this)" style="margin-bottom:8px">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        系统设置
+      </button>
+      <div class="theme-toggle" id="themeToggle">
+        <button class="theme-option active-theme" data-theme="dark" onclick="setTheme('dark')">深色</button>
+        <button class="theme-option" data-theme="light" onclick="setTheme('light')">浅色</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="mainContent">
+    <!-- Pages rendered by JS -->
+  </main>
+</div>
+
+<!-- Strategy Card Detail Modal -->
+<div class="modal-overlay" id="strategyModal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="strategyModalContent"></div>
+</div>
+
+<!-- Import Comments Modal -->
+<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal import-modal" id="importModalContent">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:20px;font-weight:800">导入评论数据</h2>
+        <p style="font-size:12px;color:var(--fg-dim);margin-top:4px">支持 CSV、JSON、Excel 粘贴、纯文本多种格式</p>
+      </div>
+      <button onclick="closeImportModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+
+    <div class="import-tabs">
+      <button class="import-tab active-import-tab" data-import-tab="file" onclick="switchImportTab('file')">📁 文件导入</button>
+      <button class="import-tab" data-import-tab="paste" onclick="switchImportTab('paste')">📋 粘贴导入</button>
+    </div>
+
+    <!-- File Import -->
+    <div id="importTabFile">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFileInput').click()">
+        <div class="drop-zone-icon">📂</div>
+        <p>点击选择文件或拖拽文件到此处</p>
+        <span>支持 .csv、.json、.xlsx、.xls、.txt 格式</span>
+        <input type="file" id="importFileInput" accept=".csv,.json,.xlsx,.xls,.xlsm,.txt,.tsv" onchange="handleFileImport(this)" style="display:none">
+      </div>
+      <div class="import-format-hint" style="margin-top:16px">
+<strong>CSV 列名（支持中文表头，自动智能映射）：</strong>
+<code>评论ID,评论内容,点赞量,评论时间,IP地址,子评论数,视频ID,视频链接,用户UID,用户链接,用户名称,抖音号,一级评论ID,一级评论内容,一级评论用户UID,一级评论用户名称,引用的评论ID,引用的评论内容,引用的用户UID,引用的用户名称,category,type,sentiment,labels,isCompetitor</code>
+- 支持中文列名（评论内容/用户名称）和英文列名（content/author）混合
+- category: content（内容评论）/ product（商品评论），可选
+- type: barrier/demand/comparison/praise/complaint/intent，可选
+- sentiment: positive/neutral/negative，AI 自动识别
+- labels: 逗号分隔，可选
+- isCompetitor: true/false，可选
+
+<strong>JSON 格式要求：</strong>
+[{ "id":"评论ID", "content":"评论内容", "likes":0, "commentTime":"2026-05-28", "ipAddress":"广东", "userName":"用户名称", "douyinId":"抖音号", "parentCommentContent":"一级评论内容", ... }]</div>
+    </div>
+
+    <!-- Paste Import -->
+    <div id="importTabPaste" style="display:none">
+      <select id="pasteFormat" onchange="updatePasteHint()" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--fg);outline:none;margin-bottom:12px">
+        <option value="csv">CSV / TSV 粘贴</option>
+        <option value="json">JSON 粘贴</option>
+        <option value="plain">纯文本（每行一条）</option>
+      </select>
+      <textarea class="paste-area" id="pasteArea" placeholder="在此粘贴数据..."></textarea>
+      <div class="import-format-hint" id="pasteHint" style="margin-top:12px">
+<strong>CSV 粘贴格式（支持中文表头）：</strong>
+评论ID,评论内容,点赞量,评论时间,IP地址,子评论数,视频ID,视频链接,用户UID,用户链接,用户名称,抖音号,一级评论ID,一级评论内容,一级评论用户名称,category,type,sentiment,labels,isCompetitor
+001,这个产品怎么样？用过的来说说,23,2026-05-28 14:30,广东,5,douyin_video_001,https://v.douyin.com/xxx,uid_123,https://www.douyin.com/user/xxx,用户A,douyin_handle_a,,, ,content,demand,neutral,使用体验,false</div>
+      <button class="btn-primary" style="margin-top:12px;width:100%" onclick="handlePasteImport()">解析并导入</button>
+    </div>
+
+    <div id="importResult"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn-secondary" onclick="closeImportModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- API Settings Modal -->
+<div class="modal-overlay" id="apiSettingsModal" style="display:none" onclick="if(event.target===this)closeApiSettingsModal()">
+  <div class="modal" style="max-width:560px">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:20px;font-weight:800">⚙️ API 设置</h2>
+        <p style="font-size:12px;color:var(--fg-dim);margin-top:4px">配置大模型 API，用于 AI 分析评论</p>
+      </div>
+      <button onclick="closeApiSettingsModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+
+    <div class="security-banner">
+      <span>🔒</span>
+      <span>API Key 仅存储在您的浏览器本地（AES 加密），不会上传到任何服务器。您需要自行从对应平台获取 API Key。</span>
+    </div>
+
+    <div class="api-settings-section">
+      <label>默认模型平台</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        <div class="api-provider-card selected" id="providerDeepSeek" onclick="selectProvider('deepseek')">
+          <div class="provider-name">DeepSeek</div>
+          <div class="provider-desc">V3 / R1</div>
+        </div>
+        <div class="api-provider-card" id="providerOpenAI" onclick="selectProvider('openai')">
+          <div class="provider-name">OpenAI</div>
+          <div class="provider-desc">GPT-4o</div>
+        </div>
+        <div class="api-provider-card" id="providerCustom" onclick="selectProvider('custom')">
+          <div class="provider-name">自定义</div>
+          <div class="provider-desc">兼容 API</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-settings-section">
+      <label>API Key</label>
+      <input type="password" class="api-input" id="apiKeyInput" placeholder="sk-...">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--fg-dim);cursor:pointer">
+          <input type="checkbox" onchange="toggleApiKeyVisibility(this)"> 显示 Key
+        </label>
+        <a href="#" onclick="event.preventDefault();navigator.clipboard.writeText('https://platform.deepseek.com/api_keys');alert('已复制 DeepSeek API Key 申请地址')" style="font-size:11px;color:var(--accent);text-decoration:none">获取 DeepSeek Key</a>
+        <span style="font-size:11px;color:var(--fg-dim)">|</span>
+        <a href="#" onclick="event.preventDefault();navigator.clipboard.writeText('https://platform.openai.com/api-keys');alert('已复制 OpenAI API Key 申请地址')" style="font-size:11px;color:var(--accent);text-decoration:none">获取 OpenAI Key</a>
+      </div>
+    </div>
+
+    <div class="api-settings-section" id="customEndpointSection" style="display:none">
+      <label>自定义 Base URL</label>
+      <input type="text" class="api-input" id="customBaseUrl" placeholder="https://your-api-endpoint.com/v1">
+      <label style="margin-top:10px">模型名称</label>
+      <input type="text" class="api-input" id="customModelName" placeholder="gpt-4o-mini">
+    </div>
+
+    <div class="api-settings-section">
+      <label>模型选择</label>
+      <select class="api-select" id="modelSelect">
+        <option value="deepseek-chat">DeepSeek V3 (推荐)</option>
+        <option value="deepseek-reasoner">DeepSeek R1 (深度推理)</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+      <button class="btn-secondary" onclick="testApiConnection()">🧪 测试连接</button>
+      <button class="btn-primary" onclick="saveApiSettings()">💾 保存设置</button>
+    </div>
+    <div id="apiTestResult" style="margin-top:12px;font-size:12px"></div>
+  </div>
+</div>
+
+<script>
+// ==================== DEMO DATA ====================
+const demoData = {
+  brand: { name: '轻氧护肤', industry: '新消费护肤', slogan: '成分护肤，科学有效' },
+  competitors: [
+    { id: 1, name: '润百颜', industry: '功效护肤' },
+    { id: 2, name: '薇诺娜', industry: '敏感肌护肤' },
+    { id: 3, name: '珀莱雅', industry: '大众功效护肤' }
+  ],
+  platforms: [
+    { id: 1, name: '抖音', icon: '🎵' },
+    { id: 2, name: '小红书', icon: '📕' },
+    { id: 3, name: 'B站', icon: '📺' },
+    { id: 4, name: '视频号', icon: '📱' }
+  ],
+  topActions: [
+    { priority: 'P0', title: '拍摄"贵在哪里"系列价值解释内容', reason: '价格异议评论上升24%，用户价值解释不足', goal: '提升转化率', targetMetric: 'CVR', trend: 'up', urgency: 'high' },
+    { priority: 'P0', title: '制作1条竞品对比内容："和润百颜比哪个好"', reason: '用户频繁比较润百颜，心智尚未定型', goal: '抢占心智', targetMetric: '加购率', trend: 'up', urgency: 'high' },
+    { priority: 'P1', title: '强化敏感肌适用场景教育', reason: '人群适配疑问集中，"敏感肌能不能用"高频出现', goal: '提高点击率', targetMetric: 'CTR', trend: 'stable', urgency: 'medium' },
+    { priority: 'P1', title: '暂停"高级感""轻奢"类表达', reason: '用户无法理解价格差异，这类表达引发价格质疑', goal: '降低无效曝光', targetMetric: '价格异议占比', trend: 'up', urgency: 'medium' },
+    { priority: 'P2', title: '用真实用户好评做视频开头3秒', reason: '信任障碍明显，"会不会踩雷"类评论上升', goal: '提升信任感', targetMetric: '完播率', trend: 'rising', urgency: 'low' }
+  ],
+  metrics: {
+    totalComments: 1847, newCommentsThisWeek: 342, newCommentsTrend: '+12%',
+    identifiedDemands: 47, demandTrend: '+8%',
+    identifiedBarriers: 23, barrierTrend: '-5%',
+    strategyCards: 15, cardsTrend: '+3',
+    avgCTR: '3.2%', ctrTrend: '+0.4%',
+    avgCVR: '1.8%', cvrTrend: '+0.3%'
+  },
+  comments: [
+    { id:1, author:'用户A', content:'这个和几十块的有什么区别？感觉差不多啊', platform:'抖音', category:'content', type:'barrier', sentiment:'neutral', labels:['价格异议','价值疑问'], date:'2026-05-27', likes:23, ipAddress:'广东', subCommentCount:5, videoId:'dy_v_001', videoLink:'https://v.douyin.com/abc', isCompetitor:false },
+    { id:2, author:'用户B', content:'敏感肌真的能用吗？我是混油敏感皮，怕过敏', platform:'小红书', category:'content', type:'demand', sentiment:'neutral', labels:['人群适配','敏感肌'], date:'2026-05-27', isCompetitor:false },
+    { id:3, author:'用户C', content:'和润百颜的屏障修护比哪个好？有人用过吗', platform:'抖音', category:'content', type:'comparison', sentiment:'neutral', labels:['竞品对比','润百颜'], date:'2026-05-26', isCompetitor:false },
+    { id:4, author:'用户D', content:'有点贵啊，这个价格都能买大牌了', platform:'小红书', category:'product', type:'barrier', sentiment:'negative', labels:['价格敏感','竞品替代'], date:'2026-05-26', isCompetitor:false },
+    { id:5, author:'用户E', content:'用了两周，皮肤真的变细腻了！早上起来不泛油光', platform:'抖音', category:'product', type:'praise', sentiment:'positive', labels:['效果证明','油皮场景'], date:'2026-05-25', isCompetitor:false },
+    { id:6, author:'用户F', content:'夏天用会不会很油？我是大油田', platform:'B站', category:'content', type:'demand', sentiment:'neutral', labels:['场景需求','油皮'], date:'2026-05-25', isCompetitor:false },
+    { id:7, author:'用户G', content:'链接在哪里？怎么买？？', platform:'抖音', category:'content', type:'intent', sentiment:'positive', labels:['购买意图'], date:'2026-05-24', isCompetitor:false },
+    { id:8, author:'用户H', content:'智商税吧？这么贵就这几个成分', platform:'小红书', category:'product', type:'barrier', sentiment:'negative', labels:['信任障碍','成分质疑'], date:'2026-05-24', isCompetitor:false },
+    { id:9, author:'用户I', content:'早上用还是晚上用？需要避光吗', platform:'视频号', category:'product', type:'demand', sentiment:'neutral', labels:['使用教育'], date:'2026-05-23', isCompetitor:false },
+    { id:10, author:'用户J', content:'有没有平替推荐？学生党买不起', platform:'抖音', category:'product', type:'barrier', sentiment:'neutral', labels:['价格敏感','学生党'], date:'2026-05-23', isCompetitor:false },
+    { id:11, author:'用户K', content:'润百颜用了过敏，这个会不会也过敏啊', platform:'小红书', category:'product', type:'barrier', sentiment:'negative', labels:['信任障碍','过敏风险','竞品关联'], date:'2026-05-22', isCompetitor:false },
+    { id:12, author:'用户L', content:'这个比珀莱雅红宝石好在哪？价格贵一倍', platform:'抖音', category:'product', type:'comparison', sentiment:'neutral', labels:['竞品对比','珀莱雅','价格质疑'], date:'2026-05-22', isCompetitor:false },
+    { id:13, author:'用户M', content:'肤感真的好绝，上脸秒吸收不黏腻！', platform:'小红书', category:'product', type:'praise', sentiment:'positive', labels:['肤感好评','清爽'], date:'2026-05-21', isCompetitor:false },
+    { id:14, author:'用户N', content:'打工人真的很需要这个，熬夜脸救星', platform:'抖音', category:'content', type:'praise', sentiment:'positive', labels:['场景共鸣','熬夜修复'], date:'2026-05-21', isCompetitor:false },
+    { id:15, author:'用户O', content:'孕妇能用吗？成分安全吗', platform:'小红书', category:'product', type:'demand', sentiment:'neutral', labels:['人群适配','孕妇'], date:'2026-05-20', isCompetitor:false },
+    { id:16, author:'用户P', content:'润百颜评论区来的，说这个效果差不多还便宜，真的假的？', platform:'抖音', category:'content', type:'comparison', sentiment:'neutral', labels:['竞品引流','润百颜','价格对比'], date:'2026-05-20', isCompetitor:false },
+    { id:17, author:'用户Q', content:'用了一个月了，毛孔真的小了！比之前用的大牌有效', platform:'B站', category:'product', type:'praise', sentiment:'positive', labels:['效果证明','长期使用','竞品对比'], date:'2026-05-19', isCompetitor:false },
+    { id:18, author:'用户R', content:'这个价格值不值啊？怕买了没效果', platform:'视频号', category:'product', type:'barrier', sentiment:'neutral', labels:['价值感不足','效果担忧'], date:'2026-05-19', isCompetitor:false },
+    { id:19, author:'用户S', content:'干皮适合吗？我看都是油皮在说好', platform:'小红书', category:'content', type:'demand', sentiment:'neutral', labels:['人群适配','干皮'], date:'2026-05-18', isCompetitor:false },
+    { id:20, author:'用户T', content:'有没有人和我一样用了一周就开始爆痘的？', platform:'抖音', category:'product', type:'complaint', sentiment:'negative', labels:['负面反馈','爆痘'], date:'2026-05-18', isCompetitor:false },
+    // Competitor comments
+    { id:101, author:'竞品用户1', content:'润百颜效果是真的快，但一瓶用不到一个月就没了', platform:'抖音', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','性价比','用量'], date:'2026-05-27', isCompetitor:true, competitorId:1 },
+    { id:102, author:'竞品用户2', content:'薇诺娜太贵了！涨价涨得离谱', platform:'小红书', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','价格'], date:'2026-05-26', isCompetitor:true, competitorId:2 },
+    { id:103, author:'竞品用户3', content:'珀莱雅这个香味太重了，敏感肌真的受不了', platform:'抖音', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','香精','敏感肌'], date:'2026-05-25', isCompetitor:true, competitorId:3 },
+    { id:104, author:'竞品用户4', content:'润百颜和轻氧护肤到底哪个好？纠结死了', platform:'小红书', category:'content', type:'comparison', sentiment:'neutral', labels:['竞品比较','心智未定型'], date:'2026-05-24', isCompetitor:true, competitorId:1 },
+    { id:105, author:'竞品用户5', content:'薇诺娜客服态度太差了，问成分都不说', platform:'抖音', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','服务'], date:'2026-05-23', isCompetitor:true, competitorId:2 },
+    { id:106, author:'竞品用户6', content:'润百颜的这个质地怎么变了？新版不好用', platform:'B站', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','品控'], date:'2026-05-22', isCompetitor:true, competitorId:1 },
+    { id:107, author:'竞品用户7', content:'珀莱雅双抗真的有用吗？用了一个月没什么感觉', platform:'小红书', category:'product', type:'complaint', sentiment:'negative', labels:['竞品弱点','效果质疑'], date:'2026-05-21', isCompetitor:true, competitorId:3 },
+    { id:108, author:'竞品用户8', content:'被轻氧护肤的评论种草了，准备换过来试试', platform:'抖音', category:'content', type:'intent', sentiment:'positive', labels:['竞品流失','被种草'], date:'2026-05-20', isCompetitor:true, competitorId:1 }
+  ],
+  demands: [
+    { id:1, category:'人群适配', text:'敏感肌能不能用？', frequency:89, trend:'rising', action:'拍摄敏感肌专题内容，邀请敏感肌达人体验' },
+    { id:2, category:'场景需求', text:'夏天用会不会油？', frequency:72, trend:'rising', action:'夏季清爽场景内容，突出吸收快不黏腻' },
+    { id:3, category:'使用教育', text:'早上用还是晚上用？', frequency:56, trend:'stable', action:'制作使用教程短视频，分早晚场景' },
+    { id:4, category:'效果验证', text:'多久能见效？', frequency:48, trend:'stable', action:'用户使用打卡系列，展示不同周期效果' },
+    { id:5, category:'人群适配', text:'孕妇能用吗？', frequency:35, trend:'rising', action:'成分安全性专题，邀请皮肤科医生背书' },
+    { id:6, category:'场景需求', text:'干皮能用吗？', frequency:31, trend:'stable', action:'干皮使用体验内容，补充人群案例' },
+    { id:7, category:'效果验证', text:'能淡化痘印吗？', frequency:28, trend:'rising', action:'痘印修复专题，用户对比图展示' },
+    { id:8, category:'竞品替代', text:'和XX比哪个好？', frequency:67, trend:'rising', action:'竞品对比内容系列，突出差异化优势' },
+    { id:9, category:'价格替代', text:'有没有平替？', frequency:44, trend:'stable', action:'成分拆解内容，解释为什么值这个价' },
+    { id:10, category:'成分安全', text:'成分安全吗？含酒精吗？', frequency:38, trend:'stable', action:'成分透明化内容，建立信任感' }
+  ],
+  barriers: [
+    { id:1, type:'price', typeLabel:'价格障碍', text:'用户认为价格偏高，不理解价差原因', severity:'high', count:89, solution:'制作"贵在哪里"价值解释系列内容，拆解成分成本和效果对比' },
+    { id:2, type:'trust', typeLabel:'信任障碍', text:'用户不确定是否有效，担心踩雷', severity:'high', count:67, solution:'用真实用户好评做视频开头，增加效果对比图和长期使用见证' },
+    { id:3, type:'competitor', typeLabel:'竞品障碍', text:'用户习惯比较竞品，心智未定型', severity:'medium', count:54, solution:'客观对比内容：不贬低竞品，突出自身差异化优势' },
+    { id:4, type:'audience', typeLabel:'人群障碍', text:'不确定自己肤质是否适合', severity:'medium', count:48, solution:'分肤质专项内容，敏感肌/油皮/干皮分别录制体验视频' },
+    { id:5, type:'effect', typeLabel:'效果障碍', text:'质疑成分有效性和效果持久度', severity:'medium', count:41, solution:'成分科普+第三方检测报告+用户长期使用数据展示' },
+    { id:6, type:'usage', typeLabel:'使用障碍', text:'不知如何使用、搭配和频率', severity:'low', count:33, solution:'使用教程系列，搭配其他产品建议，早晚使用方案' },
+    { id:7, type:'risk', typeLabel:'风险障碍', text:'担心过敏、爆痘等不良反应', severity:'medium', count:29, solution:'成分安全说明+试用装策略+过敏无理由退货政策宣传' },
+    { id:8, type:'price', typeLabel:'价格障碍', text:'有更便宜的替代选择', severity:'low', count:25, solution:'强调长期使用性价比，对比单次使用成本' }
+  ],
+  competitorOpps: [
+    { id:1, competitor:'润百颜', strength:'效果感知强，品牌认知度高', weakness:'品控不稳定、性价比低、客服差', opportunity:'打"效果接近+更低试错成本"，强调成分稳定性和服务体验', action:'制作"不踩雷平替"内容，突出品控和售后服务' },
+    { id:2, competitor:'薇诺娜', strength:'敏感肌心智强，医院背书', weakness:'价格高、涨价频繁、用户性价比感知差', opportunity:'打"同效敏感肌友好+更亲民价格"，吸引薇诺娜价格敏感用户', action:'敏感肌友好专题，价格对比表，强调"同样的成分，更好的价格"' },
+    { id:3, competitor:'珀莱雅', strength:'品牌声量大，渠道覆盖广', weakness:'香精问题、效果不稳定、使用感争议大', opportunity:'打"无香精+更温和"，吸引反感香精和敏感肌用户', action:'"无香精护肤"专题，邀请珀莱雅转粉用户分享体验' }
+  ],
+  strategyCards: [
+    {
+      id:1, title:'用户不是嫌贵，而是不知道贵在哪里', subtitle:'价格异议转化策略',
+      priority:'P0', status:'active',
+      evidence: [
+        '近30天价格相关评论占高意向评论24%',
+        '"这个和几十块的有什么区别？"（出现47次）',
+        '"贵在哪里？"（出现32次）',
+        '"是不是智商税？"（出现18次）'
+      ],
+      judgment: '当前用户的核心障碍不是绝对价格，而是价值解释不足。用户需要看到成分、效果、使用周期和对比证明，才能理解价格合理性。',
+      contentSuggestions: [
+        '拍摄"贵在哪里"系列3条：成分/材质拆解、使用效果对比、长期使用成本对比',
+        '用实验室级别原料成本可视化展示',
+        '做竞品价格价值对比表，客观展示差异'
+      ],
+      testSuggestions: [
+        { group:'A', direction:'价格质疑型开头', variable:'"为什么比平替贵3倍？"', kpi:'CTR、CVR' },
+        { group:'B', direction:'效果证明型开头', variable:'"用了30天，皮肤发生了什么？"', kpi:'完播率、点击率' },
+        { group:'C', direction:'真实评论型开头', variable:'用真实好评截图做视频开头', kpi:'评论互动、转化率' }
+      ],
+      kpis: ['CTR', '商品点击率', 'CVR', '价格异议评论占比']
+    },
+    {
+      id:2, title:'敏感肌放心用——人群适配教育', subtitle:'人群拓展策略',
+      priority:'P1', status:'active',
+      evidence: [
+        '"敏感肌能不能用？"出现89次',
+        '"混油敏感皮"是最多提问肤质类型',
+        '竞品薇诺娜用户抱怨价格高，是转化窗口'
+      ],
+      judgment: '敏感肌人群是最具转化潜力但被忽视的群体。需要系统性地展示产品的安全性和适应性，抓住竞品用户流失窗口。',
+      contentSuggestions: [
+        '邀请敏感肌达人做28天使用打卡',
+        '皮肤科医生成分解读短视频',
+        '"敏感肌选品指南"系列，客观对比市面上敏感肌产品'
+      ],
+      testSuggestions: [
+        { group:'A', direction:'敏感肌人群定向', variable:'"敏感肌姐妹看过来"', kpi:'CTR、人群精准度' },
+        { group:'B', direction:'医生背书型', variable:'皮肤科医生出镜讲解', kpi:'信任度、转化率' }
+      ],
+      kpis: ['CTR', '敏感肌人群CVR', '价格异议占比', '竞品对比评论变化']
+    },
+    {
+      id:3, title:'竞品心智抢占——"和润百颜比哪个好？"', subtitle:'竞品拦截策略',
+      priority:'P0', status:'active',
+      evidence: [
+        '用户频繁比较润百颜（67次高意向比较）',
+        '润百颜用户抱怨品控不稳定、客服差',
+        '润百颜评论区有用户被种草我方产品'
+      ],
+      judgment: '润百颜用户正在流失，对方评论区出现大量对我方的好奇和关注。这是抢占心智的最佳窗口期，需要主动出现在用户决策路径中。',
+      contentSuggestions: [
+        '客观对比视频：不贬低竞品，用数据说话',
+        '"为什么我从润百颜换到轻氧护肤"用户故事',
+        '成分党拆解对比：同价位产品横向测评'
+      ],
+      testSuggestions: [
+        { group:'A', direction:'客观对比型', variable:'同框实测对比', kpi:'加购率、品牌搜索' },
+        { group:'B', direction:'用户转粉型', variable:'真实用户转粉分享', kpi:'信任度、转化率' }
+      ],
+      kpis: ['品牌搜索量', '加购率', 'ROI', '竞品对比评论占比']
+    },
+    {
+      id:4, title:'夏季油皮清爽攻略', subtitle:'场景化内容策略',
+      priority:'P1', status:'draft',
+      evidence: [
+        '"夏天用会不会油？"出现72次',
+        '正向评论集中在"清爽不油""秒吸收"',
+        '油皮和混油皮是最活跃的提问人群'
+      ],
+      judgment: '夏季是油皮护肤需求高峰期，清爽肤感是我们被验证过的核心优势。应该把油皮场景作为主攻方向，最大化产品优势。',
+      contentSuggestions: [
+        '"油皮夏日护肤公式"系列短视频',
+        '控油效果实测：8小时吸油纸测试',
+        '和竞品做肤感盲测对比'
+      ],
+      testSuggestions: [
+        { group:'A', direction:'场景痛点型', variable:'"油皮夏天的痛谁懂啊"', kpi:'CTR、完播率' },
+        { group:'B', direction:'效果实测型', variable:'8小时控油实测', kpi:'信任度、加购率' }
+      ],
+      kpis: ['CTR', '完播率', '商品点击率', '油皮人群CVR']
+    }
+  ],
+  brandProfile: {
+    name:'轻氧护肤', fullName:'轻氧护肤（QINGYANG SKINCARE）',
+    founded:'2021', industry:'新消费护肤', positioning:'成分护肤，科学有效',
+    slogan:'不堆成分，只讲效果',
+    coreValues:['无香精','低刺激','高活成分','清爽质地','平价功效'],
+    brandStory:'我们相信护肤不需要牺牲体验换效果。轻氧由三位配方师创立，用制药标准做护肤品——每款产品都经过28天敏感肌实测。',
+    visualStyle:'清爽蓝绿+白色，极简实验室风格',
+    tone:'专业但不冰冷，科普但不说教',
+    products: [
+      { name:'轻氧修护精华液', sku:'QY-ESS-01', price:269, unit:'30ml', coreIngredients:['依克多因','神经酰胺','积雪草提取物'], targetUsers:['敏感肌','混油皮','熬夜党'], sellingPoints:['15分钟褪红','28天修护屏障','清爽秒吸收'], status:'主推' },
+      { name:'轻氧控油水乳套装', sku:'QY-WL-01', price:329, unit:'水120ml+乳50ml', coreIngredients:['烟酰胺','锌PCA','茶树提取物'], targetUsers:['油皮','混油皮','痘痘肌'], sellingPoints:['8小时控油','收缩毛孔','不拔干'], status:'主推' },
+      { name:'轻氧敏感肌急救面膜', sku:'QY-MASK-01', price:189, unit:'5片装', coreIngredients:['泛醇B5','马齿苋提取物','透明质酸'], targetUsers:['敏感肌','干皮','换季肌肤'], sellingPoints:['15分钟急救退红','械字号标准','免洗配方'], status:'新品' },
+      { name:'轻氧VC亮肤安瓶', sku:'QY-AMP-01', price:199, unit:'28支', coreIngredients:['3%VC乙基醚','阿魏酸','VE'], targetUsers:['暗沉肌','熬夜党','初老肌'], sellingPoints:['14天亮肤','不感光白天可用','每支独立保鲜'], status:'推广中' }
+    ],
+    keywords: { brandWords:['轻氧护肤','轻氧','QINGYANG'], categoryWords:['修护精华','控油水乳','敏感肌面膜','VC安瓶'], sceneWords:['熬夜修复','换季急救','妆前打底','夏日控油','刷酸修复'], audienceWords:['成分党','敏感肌','油皮','学生党','职场新人'] },
+    contentGuidelines: { do:['用真实数据说话','展示成分和机理','用户真实反馈','科学但不晦涩'], dont:['虚假夸大效果','贬低竞品','过度营销话术','伪科学概念'] }
+  },
+  benchmarkData: {
+    competitors: [
+      {
+        name:'润百颜', positioning:'玻尿酸科技护肤', strengths:['效果感知强','品牌认知度高','渠道覆盖广','达人合作多'],
+        weaknesses:['品控不稳定','性价比低','客服体验差','新品反馈两极分化'],
+        keyProducts: [{ name:'屏障修护次抛', price:369, comparison:'我方精华液价格低27%，效果相当但肤感更清爽' }],
+        contentStyle:'科技感+实验室风，强调专利和独家成分',
+        commentHighlights: { praise:['效果快','吸收好','包装卫生'], complaint:['太贵','量太少','新版不如旧版','客服不理人'] },
+        swot: { S:'品牌力强、渠道广', W:'品控不稳、价格高', O:'我方可以打性价比和品控', T:'如果润百颜降价会形成压力' }
+      },
+      {
+        name:'薇诺娜', positioning:'敏感肌功效护肤', strengths:['敏感肌心智极强','医院背书','专业形象','用户忠诚度高'],
+        weaknesses:['涨价频繁引发不满','产品线复杂','包装设计老气','年轻用户增长慢'],
+        keyProducts: [{ name:'舒敏保湿特护霜', price:268, comparison:'我方急救面膜退红效果更快，且价格低29%' }],
+        contentStyle:'医生推荐+医院场景，强调临床验证和专业背书',
+        commentHighlights: { praise:['真的有效','医生推荐','不刺激'], complaint:['又涨价了','太贵用不起','包装太丑','没活动不划算'] },
+        swot: { S:'敏感肌信任度高', W:'价格策略得罪老用户', O:'吸引薇诺娜价格敏感用户', T:'品牌壁垒高，需要差异化' }
+      },
+      {
+        name:'珀莱雅', positioning:'大众功效护肤', strengths:['品牌声量大','渠道覆盖广','达人营销强','双抗概念深入人心'],
+        weaknesses:['香精问题争议大','效果不稳定','成分党口碑分化','高端线难突破'],
+        keyProducts: [{ name:'双抗精华', price:239, comparison:'我方VC安瓶无香精、不感光、独立保鲜包装' }],
+        contentStyle:'年轻化+流量打法，重视话题性和达人矩阵',
+        commentHighlights: { praise:['大牌平替','颜值高','活动多'], complaint:['香味太重','敏感肌受不了','效果不明显','用了个寂寞'] },
+        swot: { S:'声量大、流量好', W:'香精问题、效果争议', O:'吸引反感香精的用户', T:'如果改善香精问题，差异化消失' }
+      }
+    ]
+  },
+  xhsStrategyCards: [
+    {
+      id:1, title:'油皮姐妹看过来！这个精华我回购3次了', subtitle:'小红书-控油精华种草策略', priority:'P0', status:'active',
+      coverDirection: { style:'清爽蓝绿色调，自然光拍摄', layout:'左侧手持产品特写+右侧使用前后对比拼图', text:'白字描边"油皮亲测"'},
+      titleFormula: '痛点共情型："[人群]+看过来！[产品]+我[行为]+[次数]了"',
+      bodyStructure: [
+        '引入(10%)：作为10年大油田的自白，引起共鸣',
+        '痛点(20%)：列举油皮护肤踩过的坑',
+        '方案(40%)：产品登场→成分解析→使用方法→效果实拍',
+        '总结(20%)：对比其他产品，给出购买建议',
+        '引导(10%)："姐妹们有什么油皮问题评论区问我~"'
+      ],
+      hashtags: ['#油皮护肤','#控油精华','#学生党护肤','#平价好物','#轻氧护肤'],
+      postTime: '工作日晚8-10点，周末早10点',
+      engagement: ['置顶评论放产品链接','评论区回复具体肤质问题','发起"晒你的油皮困扰"互动'],
+      evidence: ['油皮相关评论占37%','"清爽不油"是最高频正向评价','竞品用户抱怨油腻感'],
+      kpis: ['笔记互动率','商品点击率','评论关键词（清爽/回购）频次']
+    },
+    {
+      id:2, title:'敏感肌急救！用了一次就决定无限回购', subtitle:'小红书-敏感肌面膜种草策略', priority:'P0', status:'active',
+      coverDirection: { style:'温暖治愈粉色调，柔光拍摄', layout:'上下分屏：上为使用前泛红照，下为15分钟后对比', text:'花字"急救退红实测"'},
+      titleFormula: '效果对比型："[痛点场景]！[使用感受]+决定[行为]"',
+      bodyStructure: [
+        '引入：换季泛红崩溃瞬间',
+        '过程：敷面膜15分钟实拍过程',
+        '对比：使用前/中/后三连拍',
+        '成分：温和解释为什么有效',
+        '推荐：对比同类产品性价比'
+      ],
+      hashtags: ['#敏感肌护肤','#急救面膜','#换季护肤','#泛红急救','#学生党平价'],
+      postTime: '换季期密集发布，日常每周2-3篇',
+      engagement: ['置顶过敏肌科普小知识','发起#我的敏感肌自救指南#话题'],
+      evidence: ['敏感肌相关评论占89次','竞品薇诺娜用户抱怨价格高','换季期搜索热度高'],
+      kpis: ['笔记收藏率','评论中"敏感肌"关键词','商品加购率']
+    }
+  ],
+  dyStrategyCards: [
+    {
+      id:1, title:'你是不是觉得所有控油精华都黏腻？', subtitle:'抖音-控油精华种草脚本', priority:'P0', status:'active',
+      hook: { type:'痛点质问型', line:'你是不是觉得所有控油精华都黏腻？上脸像糊了层猪油？', duration:'0-3s' },
+      script: [
+        { time:'0-3s', visual:'素颜怼脸，表情夸张', voice:'"你是不是觉得所有控油精华都黏腻？"', subtitle:'痛点质问开场' },
+        { time:'3-8s', visual:'手持产品，滴管吸液特写', voice:'"那你真的没试过轻氧这个，看这个质地"', subtitle:'产品质感展示' },
+        { time:'8-15s', visual:'成分分子动画+实验室画面', voice:'"依克多因+神经酰胺，从源头控油"', subtitle:'成分科学解析' },
+        { time:'15-25s', visual:'8小时吸油纸实测对比', voice:'"早上涂的，到下午6点，看这个吸油纸"', subtitle:'效果实测证明' },
+        { time:'25-30s', visual:'产品+价格+链接', voice:'"现在新品活动，链接在左下角"', subtitle:'引导转化' }
+      ],
+      bgm: '轻快电子科技感 BPM 120', talentMatch: '护肤垂类达人 / 成分党博主 / 油皮美妆博主',
+      audienceTarget: ['18-30岁女性','油皮/混油皮人群','学生党和职场新人','经常搜索控油产品的用户'],
+      commentScript: ['置顶："油皮姐妹扣1，我给你们发专属优惠"','回复质疑评论时附上实测视频链接','引导用户@油皮闺蜜'],
+      evidence: ['"清爽不油"是最高频正向评论','控油搜索量月增35%','竞品用户抱怨油腻感'],
+      kpis: ['完播率','商品点击率','评论互动率','CPA']
+    },
+    {
+      id:2, title:'和润百颜比，它到底差在哪？', subtitle:'抖音-竞品对比内容脚本', priority:'P0', status:'draft',
+      hook: { type:'对比好奇型', line:'都叫修护精华，这个凭什么便宜100块？', duration:'0-3s' },
+      script: [
+        { time:'0-3s', visual:'两款产品并排摆放', voice:'"都叫修护精华，这个凭什么便宜100块？"', subtitle:'对比悬念开场' },
+        { time:'3-10s', visual:'分屏对比：成分表+质地+肤感', voice:'"我们不讲虚的，直接看成分和效果"', subtitle:'客观多方对比' },
+        { time:'10-18s', visual:'28天使用对比实拍', voice:'"左边润百颜，右边轻氧，28天实测"', subtitle:'真人实测' },
+        { time:'18-25s', visual:'价格+容量+单次成本换算', voice:'"不是便宜100块，是单次使用成本低42%"', subtitle:'性价比解析' },
+        { time:'25-30s', visual:'链接+优惠', voice:'"想试的姐妹先买小瓶装，不满意随时退"', subtitle:'降低试错门槛' }
+      ],
+      bgm: '节奏感电子鼓点 BPM 110', talentMatch: '测评类达人 / 成分党博主 / 护肤KOL',
+      audienceTarget: ['正在比较竞品的用户','价格敏感型用户','润百颜现有用户'],
+      commentScript: ['置顶："你用过哪一个？说说真实感受"','不删负面评论，用客观数据和真实体验回应','收集用户比较问题，作为下一期选题'],
+      evidence: ['用户频繁问"和润百颜比哪个好"','润百颜用户抱怨性价比','竞品评论区出现对我方的好奇'],
+      kpis: ['品牌搜索量','加购率','竞品对比评论占比','ROI']
+    }
+  ],
+  testPlans: [
+    { id:1, objective:'降低价格异议，提高转化', cardTitle:'价格解释策略测试', variants:[
+      {group:'A', name:'价格质疑型', content:'"为什么比平替贵3倍？"开头，详细拆解成分和工艺成本', budget:'¥2,000', status:'running'},
+      {group:'B', name:'效果证明型', content:'"30天使用实录"开头，展示真实效果变化', budget:'¥2,000', status:'running'},
+      {group:'C', name:'真实评论型', content:'用户好评截图+语音开头，用社交证明建立信任', budget:'¥2,000', status:'running'},
+      {group:'D', name:'竞品对比型', content:'"和润百颜到底有什么区别？"开头，客观数据对比', budget:'¥2,000', status:'pending'}
+    ], totalBudget:'¥8,000', successRule:'CVR > 2.5% 或 价格异议评论占比下降 > 10%', stopRule:'CPA > ¥80 连续3天' },
+    { id:2, objective:'验证敏感肌人群内容有效性', cardTitle:'敏感肌人群测试', variants:[
+      {group:'A', name:'人群定向型', content:'"敏感肌姐妹看过来"开头，针对性内容', budget:'¥1,500', status:'running'},
+      {group:'B', name:'医生背书型', content:'皮肤科医生出镜，专业成分解读', budget:'¥1,500', status:'planned'}
+    ], totalBudget:'¥3,000', successRule:'敏感肌人群CVR > 2.0%', stopRule:'CTR < 1.5% 连续2天' }
+  ],
+  reviews: [
+    {
+      id:1, period:'2026-W21 (5.18-5.24)', cardTitle:'价格解释策略',
+      performance: { ctr:'3.8%', cvr:'2.3%', roi:'2.8', spend:'¥5,000', revenue:'¥14,000' },
+      attribution: '价格解释型素材CTR不高（3.1%），但CVR高于平均水平28%（2.3% vs 行业1.8%）。说明这类内容不适合作为拉新素材，但非常适合作为转化承接素材。' +
+        '素材C组（真实评论型）CTR最高，说明社交证明开头对拉新更有效。',
+      nextActions: ['保留价格解释型内容用于再营销人群', '新增"效果证明+价格解释"混合素材测试', '将真实评论型素材作为拉新主力', '下周重点测试D组竞品对比型']
+    },
+    {
+      id:2, period:'2026-W20 (5.11-5.17)', cardTitle:'竞品心智抢占测试',
+      performance: { ctr:'4.5%', cvr:'1.9%', roi:'2.1', spend:'¥4,000', revenue:'¥8,400' },
+      attribution: '"和润百颜比"类内容CTR高达4.5%，但CVR偏低（1.9%），说明用户对竞品对比内容有兴趣但购买理由不够强。' +
+        '需要在对比内容中加强我方产品的价值解释，避免用户看完比较后仍然犹豫。',
+      nextActions: ['优化竞品对比内容的转化钩子', '在对比视频结尾增加限时优惠', '测试"竞品对比+价格解释"组合内容']
+    },
+    {
+      id:1, period:'2026-W19 (5.4-5.10)', cardTitle:'油皮场景内容测试',
+      performance: { ctr:'3.2%', cvr:'3.1%', roi:'3.5', spend:'¥3,500', revenue:'¥12,250' },
+      attribution: '油皮场景内容CVR远超平均水平（3.1% vs 1.8%），ROI达到3.5倍。说明油皮人群是产品的高转化核心人群。' +
+        '正向评论中"清爽不油""秒吸收"等描述是用户最认可的产品标签，应继续强化这个场景。',
+      nextActions: ['加大油皮场景预算投入', '拍摄油皮系列专题内容（控油实测、肤感对比）', '在投放中增加"油皮"人群定向包']
+    }
+  ]
+};
+
+// ==================== APP STATE ====================
+let currentPage = 'dashboard';
+let themeMode = 'dark';
+let commentFilter = 'all';
+let commentSearchTerm = '';
+let commentCategoryFilter = 'all';
+let commentPage = 1;
+const commentPageSize = 50;
+let importTab = 'file';
+let selectedStrategy = null;
+
+// ==================== NAVIGATION ====================
+function navigateTo(page, el) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Close mobile sidebar
+  document.querySelector('.sidebar').classList.remove('open');
+  // Scroll to top
+  document.getElementById('mainContent').scrollTop = 0;
+  renderPage(page);
+}
+
+function setTheme(mode) {
+  themeMode = mode;
+  document.body.className = mode;
+  document.querySelectorAll('.theme-option').forEach(b => {
+    b.classList.toggle('active-theme', b.dataset.theme === mode);
+  });
+  localStorage.setItem('voc-theme', mode);
+}
+
+// ==================== RENDER ====================
+function renderPage(page) {
+  const main = document.getElementById('mainContent');
+  switch(page) {
+    case 'dashboard': main.innerHTML = renderDashboard(); break;
+    case 'comments': main.innerHTML = renderComments(); break;
+    case 'demands': main.innerHTML = renderDemands(); break;
+    case 'barriers': main.innerHTML = renderBarriers(); break;
+    case 'competitors': main.innerHTML = renderCompetitors(); break;
+    case 'strategies': main.innerHTML = '<div style="text-align:center;padding:60px"><h3 style="font-size:18px;font-weight:700;color:var(--fg-dim)">策略卡已拆分为：</h3><p style="margin-top:12px"><a href="#" onclick="navigateTo(\'xhs-strategies\',document.querySelector(\'[data-page=xhs-strategies]\'))" style="color:var(--accent)">📕 小红书策略卡</a> &nbsp;|&nbsp; <a href="#" onclick="navigateTo(\'dy-strategies\',document.querySelector(\'[data-page=dy-strategies]\'))" style="color:var(--accent)">🎵 抖音策略卡</a></p></div>'; break;
+    case 'xhs-strategies': main.innerHTML = renderXHSStrategies(); break;
+    case 'dy-strategies': main.innerHTML = renderDYStrategies(); break;
+    case 'brand-center': main.innerHTML = renderBrandCenter(); break;
+    case 'benchmark-center': main.innerHTML = renderBenchmarkCenter(); break;
+    case 'lab': main.innerHTML = renderLab(); break;
+    case 'reviews': main.innerHTML = renderReviews(); break;
+    case 'reports': main.innerHTML = renderReports(); break;
+    case 'knowledge': main.innerHTML = renderKnowledge(); break;
+    case 'ai-analysis': main.innerHTML = renderAIAnalysis(); break;
+    case 'system-settings': main.innerHTML = renderSystemSettings(); break;
+  }
+}
+
+// ==================== DASHBOARD ====================
+function renderDashboard() {
+  const m = demoData.metrics;
+  return `
+    <div class="page-header">
+      <h2>本周内容投放决策台</h2>
+      <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p>
+    </div>
+
+    <div class="metric-grid" style="margin-bottom:28px">
+      <div class="metric-card">
+        <div class="metric-value gradient-text">${m.totalComments.toLocaleString()}</div>
+        <div class="metric-label">总评论数</div>
+        <div class="metric-change metric-up">本周 +${m.newCommentsThisWeek} ${m.newCommentsTrend}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#60a5fa">${m.identifiedDemands}</div>
+        <div class="metric-label">识别需求数</div>
+        <div class="metric-change metric-up">${m.demandTrend}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#f87171">${m.identifiedBarriers}</div>
+        <div class="metric-label">购买障碍</div>
+        <div class="metric-change metric-down">${m.barrierTrend}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#a78bfa">${m.strategyCards}</div>
+        <div class="metric-label">策略卡</div>
+        <div class="metric-change metric-up">${m.cardsTrend}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#fbbf24">${m.avgCTR}</div>
+        <div class="metric-label">平均 CTR</div>
+        <div class="metric-change metric-up">${m.ctrTrend}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:#4ade80">${m.avgCVR}</div>
+        <div class="metric-label">平均 CVR</div>
+        <div class="metric-change metric-up">${m.cvrTrend}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:15px;font-weight:700">本周建议动作</h3>
+      <span class="badge badge-tag"><span class="pulse-dot" style="margin-right:4px"></span>实时更新</span>
+    </div>
+
+    <div class="cards-grid">
+      ${demoData.topActions.map((a, i) => `
+        <div class="glass-card hover-card ${a.urgency === 'high' ? 'accent-border' : ''}" style="cursor:pointer;position:relative;overflow:hidden" onclick="navigateTo('xhs-strategies', document.querySelector('[data-page=xhs-strategies]'))">
+          <div class="card-header">
+            <span class="badge ${a.priority === 'P0' ? 'badge-p0' : a.priority === 'P1' ? 'badge-p1' : 'badge-p2'}">${a.priority}</span>
+            <span style="font-size:11px;color:var(--fg-dim)">${a.goal}</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.4">${a.title}</h4>
+          <p style="font-size:12px;color:var(--fg-muted);line-height:1.6;margin-bottom:12px">${a.reason}</p>
+          <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--fg-dim)">
+            <span>📊 ${a.targetMetric}</span>
+            <span class="${a.trend === 'up' ? 'metric-up' : 'metric-down'}">${a.trend === 'up' ? '↑ 上升趋势' : a.trend === 'down' ? '↓ 下降趋势' : '→ 持平'}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-title" style="margin-top:36px">最近更新的策略卡</div>
+    <div class="cards-grid-2" style="margin-top:12px">
+      ${demoData.strategyCards.slice(0, 3).map(c => `
+        <div class="glass-card hover-card" style="cursor:pointer" onclick="showStrategyDetail(${c.id})">
+          <div class="card-header">
+            <span class="badge ${c.priority === 'P0' ? 'badge-p0' : c.priority === 'P1' ? 'badge-p1' : 'badge-p2'}">${c.priority}</span>
+            <span style="font-size:11px;color:var(--fg-dim)">${c.status === 'active' ? '✓ 执行中' : '📝 草稿'}</span>
+          </div>
+          <h4 style="font-size:14px;font-weight:700;margin-bottom:4px">${c.title}</h4>
+          <p style="font-size:12px;color:var(--fg-dim)">${c.subtitle}</p>
+          <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+            ${c.evidence.slice(0,2).map(e => `<span style="font-size:10px;color:var(--fg-muted);background:var(--card-hover);padding:3px 8px;border-radius:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">"${e.length > 40 ? e.substring(0,40)+'...' : e}"</span>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ==================== COMMENTS ====================
+function renderComments() {
+  const allComments = [...demoData.comments];
+  let filtered = allComments;
+
+  // Category filter
+  if (commentCategoryFilter !== 'all') {
+    filtered = filtered.filter(c => c.category === commentCategoryFilter);
+  }
+
+  if (commentFilter !== 'all') {
+    if (commentFilter === 'own') filtered = filtered.filter(c => !c.isCompetitor);
+    else if (commentFilter === 'competitor') filtered = filtered.filter(c => c.isCompetitor);
+    else filtered = filtered.filter(c => c.type === commentFilter || c.sentiment === commentFilter);
+  }
+  if (commentSearchTerm) {
+    const t = commentSearchTerm.toLowerCase();
+    filtered = filtered.filter(c => c.content.includes(t) || c.author.includes(t) || c.labels.some(l => l.includes(t)));
+  }
+  const types = ['barrier','demand','comparison','praise','complaint','intent'];
+  const typeLabels = { barrier:'购买障碍', demand:'需求提问', comparison:'竞品对比', praise:'好评', complaint:'投诉', intent:'购买意图' };
+  const sentiments = ['positive','neutral','negative'];
+  const sentimentLabels = { positive:'正面', neutral:'中性', negative:'负面' };
+  const categoryLabels = { content:'💬 内容评论', product:'🛒 商品评论' };
+  const contentCount = allComments.filter(c => c.category === 'content').length;
+  const productCount = allComments.filter(c => c.category === 'product').length;
+  const totalPages = Math.ceil(filtered.length / commentPageSize);
+  if (commentPage > totalPages) commentPage = 1;
+  const paged = filtered.slice((commentPage-1)*commentPageSize, commentPage*commentPageSize);
+
+  return `
+    <div class="page-header" style="display:flex;align-items:start;justify-content:space-between">
+      <div>
+        <h2>评论信号池</h2>
+        <p>${demoData.brand.name} 及竞品在多平台的用户评论数据，共 ${allComments.length} 条</p>
+      </div>
+      <button class="btn-primary" onclick="showImportModal()" style="display:flex;align-items:center;gap:6px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        导入评论
+      </button>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div class="search-wrap" style="flex:1;min-width:200px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" placeholder="搜索评论内容、作者、标签..." oninput="commentSearchTerm=this.value;commentPage=1;renderPage('comments')" value="${commentSearchTerm}">
+      </div>
+      <select onchange="commentFilter=this.value;commentPage=1;renderPage('comments')" style="background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--fg);outline:none;cursor:pointer">
+        <option value="all" ${commentFilter==='all'?'selected':''}>全部评论</option>
+        <option value="own" ${commentFilter==='own'?'selected':''}>自有品牌</option>
+        <option value="competitor" ${commentFilter==='competitor'?'selected':''}>竞品评论</option>
+        <optgroup label="按类型">
+          ${types.map(t => `<option value="${t}" ${commentFilter===t?'selected':''}>${typeLabels[t]}</option>`).join('')}
+        </optgroup>
+        <optgroup label="按情感">
+          ${sentiments.map(s => `<option value="${s}" ${commentFilter===s?'selected':''}>${sentimentLabels[s]}</option>`).join('')}
+        </optgroup>
+      </select>
+      <span style="font-size:12px;color:var(--fg-dim)">共 ${filtered.length} 条</span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;color:var(--fg-dim);font-weight:600">分类：</span>
+      <button class="filter-tag ${commentCategoryFilter==='all'?'active-filter':''}" onclick="commentCategoryFilter='all';commentPage=1;renderPage('comments')">全部 (${allComments.length})</button>
+      <button class="filter-tag ${commentCategoryFilter==='content'?'active-filter':''}" onclick="commentCategoryFilter='content';commentPage=1;renderPage('comments')">💬 内容评论 (${contentCount})</button>
+      <button class="filter-tag ${commentCategoryFilter==='product'?'active-filter':''}" onclick="commentCategoryFilter='product';commentPage=1;renderPage('comments')">🛒 商品评论 (${productCount})</button>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+      ${['价格异议','敏感肌','竞品对比','效果证明','人群适配','信任障碍','购买意图','肤感好评','竞品弱点'].map(tag => `
+        <button class="filter-tag ${commentSearchTerm===tag?'active-filter':''}" onclick="commentSearchTerm=commentSearchTerm===tag?'':tag;commentPage=1;renderPage('comments')">${tag}</button>
+      `).join('')}
+    </div>
+
+    <div class="glass-card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead><tr><th>来源</th><th>用户</th><th>分类</th><th>评论内容</th><th>👍</th><th>类型</th><th>标签</th><th>日期</th><th></th></tr></thead>
+        <tbody>
+          ${paged.map((c, ci) => `
+            <tr style="cursor:pointer" onclick="toggleCommentRow(this, 'cmt-detail-${(commentPage-1)*commentPageSize+ci}')">
+              <td><span style="font-size:11px;color:var(--fg-dim)">${c.platform}${c.isCompetitor?'<br><span style="color:#f87171;font-size:10px">竞品</span>':''}</span></td>
+              <td style="white-space:nowrap;font-size:12px">
+                ${c.userName||c.author}<br>
+                ${c.douyinId ? `<span style="font-size:10px;color:var(--fg-dim)">@${c.douyinId}</span>` : ''}
+                ${c.ipAddress ? `<span style="font-size:10px;color:var(--fg-dim);display:block">📍${c.ipAddress}</span>` : ''}
+              </td>
+              <td><span class="badge ${c.category==='content'?'category-badge-content':'category-badge-product'}" style="font-size:10px">${c.category==='content'?'💬 内容':'🛒 商品'}</span></td>
+              <td style="max-width:320px">
+                <span style="font-size:13px;line-height:1.5">${c.content}</span>
+                ${c.parentCommentContent ? `<div style="font-size:10px;color:var(--fg-dim);margin-top:2px;padding-left:8px;border-left:2px solid var(--border)">回复: ${c.parentCommentContent.substring(0,50)}...</div>` : ''}
+              </td>
+              <td style="text-align:center;font-size:12px;color:${c.likes>10?'#f87171':'var(--fg-dim)'}">${c.likes||0}</td>
+              <td><span class="badge badge-tag" style="font-size:10px">${typeLabels[c.type] || c.type}</span></td>
+              <td><div style="display:flex;gap:3px;flex-wrap:wrap">${c.labels.map(l => `<span style="font-size:10px;background:var(--card-hover);padding:2px 6px;border-radius:3px;color:var(--fg-muted)">${l}</span>`).join('')}</div></td>
+              <td style="white-space:nowrap;font-size:11px;color:var(--fg-dim)">${c.date}</td>
+              <td style="font-size:10px;color:var(--fg-dim)">▼</td>
+            </tr>
+            <tr id="cmt-detail-${ci}" style="display:none">
+              <td colspan="9" style="background:var(--card-hover);padding:12px 16px;font-size:12px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
+                  ${c.videoId ? `<div><span style="color:var(--fg-dim)">视频ID:</span> <code style="font-size:11px">${c.videoId}</code></div>` : ''}
+                  ${c.videoLink ? `<div><span style="color:var(--fg-dim)">视频链接:</span> <a href="${c.videoLink}" target="_blank" style="color:var(--accent);font-size:11px">打开</a></div>` : ''}
+                  ${c.userUid ? `<div><span style="color:var(--fg-dim)">用户UID:</span> <code style="font-size:11px">${c.userUid}</code></div>` : ''}
+                  ${c.subCommentCount > 0 ? `<div><span style="color:var(--fg-dim)">子评论:</span> ${c.subCommentCount}条</div>` : ''}
+                  ${c.commentTime ? `<div><span style="color:var(--fg-dim)">时间:</span> ${c.commentTime}</div>` : ''}
+                  ${c.parentCommentId ? `<div><span style="color:var(--fg-dim)">回复评论ID:</span> <code style="font-size:11px">${c.parentCommentId}</code></div>` : ''}
+                  ${c.parentUserName ? `<div><span style="color:var(--fg-dim)">回复用户:</span> ${c.parentUserName}</div>` : ''}
+                  ${c.refCommentId ? `<div><span style="color:var(--fg-dim)">引用评论ID:</span> <code style="font-size:11px">${c.refCommentId}</code></div>` : ''}
+                  ${c.refCommentContent ? `<div><span style="color:var(--fg-dim)">引用内容:</span> ${c.refCommentContent.substring(0,60)}</div>` : ''}
+                </div>
+                ${c.parentCommentContent ? `<div style="margin-top:8px;padding:8px;background:var(--card-bg);border-radius:6px;border-left:3px solid var(--border)"><span style="color:var(--fg-dim);font-size:10px">一级评论:</span> <span style="font-size:12px">${c.parentCommentContent}</span></div>` : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ${totalPages > 1 ? `
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-top:1px solid var(--border)">
+        <button class="btn-secondary" onclick="commentPage=1;renderPage('comments')" ${commentPage<=1?'disabled style="opacity:.4"':''} style="padding:4px 10px;font-size:11px">首页</button>
+        <button class="btn-secondary" onclick="commentPage--;renderPage('comments')" ${commentPage<=1?'disabled style="opacity:.4"':''} style="padding:4px 10px;font-size:11px">上一页</button>
+        <span style="font-size:12px;color:var(--fg-dim);min-width:100px;text-align:center">第 ${commentPage}/${totalPages} 页</span>
+        <button class="btn-secondary" onclick="commentPage++;renderPage('comments')" ${commentPage>=totalPages?'disabled style="opacity:.4"':''} style="padding:4px 10px;font-size:11px">下一页</button>
+        <button class="btn-secondary" onclick="commentPage=totalPages;renderPage('comments')" ${commentPage>=totalPages?'disabled style="opacity:.4"':''} style="padding:4px 10px;font-size:11px">末页</button>
+        <span style="font-size:11px;color:var(--fg-dim)">共 ${filtered.length} 条</span>
+      </div>` : `<div style="padding:12px;text-align:center;font-size:12px;color:var(--fg-dim)">共 ${filtered.length} 条评论</div>`}
+    </div>
+  `;
+}
+
+function toggleCommentRow(row, detailId) {
+  const detail = document.getElementById(detailId);
+  if (!detail) return;
+  const isHidden = detail.style.display === 'none';
+  detail.style.display = isHidden ? 'table-row' : 'none';
+  row.querySelector('td:last-child').textContent = isHidden ? '▲' : '▼';
+}
+
+// ==================== DEMANDS ====================
+function renderDemands() {
+  return `
+    <div class="page-header">
+      <h2>用户需求地图</h2>
+      <p>从评论中识别的用户真实需求，按频率和趋势排序</p>
+    </div>
+    <div class="metric-grid" style="margin-bottom:24px">
+      <div class="metric-card"><div class="metric-value gradient-text">${demoData.demands.length}</div><div class="metric-label">识别需求类别</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#60a5fa">${demoData.demands.reduce((s,d)=>s+d.frequency,0)}</div><div class="metric-label">需求提及总次数</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#fbbf24">${demoData.demands.filter(d=>d.trend==='rising').length}</div><div class="metric-label">上升趋势需求</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#a78bfa">敏感肌适用</div><div class="metric-label">Top 1 需求</div></div>
+    </div>
+    <div class="cards-grid-3">
+      ${demoData.demands.map(d => `
+        <div class="glass-card hover-card card-sm">
+          <div class="card-header">
+            <span class="badge badge-tag">${d.category}</span>
+            <span style="font-size:11px;color:${d.trend==='rising'?'#4ade80':d.trend==='declining'?'#f87171':'var(--fg-dim)'}">${d.trend==='rising'?'↑ 上升':d.trend==='declining'?'↓ 下降':'→ 持平'}</span>
+          </div>
+          <h4 style="font-size:14px;font-weight:700;margin-bottom:4px">${d.text}</h4>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:20px;font-weight:800;color:var(--accent)">${d.frequency}</span>
+            <span style="font-size:11px;color:var(--fg-dim)">次提及</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-green" style="width:${Math.min(100, (d.frequency/89)*100)}%"></div></div>
+          <p style="font-size:11px;color:var(--fg-muted);margin-top:8px;line-height:1.5">💡 ${d.action}</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ==================== BARRIERS ====================
+function renderBarriers() {
+  const severityColors = { high:'fill-red', medium:'fill-amber', low:'fill-blue' };
+  return `
+    <div class="page-header">
+      <h2>购买障碍地图</h2>
+      <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p>
+    </div>
+    <div class="metric-grid" style="margin-bottom:24px">
+      <div class="metric-card"><div class="metric-value" style="color:#f87171">${demoData.barriers.filter(b=>b.severity==='high').length}</div><div class="metric-label">高严重度障碍</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#fbbf24">${demoData.barriers.length}</div><div class="metric-label">障碍类型总计</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#4ade80">${demoData.barriers.reduce((s,b)=>s+b.count,0)}</div><div class="metric-label">相关评论数</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#60a5fa">价格障碍</div><div class="metric-label">Top 1 障碍</div></div>
+    </div>
+    <div class="cards-grid-2">
+      ${demoData.barriers.map(b => `
+        <div class="glass-card hover-card" style="border-left:3px solid ${b.severity==='high'?'#ef4444':b.severity==='medium'?'#f59e0b':'#3b82f6'}">
+          <div class="card-header">
+            <span class="badge badge-tag">${b.typeLabel}</span>
+            <span class="badge" style="background:${b.severity==='high'?'var(--badge-red)':b.severity==='medium'?'var(--badge-amber)':'var(--badge-blue)'};color:${b.severity==='high'?'var(--badge-red-fg)':b.severity==='medium'?'var(--badge-amber-fg)':'var(--badge-blue-fg)'}">${b.severity==='high'?'严重':b.severity==='medium'?'中等':'轻微'}</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:6px">${b.text}</h4>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:22px;font-weight:800;color:${b.severity==='high'?'#f87171':b.severity==='medium'?'#fbbf24':'#60a5fa'}">${b.count}</span>
+            <span style="font-size:11px;color:var(--fg-dim)">条相关评论</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill ${severityColors[b.severity]}" style="width:${(b.count/89)*100}%"></div></div>
+          <p style="font-size:12px;color:var(--fg-muted);margin-top:10px;line-height:1.6">💡 建议：${b.solution}</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ==================== COMPETITORS ====================
+function renderCompetitors() {
+  return `
+    <div class="page-header">
+      <h2>竞品机会地图</h2>
+      <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p>
+    </div>
+    <div class="cards-grid" style="margin-bottom:32px">
+      ${demoData.competitorOpps.map(o => `
+        <div class="glass-card hover-card">
+          <h4 style="font-size:16px;font-weight:700;margin-bottom:2px">${o.competitor}</h4>
+          <p style="font-size:11px;color:var(--fg-dim);margin-bottom:16px">竞争对手分析</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div style="background:rgba(34,197,94,.05);padding:12px;border-radius:8px">
+              <div style="font-size:10px;color:#4ade80;font-weight:600;margin-bottom:4px">✓ 竞品优势</div>
+              <div style="font-size:12px;color:var(--fg-muted);line-height:1.5">${o.strength}</div>
+            </div>
+            <div style="background:rgba(239,68,68,.05);padding:12px;border-radius:8px">
+              <div style="font-size:10px;color:#f87171;font-weight:600;margin-bottom:4px">✗ 竞品弱点</div>
+              <div style="font-size:12px;color:var(--fg-muted);line-height:1.5">${o.weakness}</div>
+            </div>
+          </div>
+          <div style="background:var(--accent-glow);padding:12px;border-radius:8px;margin-bottom:10px">
+            <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px">🎯 我方机会</div>
+            <div style="font-size:12px;color:var(--fg);line-height:1.5;font-weight:500">${o.opportunity}</div>
+          </div>
+          <p style="font-size:11px;color:var(--fg-dim);line-height:1.5">💡 ${o.action}</p>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-title">竞品评论信号</div>
+    <div class="glass-card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead><tr><th>竞品</th><th>平台</th><th>评论</th><th>信号类型</th><th>日期</th></tr></thead>
+        <tbody>
+          ${demoData.comments.filter(c=>c.isCompetitor).map(c => `
+            <tr>
+              <td style="white-space:nowrap;font-size:12px">${demoData.competitors.find(co=>co.id===c.competitorId)?.name || '竞品'}</td>
+              <td style="font-size:11px;color:var(--fg-dim)">${c.platform}</td>
+              <td style="max-width:400px"><span style="font-size:13px">${c.content}</span></td>
+              <td><div style="display:flex;gap:3px;flex-wrap:wrap">${c.labels.map(l => `<span style="font-size:10px;background:var(--card-hover);padding:2px 6px;border-radius:3px;color:var(--fg-muted)">${l}</span>`).join('')}</div></td>
+              <td style="white-space:nowrap;font-size:11px;color:var(--fg-dim)">${c.date}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ==================== XHS STRATEGIES ====================
+function renderXHSStrategies() {
+  return `
+    <div class="page-header">
+      <h2>📕 小红书内容策略卡</h2>
+      <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p>
+    </div>
+    <div class="cards-grid-2">
+      ${demoData.xhsStrategyCards.map(c => `
+        <div class="glass-card hover-card" style="cursor:pointer" onclick="showXHSDetail(${c.id})">
+          <div class="card-header">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge ${c.priority==='P0'?'badge-p0':c.priority==='P1'?'badge-p1':'badge-p2'}">${c.priority}</span>
+              <span style="font-size:11px;color:${c.status==='active'?'#4ade80':'var(--fg-dim)'}">${c.status==='active'?'● 执行中':'○ 草稿'}</span>
+            </div>
+            <span class="badge badge-tag">小红书</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:4px">${c.title}</h4>
+          <p style="font-size:12px;color:var(--fg-dim);margin-bottom:12px">${c.subtitle}</p>
+          <div style="background:var(--card-hover);padding:12px;border-radius:8px;margin-bottom:10px">
+            <div style="font-size:11px;color:var(--fg-dim);margin-bottom:4px">🎨 封面方向</div>
+            <div style="font-size:12px;color:var(--fg-muted);line-height:1.5">${c.coverDirection.style} · ${c.coverDirection.layout}</div>
+          </div>
+          <div style="font-size:11px;color:var(--fg-dim)">🏷️ ${c.hashtags.slice(0,4).join(' ')}</div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            ${c.kpis.map(k => `<span class="badge badge-tag" style="font-size:10px">${k}</span>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function showXHSDetail(id) {
+  const c = demoData.xhsStrategyCards.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <span class="badge ${c.priority==='P0'?'badge-p0':c.priority==='P1'?'badge-p1':'badge-p2'}">${c.priority}</span>
+          <span class="badge badge-tag">小红书</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:800">${c.title}</h2>
+        <p style="font-size:13px;color:var(--fg-dim)">${c.subtitle}</p>
+      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div style="margin-top:24px">
+      <div class="strategy-detail-section"><h4>🎨 封面设计</h4>
+        <p>风格：${c.coverDirection.style}</p>
+        <p>布局：${c.coverDirection.layout}</p>
+        <p>文字：${c.coverDirection.text}</p>
+      </div>
+      <div class="strategy-detail-section"><h4>✍️ 标题公式</h4><p>${c.titleFormula}</p></div>
+      <div class="strategy-detail-section"><h4>📝 正文结构</h4><ul>${c.bodyStructure.map(s => `<li>${s}</li>`).join('')}</ul></div>
+      <div class="strategy-detail-section"><h4>🏷️ 标签</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${c.hashtags.map(t => `<span class="badge badge-tag">${t}</span>`).join('')}</div></div>
+      <div class="strategy-detail-section"><h4>⏰ 发布时间</h4><p>${c.postTime}</p></div>
+      <div class="strategy-detail-section"><h4>💬 互动引导</h4><ul>${c.engagement.map(e => `<li>${e}</li>`).join('')}</ul></div>
+      <div class="strategy-detail-section"><h4>📊 评论证据</h4>${c.evidence.map(e => `<div class="comment-quote">${e}</div>`).join('')}</div>
+    </div>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+// ==================== DY STRATEGIES ====================
+function renderDYStrategies() {
+  return `
+    <div class="page-header">
+      <h2>🎵 抖音内容策略卡</h2>
+      <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p>
+    </div>
+    <div class="cards-grid-2">
+      ${demoData.dyStrategyCards.map(c => `
+        <div class="glass-card hover-card" style="cursor:pointer" onclick="showDYDetail(${c.id})">
+          <div class="card-header">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge ${c.priority==='P0'?'badge-p0':c.priority==='P1'?'badge-p1':'badge-p2'}">${c.priority}</span>
+              <span style="font-size:11px;color:${c.status==='active'?'#4ade80':'var(--fg-dim)'}">${c.status==='active'?'● 执行中':'○ 草稿'}</span>
+            </div>
+            <span class="badge badge-tag">抖音</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:4px">${c.title}</h4>
+          <p style="font-size:12px;color:var(--fg-dim);margin-bottom:12px">${c.subtitle}</p>
+          <div style="background:var(--card-hover);padding:12px;border-radius:8px;margin-bottom:10px">
+            <div style="font-size:11px;color:var(--fg-dim);margin-bottom:4px">🎬 开头钩子 (${c.hook.type})</div>
+            <div style="font-size:12px;color:var(--fg);font-weight:500;line-height:1.5">"${c.hook.line}"</div>
+          </div>
+          <div style="font-size:11px;color:var(--fg-dim);margin-bottom:4px">🎵 ${c.bgm}</div>
+          <div style="font-size:11px;color:var(--fg-dim)">👤 ${c.talentMatch}</div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            ${c.kpis.map(k => `<span class="badge badge-tag" style="font-size:10px">${k}</span>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function showDYDetail(id) {
+  const c = demoData.dyStrategyCards.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <span class="badge ${c.priority==='P0'?'badge-p0':c.priority==='P1'?'badge-p1':'badge-p2'}">${c.priority}</span>
+          <span class="badge badge-tag">抖音</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:800">${c.title}</h2>
+        <p style="font-size:13px;color:var(--fg-dim)">${c.subtitle}</p>
+      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div style="margin-top:24px">
+      <div class="strategy-detail-section"><h4>🎬 开头钩子 (${c.hook.type})</h4><div class="comment-quote">"${c.hook.line}"</div></div>
+      <div class="strategy-detail-section"><h4>📜 脚本结构</h4>
+        ${c.script.map(s => `<div style="background:var(--card-hover);padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:12px">
+          <span style="font-weight:700;color:var(--accent)">${s.time}</span>
+          <span style="color:var(--fg-dim);margin-left:8px">${s.visual}</span>
+          <div style="color:var(--fg-muted);margin-top:4px">🎤 ${s.voice}</div>
+        </div>`).join('')}
+      </div>
+      <div class="strategy-detail-section"><h4>🎵 BGM</h4><p>${c.bgm}</p></div>
+      <div class="strategy-detail-section"><h4>👤 达人匹配</h4><p>${c.talentMatch}</p></div>
+      <div class="strategy-detail-section"><h4>🎯 人群定向</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${c.audienceTarget.map(t => `<span class="badge badge-tag">${t}</span>`).join('')}</div></div>
+      <div class="strategy-detail-section"><h4>💬 评论互动脚本</h4><ul>${c.commentScript.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    </div>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+// ==================== BRAND CENTER ====================
+function renderBrandCenter() {
+  loadBrandData();
+  const b = demoData.brandProfile;
+  return `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>🏢 品牌中心</h2>
+        <p>自身品牌/产品知识库——品牌信息、产品线、内容资产一站式管理</p></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="aiGenerateBrand()" style="display:flex;align-items:center;gap:6px">🤖 AI 生成</button>
+          <button class="btn-primary" onclick="editBrandInfo()">✏️ 编辑品牌</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:start;gap:20px;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <h3 style="font-size:20px;font-weight:800">${b.name}</h3>
+          <p style="font-size:13px;color:var(--fg-dim);margin-top:4px">${b.fullName} · ${b.founded}年创立 · ${b.industry}</p>
+          <p style="font-size:14px;font-weight:600;color:var(--accent);margin-top:8px">"${b.slogan}"</p>
+          <p style="font-size:12px;color:var(--fg-muted);margin-top:8px;line-height:1.6">${b.brandStory}</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+            ${b.coreValues.map(v => `<span class="badge badge-tag">${v}</span>`).join('')}
+          </div>
+        </div>
+        <div style="background:var(--card-hover);padding:16px;border-radius:12px;min-width:200px">
+          <div style="font-size:11px;color:var(--fg-dim);font-weight:600;margin-bottom:8px">品牌调性</div>
+          <div style="font-size:12px;color:var(--fg-muted);line-height:1.6">🎨 ${b.visualStyle}<br>🗣️ ${b.tone}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="section-title" style="margin:0">📦 产品线 (${b.products.length} 个 SKU)</div>
+      <button class="btn-primary" onclick="editBrandProduct(-1)" style="font-size:12px;padding:4px 14px">+ 添加产品</button>
+    </div>
+    <div class="cards-grid-2" style="margin-top:12px">
+      ${b.products.map((p,i) => `
+        <div class="glass-card hover-card card-sm">
+          <div class="card-header">
+            <h4 style="font-size:15px;font-weight:700">${p.name}</h4>
+            <div style="display:flex;gap:6px">
+              <span class="badge badge-tag">${p.status}</span>
+              <button class="btn-secondary" onclick="editBrandProduct(${i})" style="font-size:10px;padding:2px 8px">编辑</button>
+              <button class="btn-secondary" onclick="deleteBrandProduct(${i})" style="font-size:10px;padding:2px 8px;color:#f87171;border-color:rgba(239,68,68,.3)">删除</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--fg-muted)">
+            <span>SKU: ${p.sku}</span><span>¥${p.price} / ${p.unit}</span>
+          </div>
+          <div style="margin-top:8px"><span style="font-size:11px;color:var(--fg-dim)">核心成分：</span><span style="font-size:11px;color:var(--fg)">${p.coreIngredients.join('、')}</span></div>
+          <div style="margin-top:4px"><span style="font-size:11px;color:var(--fg-dim)">目标人群：</span><span style="font-size:11px;color:var(--fg)">${p.targetUsers.join('、')}</span></div>
+          <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">${p.sellingPoints.map(sp => `<span style="font-size:10px;background:var(--tag-bg);color:var(--tag-fg);padding:2px 8px;border-radius:4px">${sp}</span>`).join('')}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="section-title" style="margin:0">🔑 品牌关键词库</div>
+      <button class="btn-secondary" onclick="editBrandKeywords()" style="font-size:11px;padding:2px 10px">编辑</button>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      ${[
+        ['品牌词', b.keywords.brandWords, 'fill-green'],
+        ['品类词', b.keywords.categoryWords, 'fill-blue'],
+        ['场景词', b.keywords.sceneWords, 'fill-purple'],
+        ['人群词', b.keywords.audienceWords, 'fill-amber']
+      ].map(([label, words, color]) => `
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--fg-dim);margin-bottom:6px">${label}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${words.map(w => `<span style="font-size:12px;background:var(--card-hover);padding:4px 12px;border-radius:16px;color:var(--fg)">${w}</span>`).join('')}</div>
+          <div class="stat-bar" style="margin-top:4px"><div class="stat-bar-fill ${color}" style="width:${40+Math.random()*60}%"></div></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="section-title" style="margin:0">📋 内容风格指南</div>
+      <button class="btn-secondary" onclick="editBrandGuidelines()" style="font-size:11px;padding:2px 10px">编辑</button>
+    </div>
+    <div class="glass-card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="background:rgba(34,197,94,.05);padding:14px;border-radius:8px">
+          <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:6px">✅ 应该做</div>
+          ${b.contentGuidelines.do.map(d => `<div style="font-size:12px;color:var(--fg-muted);padding:3px 0">• ${d}</div>`).join('')}
+        </div>
+        <div style="background:rgba(239,68,68,.05);padding:14px;border-radius:8px">
+          <div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:6px">❌ 不要做</div>
+          ${b.contentGuidelines.dont.map(d => `<div style="font-size:12px;color:var(--fg-muted);padding:3px 0">• ${d}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Brand Center Edit Functions
+function loadBrandData() {
+  const saved = localStorage.getItem('voc-brand-data');
+  if (saved) { try { const d=JSON.parse(saved); Object.assign(demoData.brandProfile, d); } catch(e){} }
+}
+
+function saveBrandData() { localStorage.setItem('voc-brand-data', JSON.stringify(demoData.brandProfile)); }
+
+function editBrandInfo() {
+  const b = demoData.brandProfile;
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">✏️ 编辑品牌信息</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    ${['name:品牌名称','fullName:品牌全称','founded:创立年份','industry:行业','positioning:品牌定位','slogan:Slogan','brandStory:品牌故事','visualStyle:视觉风格','tone:语调风格'].map(f => {
+      const [key,label] = f.split(':');
+      return `<div class="api-settings-section"><label>${label}</label>
+        <${key==='brandStory'?'textarea class="api-input" style="min-height:80px;resize:vertical"':'input type="text" class="api-input"'} id="edit-brand-${key}" value="${(b[key]||'').replace(/"/g,'&quot;')}">${key==='brandStory'?b[key]||'':''}</${key==='brandStory'?'textarea':'input'}>
+      </div>`;
+    }).join('')}
+    <div class="api-settings-section"><label>核心卖点（逗号分隔）</label><input type="text" class="api-input" id="edit-brand-values" value="${b.coreValues.join(',')}"></div>
+    <button class="btn-primary" onclick="saveBrandInfo()" style="margin-top:16px;width:100%">💾 保存</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function saveBrandInfo() {
+  const b = demoData.brandProfile;
+  ['name','fullName','founded','industry','positioning','slogan','brandStory','visualStyle','tone'].forEach(k => {
+    const el = document.getElementById('edit-brand-'+k);
+    if (el) b[k] = el.value;
+  });
+  b.coreValues = document.getElementById('edit-brand-values').value.split(',').map(s=>s.trim()).filter(Boolean);
+  saveBrandData(); closeModal(); renderPage('brand-center');
+}
+
+function editBrandProduct(index) {
+  const p = index >= 0 ? demoData.brandProfile.products[index] : { name:'',sku:'',price:'',unit:'',coreIngredients:[],targetUsers:[],sellingPoints:[],status:'新品' };
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">${index>=0?'✏️ 编辑产品':'➕ 添加产品'}</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    ${[{k:'name',l:'产品名称'},{k:'sku',l:'SKU'},{k:'price',l:'价格'},{k:'unit',l:'规格'},{k:'status',l:'状态'}].map(f => `<div class="api-settings-section"><label>${f.l}</label><input type="text" class="api-input" id="edit-prod-${f.k}" value="${p[f.k]||''}"></div>`).join('')}
+    ${[{k:'coreIngredients',l:'核心成分（逗号分隔）'},{k:'targetUsers',l:'目标人群（逗号分隔）'},{k:'sellingPoints',l:'卖点（逗号分隔）'}].map(f => `<div class="api-settings-section"><label>${f.l}</label><input type="text" class="api-input" id="edit-prod-${f.k}" value="${(p[f.k]||[]).join(',')}"></div>`).join('')}
+    <button class="btn-primary" onclick="saveBrandProduct(${index})" style="margin-top:16px;width:100%">💾 保存</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function saveBrandProduct(index) {
+  const p = { name:'',sku:'',price:'',unit:'',coreIngredients:[],targetUsers:[],sellingPoints:[],status:'新品' };
+  ['name','sku','price','unit','status'].forEach(k => { const el=document.getElementById('edit-prod-'+k); if(el)p[k]=el.value; });
+  ['coreIngredients','targetUsers','sellingPoints'].forEach(k => { const el=document.getElementById('edit-prod-'+k); if(el)p[k]=el.value.split(',').map(s=>s.trim()).filter(Boolean); });
+  if (index >= 0) demoData.brandProfile.products[index] = p;
+  else demoData.brandProfile.products.push(p);
+  saveBrandData(); closeModal(); renderPage('brand-center');
+}
+
+function deleteBrandProduct(index) {
+  if (!confirm('确定删除产品 "'+demoData.brandProfile.products[index].name+'"？')) return;
+  demoData.brandProfile.products.splice(index,1);
+  saveBrandData(); renderPage('brand-center');
+}
+
+function editBrandKeywords() {
+  const kw = demoData.brandProfile.keywords;
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">🔑 编辑关键词</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    ${[{k:'brandWords',l:'品牌词'},{k:'categoryWords',l:'品类词'},{k:'sceneWords',l:'场景词'},{k:'audienceWords',l:'人群词'}].map(f => `<div class="api-settings-section"><label>${f.l}（逗号分隔）</label><input type="text" class="api-input" id="edit-kw-${f.k}" value="${kw[f.k].join(',')}"></div>`).join('')}
+    <button class="btn-primary" onclick="saveBrandKeywords()" style="margin-top:16px;width:100%">💾 保存</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function saveBrandKeywords() {
+  ['brandWords','categoryWords','sceneWords','audienceWords'].forEach(k => {
+    demoData.brandProfile.keywords[k] = document.getElementById('edit-kw-'+k).value.split(',').map(s=>s.trim()).filter(Boolean);
+  });
+  saveBrandData(); closeModal(); renderPage('brand-center');
+}
+
+function editBrandGuidelines() {
+  const g = demoData.brandProfile.contentGuidelines;
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">📋 编辑内容指南</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div class="api-settings-section"><label>✅ 应该做（每行一条）</label><textarea class="api-input" id="edit-gl-do" style="min-height:80px;resize:vertical">${g.do.join('\n')}</textarea></div>
+    <div class="api-settings-section"><label>❌ 不要做（每行一条）</label><textarea class="api-input" id="edit-gl-dont" style="min-height:80px;resize:vertical">${g.dont.join('\n')}</textarea></div>
+    <button class="btn-primary" onclick="saveBrandGuidelines()" style="margin-top:16px;width:100%">💾 保存</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function saveBrandGuidelines() {
+  demoData.brandProfile.contentGuidelines.do = document.getElementById('edit-gl-do').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  demoData.brandProfile.contentGuidelines.dont = document.getElementById('edit-gl-dont').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  saveBrandData(); closeModal(); renderPage('brand-center');
+}
+
+async function aiGenerateBrand() {
+  if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { alert('请先在系统设置中配置 API Key'); return; }
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">🤖 AI 生成品牌信息</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--fg-dim);margin-bottom:16px">粘贴品牌/产品的原始介绍文本，AI 将自动解析为结构化数据</p>
+    <textarea class="api-input" id="ai-brand-input" style="min-height:150px;resize:vertical" placeholder="例如：轻氧护肤是一个2021年创立的新消费护肤品牌，主打成分护肤科学有效。核心产品包括修护精华液（269元/30ml，含依克多因和神经酰胺，适合敏感肌和熬夜党）..."></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn-primary" onclick="executeAIBrandGenerate()" style="flex:1">🚀 开始生成</button>
+      <button class="btn-secondary" onclick="closeModal()">取消</button>
+    </div>
+    <div id="ai-brand-result" style="margin-top:16px"></div>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+async function executeAIBrandGenerate() {
+  const input = document.getElementById('ai-brand-input').value.trim();
+  if (!input) { document.getElementById('ai-brand-result').innerHTML = '<span style="color:#f87171">请输入品牌描述文本</span>'; return; }
+  document.getElementById('ai-brand-result').innerHTML = '<span style="color:#fbbf24"><span class="spinner"></span> AI 正在分析...</span>';
+  try {
+    const prompt = `你是一个品牌知识库结构化专家。将以下品牌原始描述转为JSON：
+{"name":"品牌简称","fullName":"全称","founded":"创立年份","industry":"行业","positioning":"定位","slogan":"slogan","brandStory":"1-2句话品牌故事","coreValues":["卖点1","卖点2"],"visualStyle":"视觉风格","tone":"语调风格","products":[{"name":"产品名","sku":"SKU","price":"价格数字","unit":"规格","coreIngredients":["成分"],"targetUsers":["人群"],"sellingPoints":["卖点"],"status":"主推/新品/推广中"}],"keywords":{"brandWords":[],"categoryWords":[],"sceneWords":[],"audienceWords":[]},"contentGuidelines":{"do":[],"dont":[]}}
+如果某字段没有信息，留空或使用合理默认值。\n\n原始描述：${input}`;
+    const resp = await callLLM([{role:'user',content:prompt}], 3000);
+    const parsed = JSON.parse(resp);
+    if (parsed.products) parsed.products = parsed.products.map(p => ({...p, price:parseInt(p.price)||0}));
+    Object.assign(demoData.brandProfile, parsed);
+    saveBrandData();
+    document.getElementById('ai-brand-result').innerHTML = '<span style="color:#4ade80">✅ 品牌信息已生成！关闭弹窗查看结果</span>';
+    setTimeout(() => { closeModal(); renderPage('brand-center'); }, 1500);
+  } catch(e) {
+    document.getElementById('ai-brand-result').innerHTML = `<span style="color:#f87171">❌ 生成失败: ${e.message}</span>`;
+  }
+}
+
+// ==================== BENCHMARK CENTER ====================
+function renderBenchmarkCenter() {
+  loadBenchmarkData();
+  const data = demoData.benchmarkData;
+  return `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>🎯 对标中心</h2>
+        <p>竞品品牌和产品对标知识库——竞品分析、产品对标、SWOT 矩阵</p></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="aiGenerateBenchmark()" style="display:flex;align-items:center;gap:6px">🤖 AI 生成</button>
+          <button class="btn-primary" onclick="editBenchmarkCompetitor(-1)">+ 添加竞品</button>
+        </div>
+      </div>
+    </div>
+
+    ${data.competitors.map((c, i) => `
+      <div class="glass-card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <h3 style="font-size:18px;font-weight:800">${c.name}</h3>
+            <p style="font-size:12px;color:var(--fg-dim)">${c.positioning}</p>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-secondary" onclick="editBenchmarkCompetitor(${i})" style="font-size:11px;padding:4px 10px">编辑</button>
+            <button class="btn-secondary" onclick="deleteBenchmarkCompetitor(${i})" style="font-size:11px;padding:4px 10px;color:#f87171;border-color:rgba(239,68,68,.3)">删除</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+          <div style="background:rgba(34,197,94,.05);padding:14px;border-radius:8px">
+            <div style="font-size:11px;font-weight:700;color:#4ade80;margin-bottom:6px">👍 优势</div>
+            ${c.strengths.map(s => `<div style="font-size:12px;color:var(--fg-muted);padding:2px 0">• ${s}</div>`).join('')}
+          </div>
+          <div style="background:rgba(239,68,68,.05);padding:14px;border-radius:8px">
+            <div style="font-size:11px;font-weight:700;color:#f87171;margin-bottom:6px">👎 劣势</div>
+            ${c.weaknesses.map(w => `<div style="font-size:12px;color:var(--fg-muted);padding:2px 0">• ${w}</div>`).join('')}
+          </div>
+          <div style="background:var(--card-hover);padding:14px;border-radius:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--fg-dim);margin-bottom:6px">📊 评论口碑</div>
+            <div style="font-size:11px;color:#4ade80;margin-bottom:4px">被夸：${c.commentHighlights.praise[0]}</div>
+            <div style="font-size:11px;color:#f87171">被骂：${c.commentHighlights.complaint[0]}</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:0">🔬 产品对标</div>
+        ${c.keyProducts.map((p, pi) => `
+          <div class="insight-card">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-weight:700">${p.name}</span>
+              <span style="font-size:12px;color:var(--fg-dim)">¥${p.price}</span>
+            </div>
+            <p style="font-size:12px;color:var(--fg-muted);margin-top:4px">${p.comparison}</p>
+          </div>
+        `).join('')}
+
+        <div class="section-title" style="margin-top:12px">🎯 SWOT 分析</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${[
+            ['S 优势', c.swot.S, 'fill-green'],
+            ['W 劣势', c.swot.W, 'fill-red'],
+            ['O 机会', c.swot.O, 'fill-blue'],
+            ['T 威胁', c.swot.T, 'fill-amber']
+          ].map(([label, text, color]) => `
+            <div style="background:var(--card-hover);padding:10px 14px;border-radius:8px">
+              <div style="font-size:11px;font-weight:700;color:var(--fg-dim);margin-bottom:4px">${label}</div>
+              <div style="font-size:12px;color:var(--fg-muted)">${text}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function loadBenchmarkData() {
+  const saved = localStorage.getItem('voc-benchmark-data');
+  if (saved) { try { const d=JSON.parse(saved); Object.assign(demoData.benchmarkData, d); } catch(e){} }
+}
+
+function saveBenchmarkData() { localStorage.setItem('voc-benchmark-data', JSON.stringify(demoData.benchmarkData)); }
+
+function editBenchmarkCompetitor(index) {
+  const c = index >= 0 ? demoData.benchmarkData.competitors[index] : { name:'',positioning:'',strengths:[],weaknesses:[],keyProducts:[],contentStyle:'',commentHighlights:{praise:[],complaint:[]},swot:{S:'',W:'',O:'',T:''} };
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">${index>=0?'✏️ 编辑竞品':'➕ 添加竞品'}</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    ${[{k:'name',l:'品牌名称'},{k:'positioning',l:'定位'}].map(f => `<div class="api-settings-section"><label>${f.l}</label><input type="text" class="api-input" id="edit-comp-${f.k}" value="${c[f.k]||''}"></div>`).join('')}
+    ${[{k:'strengths',l:'优势（每行一条）'},{k:'weaknesses',l:'劣势（每行一条）'}].map(f => `<div class="api-settings-section"><label>${f.l}</label><textarea class="api-input" id="edit-comp-${f.k}" style="min-height:60px;resize:vertical">${(c[f.k]||[]).join('\n')}</textarea></div>`).join('')}
+    ${[{k:'praise',l:'被夸点（每行一条）'},{k:'complaint',l:'被骂点（每行一条）'}].map(f => `<div class="api-settings-section"><label>${f.l}</label><textarea class="api-input" id="edit-comp-${f.k}" style="min-height:60px;resize:vertical">${(c.commentHighlights[f.k]||[]).join('\n')}</textarea></div>`).join('')}
+    ${[['S','优势'],['W','劣势'],['O','机会'],['T','威胁']].map(([k,l]) => `<div class="api-settings-section"><label>SWOT-${l}</label><input type="text" class="api-input" id="edit-comp-swot-${k}" value="${c.swot[k]||''}"></div>`).join('')}
+    <button class="btn-primary" onclick="saveBenchmarkCompetitor(${index})" style="margin-top:16px;width:100%">💾 保存</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function saveBenchmarkCompetitor(index) {
+  const c = { name:'',positioning:'',strengths:[],weaknesses:[],keyProducts:[],contentStyle:'',commentHighlights:{praise:[],complaint:[]},swot:{S:'',W:'',O:'',T:''} };
+  ['name','positioning'].forEach(k => { const el=document.getElementById('edit-comp-'+k); if(el)c[k]=el.value; });
+  ['strengths','weaknesses','praise','complaint'].forEach(k => {
+    const el = document.getElementById('edit-comp-'+k);
+    if (el) { const arr = el.value.split('\n').map(s=>s.trim()).filter(Boolean); if (k==='praise'||k==='complaint') c.commentHighlights[k]=arr; else c[k]=arr; }
+  });
+  ['S','W','O','T'].forEach(k => { const el=document.getElementById('edit-comp-swot-'+k); if(el)c.swot[k]=el.value; });
+  if (index >= 0) demoData.benchmarkData.competitors[index] = c;
+  else demoData.benchmarkData.competitors.push(c);
+  saveBenchmarkData(); closeModal(); renderPage('benchmark-center');
+}
+
+function deleteBenchmarkCompetitor(index) {
+  if (!confirm('确定删除竞品 "'+demoData.benchmarkData.competitors[index].name+'"？')) return;
+  demoData.benchmarkData.competitors.splice(index,1);
+  saveBenchmarkData(); renderPage('benchmark-center');
+}
+
+async function aiGenerateBenchmark() {
+  if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { alert('请先在系统设置中配置 API Key'); return; }
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800">🤖 AI 生成竞品档案</h2>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--fg-dim);margin-bottom:16px">粘贴竞品公开信息，AI 将自动生成结构化竞品档案（优势/劣势/SWOT/评论口碑）</p>
+    <textarea class="api-input" id="ai-bench-input" style="min-height:150px;resize:vertical" placeholder="例如：润百颜是华熙生物旗下品牌，主打玻尿酸科技护肤。优势是品牌力强、渠道广，但用户反映价格偏高、品控不稳定..."></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn-primary" onclick="executeAIBenchmarkGenerate()" style="flex:1">🚀 开始生成</button>
+      <button class="btn-secondary" onclick="closeModal()">取消</button>
+    </div>
+    <div id="ai-bench-result" style="margin-top:16px"></div>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+async function executeAIBenchmarkGenerate() {
+  const input = document.getElementById('ai-bench-input').value.trim();
+  if (!input) { document.getElementById('ai-bench-result').innerHTML='<span style="color:#f87171">请输入竞品描述</span>'; return; }
+  document.getElementById('ai-bench-result').innerHTML='<span style="color:#fbbf24"><span class="spinner"></span> AI 正在分析...</span>';
+  try {
+    const prompt = `你是竞品分析专家。从以下描述中提取竞品档案JSON：
+{"competitors":[{"name":"品牌名","positioning":"定位","strengths":["优势"],"weaknesses":["劣势"],"keyProducts":[{"name":"产品","price":价格数字,"comparison":"与我方对比"}],"contentStyle":"内容风格","commentHighlights":{"praise":["被夸"],"complaint":["被骂"]},"swot":{"S":"优势总结","W":"劣势总结","O":"我方机会","T":"潜在威胁"}}]}
+如果SWOT没有明确信息，请根据已知信息合理推断。\n描述：${input}`;
+    const resp = await callLLM([{role:'user',content:prompt}], 3000);
+    const parsed = JSON.parse(resp);
+    if (parsed.competitors && parsed.competitors.length > 0) {
+      demoData.benchmarkData.competitors.push(...parsed.competitors);
+      saveBenchmarkData();
+    }
+    document.getElementById('ai-bench-result').innerHTML='<span style="color:#4ade80">✅ 竞品档案已生成！关闭弹窗查看</span>';
+    setTimeout(()=>{closeModal();renderPage('benchmark-center');},1500);
+  } catch(e) {
+    document.getElementById('ai-bench-result').innerHTML=`<span style="color:#f87171">❌ 生成失败: ${e.message}</span>`;
+  }
+}
+
+// ==================== STRATEGIES (DEPRECATED) ====================
+function renderStrategies() {
+  return `
+    <div class="page-header">
+      <h2>策略卡库</h2>
+      <p>基于用户评论洞察生成的内容投放策略，可直接交付执行</p>
+    </div>
+    <div class="cards-grid-2">
+      ${demoData.strategyCards.map(c => `
+        <div class="glass-card hover-card" style="cursor:pointer" onclick="showStrategyDetail(${c.id})">
+          <div class="card-header">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge ${c.priority==='P0'?'badge-p0':c.priority==='P1'?'badge-p1':'badge-p2'}">${c.priority}</span>
+              <span style="font-size:11px;color:${c.status==='active'?'#4ade80':'var(--fg-dim)'}">${c.status==='active'?'● 执行中':'○ 草稿'}</span>
+            </div>
+            <span style="font-size:11px;color:var(--fg-dim);cursor:pointer" onclick="event.stopPropagation()">查看详情 →</span>
+          </div>
+          <h4 style="font-size:16px;font-weight:700;margin-bottom:4px">${c.title}</h4>
+          <p style="font-size:12px;color:var(--fg-dim);margin-bottom:12px">${c.subtitle}</p>
+          <div style="margin-bottom:10px">
+            ${c.evidence.slice(0,3).map(e => `<div class="comment-quote">${e}</div>`).join('')}
+          </div>
+          <p style="font-size:12px;color:var(--fg-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.judgment}</p>
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+            ${c.kpis.map(k => `<span class="badge badge-tag" style="font-size:10px">${k}</span>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function showStrategyDetail(id) {
+  const card = demoData.strategyCards.find(c => c.id === id);
+  if (!card) return;
+  const modal = document.getElementById('strategyModal');
+  const content = document.getElementById('strategyModalContent');
+  content.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <span class="badge ${card.priority==='P0'?'badge-p0':card.priority==='P1'?'badge-p1':'badge-p2'}">${card.priority}</span>
+          <span style="font-size:11px;color:${card.status==='active'?'#4ade80':'var(--fg-dim)'}">${card.status==='active'?'● 执行中':'○ 草稿'}</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:800">${card.title}</h2>
+        <p style="font-size:13px;color:var(--fg-dim)">${card.subtitle}</p>
+      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div style="margin-top:24px">
+      <div class="strategy-detail-section">
+        <h4>📊 评论证据</h4>
+        ${card.evidence.map(e => `<div class="comment-quote">${e}</div>`).join('')}
+      </div>
+      <div class="strategy-detail-section">
+        <h4>🧠 业务判断</h4>
+        <p>${card.judgment}</p>
+      </div>
+      <div class="strategy-detail-section">
+        <h4>🎬 内容建议</h4>
+        <ul>${card.contentSuggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+      </div>
+      <div class="strategy-detail-section">
+        <h4>🧪 投放测试</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          ${card.testSuggestions.map(t => `
+            <div style="background:var(--card-hover);padding:12px;border-radius:8px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">${t.group}组</div>
+              <div style="font-size:11px;color:var(--fg-muted);margin-bottom:4px">${t.direction}</div>
+              <div style="font-size:11px;color:var(--fg-dim)">变量: ${t.variable}</div>
+              <div style="font-size:10px;color:var(--fg-dim);margin-top:4px">KPI: ${t.kpi}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="strategy-detail-section">
+        <h4>📈 验证指标</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${card.kpis.map(k => `<span class="badge badge-tag">${k}</span>`).join('')}</div>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('strategyModal').style.display = 'none';
+}
+
+// ==================== LAB ====================
+function renderLab() {
+  return `
+    <div class="page-header">
+      <h2>🧪 内容实验室</h2>
+      <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
+    </div>
+    ${demoData.testPlans.map(tp => `
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <h4 style="font-size:16px;font-weight:700">${tp.objective}</h4>
+            <p style="font-size:12px;color:var(--fg-dim)">关联策略：${tp.cardTitle}</p>
+          </div>
+          <span class="badge badge-tag">总预算 ${tp.totalBudget}</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table" style="margin-bottom:12px">
+            <thead><tr><th>测试组</th><th>素材方向</th><th>核心内容</th><th>预算</th><th>状态</th></tr></thead>
+            <tbody>
+              ${tp.variants.map(v => `
+                <tr>
+                  <td><span style="font-weight:700;font-size:14px">${v.group}</span></td>
+                  <td style="font-weight:600">${v.name}</td>
+                  <td style="max-width:350px;font-size:12px;color:var(--fg-muted)">${v.content}</td>
+                  <td>${v.budget}</td>
+                  <td><span class="badge" style="background:${v.status==='running'?'rgba(34,197,94,.1)':v.status==='pending'?'rgba(251,191,36,.1)':'rgba(113,113,122,.1)'};color:${v.status==='running'?'#4ade80':v.status==='pending'?'#fbbf24':'var(--fg-dim)'}">${v.status==='running'?'▶ 运行中':v.status==='pending'?'⏳ 待启动':'📋 已计划'}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+          <div style="background:rgba(34,197,94,.05);padding:12px;border-radius:8px">
+            <span style="color:#4ade80;font-weight:600">✅ 放大规则：</span>
+            <span style="color:var(--fg-muted)">${tp.successRule}</span>
+          </div>
+          <div style="background:rgba(239,68,68,.05);padding:12px;border-radius:8px">
+            <span style="color:#f87171;font-weight:600">🛑 停止规则：</span>
+            <span style="color:var(--fg-muted)">${tp.stopRule}</span>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ==================== REVIEWS ====================
+function renderReviews() {
+  return `
+    <div class="page-header">
+      <h2>复盘归因中心</h2>
+      <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
+    </div>
+    ${demoData.reviews.map(r => `
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <h4 style="font-size:15px;font-weight:700">${r.period} · ${r.cardTitle}</h4>
+          </div>
+          <span class="badge badge-tag">ROI ${r.performance.roi}x</span>
+        </div>
+        <div class="metric-grid" style="margin-bottom:16px">
+          <div class="metric-card"><div class="metric-value" style="font-size:22px">${r.performance.ctr}</div><div class="metric-label">CTR</div></div>
+          <div class="metric-card"><div class="metric-value" style="font-size:22px;color:#4ade80">${r.performance.cvr}</div><div class="metric-label">CVR</div></div>
+          <div class="metric-card"><div class="metric-value" style="font-size:22px;color:#fbbf24">${r.performance.roi}x</div><div class="metric-label">ROI</div></div>
+          <div class="metric-card"><div class="metric-value" style="font-size:22px;color:var(--fg-dim)">${r.performance.spend}</div><div class="metric-label">消耗</div></div>
+          <div class="metric-card"><div class="metric-value" style="font-size:22px;color:#4ade80">${r.performance.revenue}</div><div class="metric-label">GMV</div></div>
+        </div>
+        <div style="background:var(--card-hover);padding:16px;border-radius:10px;margin-bottom:16px">
+          <h5 style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">🔍 归因结论</h5>
+          <p style="font-size:13px;color:var(--fg-muted);line-height:1.7">${r.attribution}</p>
+        </div>
+        <div>
+          <h5 style="font-size:12px;font-weight:700;color:var(--fg-dim);margin-bottom:8px">📋 下一步动作</h5>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${r.nextActions.map(a => `<span style="font-size:12px;background:var(--accent-glow);color:var(--accent);padding:4px 12px;border-radius:6px">${a}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ==================== REPORTS ====================
+function renderReports() {
+  const reportTypes = [
+    { icon:'📊', name:'老板汇报版', desc:'品牌老板、管理层用，聚焦结论和ROI', audience:'品牌管理层' },
+    { icon:'🎬', name:'内容执行版', desc:'内容团队、编导、文案用，含具体选题和脚本方向', audience:'内容团队' },
+    { icon:'📈', name:'投放执行版', desc:'投手、增长负责人用，含素材测试方案和预算建议', audience:'投放团队' },
+    { icon:'🤝', name:'客户汇报版', desc:'代运营公司给甲方，含评论证据和策略推导', audience:'甲方客户' },
+    { icon:'🎯', name:'竞品机会版', desc:'市场团队用，竞品评论区分析和切入机会', audience:'市场团队' },
+    { icon:'📅', name:'月度复盘版', desc:'品牌增长团队月会用，含策略效果和归因分析', audience:'增长团队' }
+  ];
+  return `
+    <div class="page-header">
+      <h2>报告中心</h2>
+      <p>一键生成不同角色需要的专业报告</p>
+    </div>
+    <div class="cards-grid-3">
+      ${reportTypes.map(r => `
+        <div class="glass-card hover-card" style="text-align:center;cursor:pointer">
+          <div style="font-size:36px;margin-bottom:12px">${r.icon}</div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:4px">${r.name}</h4>
+          <p style="font-size:12px;color:var(--fg-dim);margin-bottom:12px">${r.desc}</p>
+          <div style="display:flex;gap:6px;justify-content:center">
+            <span class="badge badge-tag" style="cursor:pointer">生成报告</span>
+            <span style="font-size:10px;color:var(--fg-dim);display:flex;align-items:center">👥 ${r.audience}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="glass-card" style="margin-top:24px;text-align:center;padding:32px">
+      <div style="font-size:48px;margin-bottom:12px">🚀</div>
+      <h4 style="font-size:16px;font-weight:700;margin-bottom:4px">报告自动化</h4>
+      <p style="font-size:13px;color:var(--fg-dim)">系统支持每周/每月自动生成报告，通过邮件或飞书发送给指定人员</p>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+        <span class="badge badge-tag" style="cursor:pointer;padding:6px 16px">设置自动推送</span>
+        <span class="badge badge-purple" style="cursor:pointer;padding:6px 16px">查看历史报告</span>
+      </div>
+    </div>
+  `;
+}
+
+// ==================== KNOWLEDGE ====================
+function renderKnowledge() {
+  const categories = [
+    { name:'人群标签', tags:['敏感肌','油皮','干皮','混油皮','学生党','宝妈','白领','孕妇','成分党','熬夜党'], color:'fill-green' },
+    { name:'购买障碍', tags:['价格异议','价值疑问','信任不足','效果质疑','竞品替代','使用困惑','过敏担忧'], color:'fill-red' },
+    { name:'场景标签', tags:['夏季护肤','换季急救','熬夜修复','妆前打底','旅行精简','刷酸修复','医美术后'], color:'fill-blue' },
+    { name:'卖点标签', tags:['清爽不油','秒吸收','成分安全','效果快','性价比','温和不刺激','长期改善'], color:'fill-purple' },
+    { name:'竞品品牌', tags:['润百颜','薇诺娜','珀莱雅','修丽可','科颜氏','资生堂','兰蔻'], color:'fill-amber' }
+  ];
+  return `
+    <div class="page-header">
+      <h2>品类知识库</h2>
+      <p>沉淀护肤品类用户语言、购买障碍和内容打法，越用越懂这个品类</p>
+    </div>
+    ${categories.map(cat => `
+      <div class="glass-card" style="margin-bottom:16px">
+        <h4 style="font-size:14px;font-weight:700;margin-bottom:12px">${cat.name}</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          ${cat.tags.map(t => `<span style="font-size:12px;background:var(--card-hover);padding:6px 14px;border-radius:20px;color:var(--fg);cursor:pointer;transition:all .2s" onmouseover="this.style.background='var(--accent-glow)';this.style.color='var(--accent)'" onmouseout="this.style.background='var(--card-hover)';this.style.color='var(--fg)'">${t}</span>`).join('')}
+        </div>
+        <div class="stat-bar"><div class="stat-bar-fill ${cat.color}" style="width:${40+Math.random()*60}%"></div></div>
+        <div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${cat.tags.length} 个标签 · 系统自动聚类</div>
+      </div>
+    `).join('')}
+    <div class="glass-card hover-card" style="margin-top:20px;text-align:center;padding:28px;border:1px dashed var(--border)">
+      <div style="font-size:32px;margin-bottom:8px">🧠</div>
+      <h4 style="font-size:14px;font-weight:700;margin-bottom:4px">品类知识自动沉淀</h4>
+      <p style="font-size:12px;color:var(--fg-dim);line-height:1.6">系统每周自动分析新评论，更新标签权重和聚类。<br>同一品类服务越多客户，系统越懂这个品类的用户语言、购买障碍和内容打法。</p>
+    </div>
+  `;
+}
+
+// ==================== IMPORT COMMENTS ====================
+function showImportModal() {
+  document.getElementById('importModal').style.display = 'flex';
+  importTab = 'file';
+  switchImportTab('file');
+  document.getElementById('importResult').innerHTML = '';
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+}
+
+function switchImportTab(tab) {
+  importTab = tab;
+  document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active-import-tab'));
+  document.querySelector(`[data-import-tab="${tab}"]`).classList.add('active-import-tab');
+  document.getElementById('importTabFile').style.display = tab === 'file' ? 'block' : 'none';
+  document.getElementById('importTabPaste').style.display = tab === 'paste' ? 'block' : 'none';
+}
+
+function updatePasteHint() {
+  const fmt = document.getElementById('pasteFormat').value;
+  const hint = document.getElementById('pasteHint');
+  const hints = {
+    csv: '<strong>CSV 粘贴格式（支持中文表头）：</strong>\n评论ID,评论内容,点赞量,评论时间,IP地址,用户名称,抖音号,category,type,sentiment,labels,isCompetitor\n001,这个产品怎么样,23,2026-05-28,广东,用户A,douyin_handle,content,demand,neutral,使用体验,false',
+    json: '<strong>JSON 粘贴格式：</strong>\n[{"id":"001","content":"评论内容","likes":23,"commentTime":"2026-05-28","ipAddress":"广东","userName":"用户A","douyinId":"douyin_handle","category":"content"}]',
+    plain: '<strong>纯文本格式（Tab/竖线分隔，每行一条）：</strong>\n平台 | 作者 | 内容 | 分类 | 类型 | 情感 | 标签 | 日期 | 是否竞品\n抖音 | 用户A | 这个产品怎么样 | content | demand | neutral | 使用体验 | 2026-05-28 | false'
+  };
+  hint.innerHTML = hints[fmt] || hints.csv;
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('dropZone');
+  if (!dropZone) return;
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); }));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); }));
+  dropZone.addEventListener('drop', ev => {
+    const file = ev.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+});
+
+function handleFileImport(input) {
+  const file = input.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'xlsx' || ext === 'xlsm' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd hh:mm:ss' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, dateNF: 'yyyy-mm-dd hh:mm:ss' });
+        const parsed = normalizeComments(rows);
+        showImportResult(parsed);
+      } catch(err) {
+        showImportResult([], 'Excel 解析失败: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    let parsed = [];
+    if (ext === 'json') {
+      parsed = parseJSON(text);
+    } else if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
+      parsed = parseCSV(text, ext === 'tsv' ? '\t' : ',');
+    } else {
+      try { parsed = parseJSON(text); } catch(_) { parsed = parseCSV(text); }
+    }
+    showImportResult(parsed);
+  };
+  reader.readAsText(file);
+}
+
+function handlePasteImport() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showImportResult([], '请粘贴数据后再导入'); return; }
+  const fmt = document.getElementById('pasteFormat').value;
+  let parsed = [];
+  try {
+    if (fmt === 'json') parsed = parseJSON(text);
+    else if (fmt === 'csv') parsed = parseCSV(text);
+    else parsed = parseText(text);
+  } catch(e) {
+    showImportResult([], '格式解析失败：' + e.message);
+    return;
+  }
+  showImportResult(parsed);
+}
+
+function parseJSON(text) {
+  const data = JSON.parse(text);
+  const arr = Array.isArray(data) ? data : [data];
+  return normalizeComments(arr);
+}
+
+function parseCSV(text, delimiter) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) throw new Error('CSV 至少需要表头 + 1行数据');
+  const header = lines[0].split(delimiter || detectDelimiter(lines[0])).map(h => h.trim().toLowerCase());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(delimiter || detectDelimiter(lines[0]));
+    const obj = {};
+    cells.forEach((cell, j) => { if (j < header.length) obj[header[j]] = cell.trim(); });
+    rows.push(obj);
+  }
+  return normalizeComments(rows);
+}
+
+function parseText(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  const rows = [];
+  for (const line of lines) {
+    const parts = line.split('|').map(p => p.trim());
+    if (parts.length >= 4) {
+      rows.push({
+        platform: parts[0], author: parts[1], content: parts[2], category: parts[3] || 'content',
+        type: parts[4] || 'demand', sentiment: parts[5] || 'neutral',
+        labels: parts[6] || '', date: parts[7] || today(), isCompetitor: parts[8] || 'false'
+      });
+    } else {
+      // Fallback: treat as content only
+      rows.push({ content: line, platform:'抖音', author:'导入用户', category:'content', type:'demand', sentiment:'neutral', labels:'', date:today(), isCompetitor:'false' });
+    }
+  }
+  return normalizeComments(rows);
+}
+
+function detectDelimiter(line) {
+  if (line.includes('\t')) return '\t';
+  if (line.includes(',')) return ',';
+  return ',';
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function normalizeComments(rows) {
+  let maxId = demoData.comments.reduce((m, c) => Math.max(m, c.id), 0);
+  const validPlatforms = ['抖音','小红书','B站','视频号'];
+  const validTypes = ['barrier','demand','comparison','praise','complaint','intent'];
+  const validSentiments = ['positive','neutral','negative'];
+  const validCategories = ['content','product'];
+  const errors = [];
+
+  // Smart field mapping: Chinese → English
+  const mapField = (r, keys) => {
+    for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return String(r[k]).trim(); }
+    return '';
+  };
+
+  const comments = rows.map((r, i) => {
+    const errors_ = [];
+
+    // Core fields with Chinese alias support
+    const content = mapField(r, ['content','评论内容','text','comment','内容']);
+    if (!content) { errors_.push('缺少评论内容'); }
+
+    let platform = mapField(r, ['platform','平台','source','来源']) || '抖音';
+    if (!validPlatforms.includes(platform)) { platform = '抖音'; }
+
+    let category = (mapField(r, ['category','分类','commentCategory']) || 'content').toLowerCase();
+    if (!validCategories.includes(category)) category = 'content';
+
+    let type = (mapField(r, ['type','评论类型','intent']) || 'demand').toLowerCase();
+    if (!validTypes.includes(type)) type = 'demand';
+
+    let sentiment = (mapField(r, ['sentiment','情感','emotion']) || 'neutral').toLowerCase();
+    if (!validSentiments.includes(sentiment)) sentiment = 'neutral';
+
+    // Labels
+    let labels = [];
+    const labelStr = mapField(r, ['labels','标签','tags']);
+    if (labelStr) {
+      labels = labelStr.includes(',') ? labelStr.split(',').map(l=>l.trim()).filter(Boolean)
+        : labelStr.includes('，') ? labelStr.split('，').map(l=>l.trim()).filter(Boolean)
+        : [labelStr];
+    }
+
+    let isCompetitor = false;
+    const compStr = (mapField(r, ['isCompetitor','是否竞品','is_competitor'])||'false').toLowerCase();
+    isCompetitor = compStr === 'true' || compStr === 'yes' || compStr === '是';
+
+    if (errors_.length) errors.push({ row: i + 1, errors: errors_ });
+
+    // New douyin-style fields
+    const likes = parseInt(mapField(r, ['likes','点赞量','likeCount','点赞数'])) || 0;
+    const commentTime = mapField(r, ['commentTime','评论时间','created_at']) || '';
+    const ipAddress = mapField(r, ['ipAddress','IP地址','ip','ip属地']) || '';
+    const subCommentCount = parseInt(mapField(r, ['subCommentCount','子评论数','replyCount','回复数'])) || 0;
+    const videoId = mapField(r, ['videoId','视频ID','video_id']) || '';
+    const videoLink = mapField(r, ['videoLink','视频链接','video_url']) || '';
+    const userUid = mapField(r, ['userUid','用户UID','user_uid','uid']) || '';
+    const userLink = mapField(r, ['userLink','用户链接','user_url']) || '';
+    const userName = mapField(r, ['userName','用户名称','author','用户','user','nickname']) || '匿名用户';
+    const douyinId = mapField(r, ['douyinId','抖音号','douyin_id','username']) || '';
+
+    // Parent comment
+    const parentCommentId = mapField(r, ['parentCommentId','一级评论ID','parent_id']) || '';
+    const parentCommentContent = mapField(r, ['parentCommentContent','一级评论内容','parent_content']) || '';
+    const parentUserUid = mapField(r, ['parentUserUid','一级评论用户UID','parent_uid']) || '';
+    const parentUserName = mapField(r, ['parentUserName','一级评论用户名称','parent_username','parent_author']) || '';
+
+    // Referenced comment
+    const refCommentId = mapField(r, ['refCommentId','引用的评论ID','ref_id','引用评论ID']) || '';
+    const refCommentContent = mapField(r, ['refCommentContent','引用的评论内容','ref_content','引用评论内容']) || '';
+    const refUserUid = mapField(r, ['refUserUid','引用的用户UID','ref_uid','引用用户UID']) || '';
+    const refUserName = mapField(r, ['refUserName','引用的用户名称','ref_username','引用用户名称']) || '';
+
+    return {
+      id: ++maxId, content, platform, category, type, sentiment, labels,
+      author: userName, userName, douyinId,
+      date: mapField(r, ['date','日期','commentTime','评论时间']) || today(),
+      likes, commentTime, ipAddress, subCommentCount,
+      videoId, videoLink, userUid, userLink,
+      parentCommentId, parentCommentContent, parentUserUid, parentUserName,
+      refCommentId, refCommentContent, refUserUid, refUserName,
+      isCompetitor, competitorId: isCompetitor ? (parseInt(r.competitorId) || 1) : null
+    };
+  });
+
+  return { comments, errors, total: comments.length };
+}
+
+function showImportResult(result, customError) {
+  const div = document.getElementById('importResult');
+  if (customError) {
+    div.innerHTML = `<div class="import-result error">❌ ${customError}</div>`;
+    return;
+  }
+  if (!result || !result.comments || result.comments.length === 0) {
+    div.innerHTML = `<div class="import-result error">❌ 未能解析到有效评论数据，请检查格式</div>`;
+    return;
+  }
+
+  let html = `<div class="import-result success">✅ 成功解析 ${result.total} 条评论`;
+
+  if (result.errors && result.errors.length > 0) {
+    html += `<br><span style="color:#fbbf24;font-size:12px">⚠️ ${result.errors.length} 行存在格式问题（已自动修正）</span>`;
+    html += `<div style="margin-top:8px;font-size:11px;color:var(--fg-dim)">`;
+    result.errors.forEach(e => html += `第${e.row}行: ${e.errors.join(', ')}<br>`);
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  html += `<div style="margin-top:12px;display:flex;gap:10px">
+    <button class="btn-primary" onclick="confirmImport(${JSON.stringify(result.comments).replace(/"/g, '&quot;')})">确认导入 (${result.total}条)</button>
+    <button class="btn-secondary" onclick="document.getElementById('importResult').innerHTML=''">取消</button>
+  </div>`;
+
+  // Store parsed comments for confirmation
+  window._importData = result.comments;
+  html = html.replace(`confirmImport(${JSON.stringify(result.comments).replace(/"/g, '&quot;')})`, 'confirmImport()');
+
+  div.innerHTML = html;
+}
+
+function confirmImport() {
+  const data = window._importData;
+  if (!data || data.length === 0) return;
+
+  // Add to demoData.comments
+  demoData.comments = [...demoData.comments, ...data];
+
+  // Update metrics
+  demoData.metrics.totalComments += data.length;
+  demoData.metrics.newCommentsThisWeek += data.length;
+
+  const resultDiv = document.getElementById('importResult');
+  resultDiv.innerHTML = `<div class="import-result success">🎉 成功导入 ${data.length} 条评论！数据已加入评论信号池</div>`;
+
+  // Refresh comments page
+  setTimeout(() => { closeImportModal(); renderPage('comments'); }, 800);
+
+  window._importData = null;
+}
+
+// ==================== SYSTEM SETTINGS ====================
+let callLogs = JSON.parse(localStorage.getItem('voc-call-logs')||'[]');
+
+function renderSystemSettings() {
+  const s = apiSettings;
+  return `
+    <div class="page-header">
+      <h2>⚙️ 系统设置</h2>
+      <p>管理 AI 模型 API 配置、存储策略和调用日志</p>
+    </div>
+
+    <div class="security-banner">
+      <span>🔒</span><span>API Key 仅存储在您的浏览器本地（AES-256-CBC 加密），不会上传到任何服务器。</span>
+    </div>
+
+    <!-- API Configuration -->
+    <div class="glass-card" style="margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🤖 AI 模型配置</h3>
+
+      <div class="api-settings-section">
+        <label>默认平台</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div class="api-provider-card ${s.provider==='deepseek'?'selected':''}" onclick="switchSystemProvider('deepseek')">
+            <div class="provider-name">DeepSeek</div><div class="provider-desc">V3 / R1</div>
+          </div>
+          <div class="api-provider-card ${s.provider==='openai'?'selected':''}" onclick="switchSystemProvider('openai')">
+            <div class="provider-name">OpenAI</div><div class="provider-desc">GPT-4o</div>
+          </div>
+          <div class="api-provider-card ${s.provider==='custom'?'selected':''}" onclick="switchSystemProvider('custom')">
+            <div class="provider-name">自定义</div><div class="provider-desc">兼容 API</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="api-settings-section">
+        <label>API Key</label>
+        <div style="display:flex;gap:10px">
+          <input type="password" class="api-input" id="sysApiKey" value="${s.apiKey||''}" placeholder="sk-..." style="flex:1">
+          <button class="btn-secondary" onclick="document.getElementById('sysApiKey').type=document.getElementById('sysApiKey').type==='password'?'text':'password'" style="white-space:nowrap">👁️</button>
+        </div>
+        <div style="margin-top:6px;display:flex;gap:8px;font-size:11px;color:var(--fg-dim)">
+          <a href="#" onclick="event.preventDefault();window.open('https://platform.deepseek.com/api_keys')" style="color:var(--accent)">获取 DeepSeek Key</a>
+          <span>|</span>
+          <a href="#" onclick="event.preventDefault();window.open('https://platform.openai.com/api-keys')" style="color:var(--accent)">获取 OpenAI Key</a>
+        </div>
+      </div>
+
+      <div class="api-settings-section" id="sysCustomSection" style="display:${s.provider==='custom'?'block':'none'}">
+        <label>自定义 Base URL</label>
+        <input type="text" class="api-input" id="sysCustomUrl" value="${s.customBaseUrl||''}" placeholder="https://your-api.com/v1">
+        <label style="margin-top:10px">模型名称</label>
+        <input type="text" class="api-input" id="sysCustomModel" value="${s.customModel||''}" placeholder="gpt-4o-mini">
+      </div>
+
+      <div class="api-settings-section">
+        <label>模型</label>
+        <select class="api-select" id="sysModel">
+          ${(s.provider==='deepseek'?['deepseek-chat','deepseek-reasoner']:s.provider==='openai'?['gpt-4o','gpt-4o-mini']:['custom']).map(m => `<option value="${m}" ${s.model===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-primary" onclick="saveSystemApiSettings()">💾 保存 API 配置</button>
+        <button class="btn-secondary" onclick="testApiConnection()">🧪 测试连接</button>
+      </div>
+      <div id="sysApiResult" style="margin-top:12px;font-size:12px"></div>
+    </div>
+
+    <!-- Storage Settings -->
+    <div class="glass-card" style="margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">💾 存储管理</h3>
+      <div class="metric-grid" style="margin-bottom:16px">
+        <div class="metric-card"><div class="metric-value" style="font-size:16px">${localStorage.getItem('voc-api-settings')?'🔐 已加密':'🔓 未配置'}</div><div class="metric-label">API Key</div></div>
+        <div class="metric-card"><div class="metric-value" style="font-size:16px">${callLogs.length}</div><div class="metric-label">API 调用记录</div></div>
+        <div class="metric-card"><div class="metric-value" style="font-size:16px">${demoData.comments.length}</div><div class="metric-label">评论数据</div></div>
+      </div>
+      ${localStorage.getItem('voc-api-settings') ? `<div style="display:flex;gap:10px">
+        <button class="btn-secondary" onclick="exportAllSettings()">📤 导出配置</button>
+        <button class="btn-secondary" onclick="if(confirm('确定清除所有本地存储的数据？此操作不可恢复。')){clearAllSettings()}" style="color:#f87171;border-color:#f87171">🗑️ 清除所有数据</button>
+      </div>` : '<p style="font-size:12px;color:var(--fg-dim)">尚无存储数据，配置 API 后自动保存</p>'}
+    </div>
+
+    <!-- Call Logs -->
+    <div class="glass-card" style="margin-bottom:20px">
+      <div class="card-header"><h3 style="font-size:16px;font-weight:700">📋 调用日志</h3>
+        <button class="btn-secondary" onclick="callLogs=[];localStorage.removeItem('voc-call-logs');renderSystemSettings()" style="font-size:11px">清空日志</button>
+      </div>
+      ${callLogs.length === 0 ? '<p style="font-size:12px;color:var(--fg-dim);padding:12px 0">暂无调用记录</p>' : `
+      <div class="log-stream" style="max-height:300px">
+        ${callLogs.slice(-30).reverse().map(l => `<div class="log-line ${l.status==='error'?'highlight':''}">[${l.time}] ${l.status==='success'?'✅':'❌'} ${l.model} · ${l.tokens||0} tokens · ${l.latency||0}ms</div>`).join('')}
+      </div>`}
+    </div>
+  `;
+}
+
+function switchSystemProvider(provider) {
+  apiSettings.provider = provider;
+  document.getElementById('sysCustomSection').style.display = provider === 'custom' ? 'block' : 'none';
+  const sel = document.getElementById('sysModel');
+  const models = provider === 'deepseek' ? ['deepseek-chat','deepseek-reasoner'] : provider === 'openai' ? ['gpt-4o','gpt-4o-mini'] : ['custom'];
+  sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+  renderSystemSettings();
+}
+
+function saveSystemApiSettings() {
+  apiSettings.apiKey = document.getElementById('sysApiKey').value.trim();
+  apiSettings.model = document.getElementById('sysModel').value;
+  if (apiSettings.provider === 'custom') {
+    apiSettings.customBaseUrl = document.getElementById('sysCustomUrl').value;
+    apiSettings.customModel = document.getElementById('sysCustomModel').value;
+  }
+  if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { document.getElementById('sysApiResult').innerHTML='<span style="color:#f87171">❌ 请输入 API Key</span>'; return; }
+  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
+  localStorage.setItem('voc-api-settings', encrypted);
+  document.getElementById('sysApiResult').innerHTML = '<span style="color:#4ade80">✅ API 配置已保存（AES-256 加密）</span>';
+}
+
+function exportAllSettings() {
+  const data = { apiSettings: localStorage.getItem('voc-api-settings')||'(none)', comments: demoData.comments.length, cards: demoData.strategyCards.length, brandProfile:demoData.brandProfile, benchmark:demoData.benchmarkData };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='voc-settings-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+  alert('配置已导出为 voc-settings-backup.json');
+}
+
+function clearAllSettings() {
+  localStorage.removeItem('voc-api-settings');
+  localStorage.removeItem('voc-call-logs');
+  localStorage.removeItem('voc-brand-data');
+  localStorage.removeItem('voc-benchmark-data');
+  callLogs = [];
+  apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat' };
+  renderSystemSettings();
+}
+
+function logAICall(model, tokens, latency, status) {
+  callLogs.push({ time: new Date().toLocaleString(), model, tokens, latency, status });
+  if (callLogs.length > 100) callLogs.shift();
+  localStorage.setItem('voc-call-logs', JSON.stringify(callLogs));
+}
+
+// ==================== AI ANALYSIS SYSTEM ====================
+// API Settings
+const ENCRYPTION_KEY = 'voc-ai-analysis-' + (navigator.userAgent.length % 10000).toString();
+let apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat' };
+let pipelineState = { step:0, status:'idle', results:{}, logs:[] };
+
+function loadApiSettings() {
+  try {
+    const raw = localStorage.getItem('voc-api-settings');
+    if (!raw) return;
+    const bytes = CryptoJS.AES.decrypt(raw, ENCRYPTION_KEY);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    if (decrypted) apiSettings = JSON.parse(decrypted);
+  } catch(e) { console.log('No saved API settings'); }
+}
+
+function saveApiSettings() {
+  const provider = apiSettings.provider;
+  const keyInput = document.getElementById('apiKeyInput');
+  if (keyInput && keyInput.value) apiSettings.apiKey = keyInput.value.trim();
+  apiSettings.model = document.getElementById('modelSelect')?.value || 'deepseek-chat';
+  if (provider === 'custom') {
+    apiSettings.customBaseUrl = document.getElementById('customBaseUrl')?.value || '';
+    apiSettings.customModel = document.getElementById('customModelName')?.value || '';
+  }
+  if (!apiSettings.apiKey && provider !== 'custom') {
+    alert('请输入 API Key');
+    return;
+  }
+  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
+  localStorage.setItem('voc-api-settings', encrypted);
+  document.getElementById('apiTestResult').innerHTML = '<div style="color:#4ade80">✅ 设置已保存（AES 加密存储）</div>';
+  setTimeout(closeApiSettingsModal, 1000);
+}
+
+function selectProvider(provider) {
+  apiSettings.provider = provider;
+  document.querySelectorAll('.api-provider-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('provider' + provider.charAt(0).toUpperCase() + provider.slice(1)).classList.add('selected');
+  document.getElementById('customEndpointSection').style.display = provider === 'custom' ? 'block' : 'none';
+  const models = provider === 'openai' ? ['gpt-4o','gpt-4o-mini'] : provider === 'custom' ? [] : ['deepseek-chat','deepseek-reasoner'];
+  const sel = document.getElementById('modelSelect');
+  sel.innerHTML = provider === 'custom' ? '<option value="custom">使用上方自定义模型名</option>' :
+    models.map(m => `<option value="${m}">${m}</option>`).join('');
+  loadApiSettings();
+  document.getElementById('apiKeyInput').value = apiSettings.apiKey || '';
+}
+
+function showApiSettingsModal() {
+  loadApiSettings();
+  selectProvider(apiSettings.provider);
+  document.getElementById('apiKeyInput').value = apiSettings.apiKey || '';
+  if (apiSettings.provider === 'custom') {
+    document.getElementById('customBaseUrl').value = apiSettings.customBaseUrl || '';
+    document.getElementById('customModelName').value = apiSettings.customModel || '';
+  }
+  document.getElementById('apiSettingsModal').style.display = 'flex';
+}
+
+function closeApiSettingsModal() { document.getElementById('apiSettingsModal').style.display = 'none'; }
+function toggleApiKeyVisibility(cb) {
+  document.getElementById('apiKeyInput').type = cb.checked ? 'text' : 'password';
+}
+
+async function testApiConnection() {
+  const result = document.getElementById('apiTestResult');
+  result.innerHTML = '<span style="color:#fbbf24">🔄 正在测试连接...</span>';
+  try {
+    const resp = await callLLM([{role:'user',content:'回复"OK"'}], 10, true);
+    result.innerHTML = resp.includes('OK') ? '<span style="color:#4ade80">✅ 连接成功！模型响应正常</span>' : `<span style="color:#fbbf24">⚠️ 收到响应但内容异常: ${resp.substring(0,100)}</span>`;
+  } catch(e) {
+    result.innerHTML = `<span style="color:#f87171">❌ 连接失败: ${e.message}</span>`;
+  }
+}
+
+// LLM Call
+async function callLLM(messages, maxTokens = 2000, short = false) {
+  const s = apiSettings;
+  let endpoint, model, headers;
+  if (s.provider === 'openai') {
+    endpoint = 'https://api.openai.com/v1/chat/completions';
+    model = s.model || 'gpt-4o';
+    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
+  } else if (s.provider === 'custom') {
+    endpoint = (s.customBaseUrl || 'https://api.openai.com/v1') + '/chat/completions';
+    model = s.customModel || 'gpt-4o-mini';
+    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
+  } else {
+    endpoint = 'https://api.deepseek.com/v1/chat/completions';
+    model = s.model || 'deepseek-chat';
+    headers = { 'Content-Type':'application/json', 'Authorization':'Bearer ' + s.apiKey };
+  }
+  const resp = await fetch(endpoint, {
+    method:'POST', headers,
+    body: JSON.stringify({ model, messages, max_tokens:maxTokens, temperature:short?0:0.3, response_format:short?undefined:{type:'json_object'} })
+  });
+  if (!resp.ok) { const err = await resp.text(); logAICall(model, 0, 0, 'error'); throw new Error(`API Error ${resp.status}: ${err.substring(0,200)}`); }
+  const data = await resp.json();
+  const tokens = data.usage?.total_tokens || 0;
+  logAICall(model, tokens, 0, 'success');
+  return data.choices[0].message.content;
+}
+
+// Analysis Pipeline
+async function runAnalysisPipeline() {
+  const s = apiSettings;
+  if (!s.apiKey && s.provider !== 'custom') { alert('请先配置 API Key（点击右上角 ⚙️ 设置）'); return; }
+  pipelineState = { step:0, status:'running', results:{}, logs:[] };
+  renderAIAnalysis();
+
+  const comments = demoData.comments.filter(c => !c.isCompetitor);
+  if (comments.length === 0) { addLog('没有可分析的评论', 'error'); return; }
+  addLog(`准备分析 ${comments.length} 条评论`);
+
+  try {
+    // Step 1: Clean
+    updatePipelineStep(0, 'active');
+    addLog('Step 1/4: 正在清洗评论数据...');
+    const cleanResult = await step1Clean(comments);
+    pipelineState.results.clean = cleanResult;
+    updatePipelineStep(0, 'done');
+    addLog(`✅ 清洗完成: 保留 ${cleanResult.kept} 条, 移除 ${cleanResult.removed} 条无效评论`);
+
+    // Step 2: Semantic Analysis
+    updatePipelineStep(1, 'active');
+    addLog('Step 2/4: 正在进行语义分析...');
+    const analyses = await step2Analyze(cleanResult.comments);
+    pipelineState.results.analyses = analyses;
+    updatePipelineStep(1, 'done');
+    addLog(`✅ 语义分析完成: 分析 ${analyses.length} 条评论`);
+
+    // Step 3: Clustering
+    updatePipelineStep(2, 'active');
+    addLog('Step 3/4: 正在聚类洞察...');
+    const clusters = await step3Cluster(analyses);
+    pipelineState.results.clusters = clusters;
+    updatePipelineStep(2, 'done');
+    addLog(`✅ 洞察聚类完成: 识别 ${clusters.demands?.length||0} 个需求, ${clusters.barriers?.length||0} 个障碍`);
+
+    // Step 4: Strategy
+    updatePipelineStep(3, 'active');
+    addLog('Step 4/4: 生成策略建议...');
+    const strategies = await step4Strategize(clusters);
+    pipelineState.results.strategies = strategies;
+    updatePipelineStep(3, 'done');
+    addLog('✅ 策略生成完成');
+
+    pipelineState.status = 'done';
+  } catch(e) {
+    addLog(`❌ 分析失败: ${e.message}`, 'error');
+    pipelineState.status = 'error';
+    updatePipelineStep(pipelineState.step, 'error');
+  }
+  renderAIAnalysis();
+}
+
+function updatePipelineStep(step, status) { pipelineState.step = step; renderAIAnalysis(); }
+
+function addLog(msg, type) {
+  pipelineState.logs.push({msg, type, time: new Date().toLocaleTimeString()});
+  if (pipelineState.logs.length > 50) pipelineState.logs.shift();
+}
+
+// Step 1: Comment Cleaning
+async function step1Clean(comments) {
+  const batch = comments.map(c => `[ID:${c.id}] ${c.content}`).join('\n');
+  const prompt = `你是评论数据清洗专家。清洗以下护肤品牌用户评论：
+1. 去除纯表情、无意义重复、"dddd"等明显无效内容
+2. 修正明显错别字（如"成份"→"成分"）
+3. 去除广告和引流内容
+4. 保留有实际意义的评论，保持原文不改变语义
+
+返回JSON：{"kept": [{"id": "评论ID", "content": "清洗后内容", "original": "原始内容"}], "removed": [{"id": "评论ID", "content": "原始内容", "reason": "移除原因"}], "kept_count": 保留数量, "removed_count": 移除数量}
+
+评论数据：\n${batch}`;
+  const resp = await callLLM([{role:'user', content:prompt}], 4000);
+  try {
+    const result = JSON.parse(resp);
+    return {
+      kept: result.kept_count || result.kept?.length || 0,
+      removed: result.removed_count || result.removed?.length || 0,
+      comments: (result.kept || []).map(item => {
+        const orig = comments.find(c => c.id === (typeof item.id==='string'?parseInt(item.id):item.id));
+        return { ...orig, content: item.content || item.original || orig?.content };
+      }),
+      details: result
+    };
+  } catch(e) {
+    // Fallback: return all comments
+    return { kept: comments.length, removed: 0, comments, details: { raw: resp } };
+  }
+}
+
+// Step 2: Semantic Analysis
+async function step2Analyze(comments) {
+  const results = [];
+  const batchSize = 10;
+  for (let i = 0; i < comments.length; i += batchSize) {
+    const batch = comments.slice(i, i + batchSize);
+    const batchText = batch.map(c => `[ID:${c.id}] ${c.content}`).join('\n');
+    addLog(`  分析批次 ${Math.floor(i/batchSize)+1}/${Math.ceil(comments.length/batchSize)} (${batch.length}条)...`);
+    const prompt = `你是护肤品类用户评论分析专家。分析以下评论，每条评论返回结构化结果。
+
+返回JSON：{"analyses":[{
+  "id":"评论ID",
+  "sentiment":"positive|neutral|negative",
+  "sentiment_strength":0.8,
+  "intent":"demand|barrier|comparison|praise|complaint|intent",
+  "demand_types":["人群需求"],
+  "barrier_types":["价格障碍"],
+  "entities":{"products":[],"competitors":[],"ingredients":[],"skin_types":[]},
+  "purchase_signal":"high|medium|low",
+  "keywords":[],
+  "summary":"一句话总结用户意图"
+}]}
+
+评论数据：\n${batchText}`;
+    const resp = await callLLM([{role:'user', content:prompt}], 4000);
+    try {
+      const parsed = JSON.parse(resp);
+      results.push(...(parsed.analyses || []));
+    } catch(e) {
+      addLog(`  ⚠️ 批次解析失败，使用默认值`, 'warn');
+      results.push(...batch.map(c => ({ id: c.id, sentiment:'neutral', sentiment_strength:0.5, intent:'demand', demand_types:[], barrier_types:[], entities:{}, purchase_signal:'medium', keywords:[], summary:c.content })));
+    }
+  }
+  return results;
+}
+
+// Step 3: Clustering
+async function step3Cluster(analyses) {
+  const summary = JSON.stringify(analyses.map(a => ({
+    id:a.id, sentiment:a.sentiment, intent:a.intent,
+    demand_types:a.demand_types||[], barrier_types:a.barrier_types||[],
+    entities:a.entities||{}, purchase_signal:a.purchase_signal, summary:a.summary
+  })));
+  const prompt = `你是品牌增长策略分析师。基于以下${analyses.length}条评论的语义分析摘要，生成洞察聚类。
+
+返回JSON：{
+  "overview":{"total":${analyses.length},"positive":0,"neutral":0,"negative":0,"high_intent":0,"medium_intent":0,"low_intent":0},
+  "demands":[{"demand":"需求描述","frequency":10,"trend":"rising|stable","suggested_action":"建议动作"}]],
+  "barriers":[{"barrier":"障碍描述","type":"price|trust|effect|audience|usage|competitor|risk","severity":"high|medium|low","frequency":5,"solution":"解决方案"}]],
+  "competitor_signals":[{"competitor":"竞品名","strength":"被夸点","weakness":"被骂点","opportunity":"我方机会","frequency":3}]],
+  "key_insights":["最重要的3-5个洞察，每个一句话"]
+}
+
+分析摘要：${summary.substring(0,6000)}`;
+  const resp = await callLLM([{role:'user', content:prompt}], 4000);
+  try { return JSON.parse(resp); } catch(e) { return { raw: resp, demands:[], barriers:[], competitor_signals:[], key_insights:[] }; }
+}
+
+// Step 4: Strategy Generation
+async function step4Strategize(clusters) {
+  const context = JSON.stringify({
+    demands: (clusters.demands||[]).slice(0,5),
+    barriers: (clusters.barriers||[]).slice(0,5),
+    competitor_signals: (clusters.competitor_signals||[]).slice(0,3),
+    key_insights: clusters.key_insights||[]
+  });
+  const prompt = `你是品牌内容投放策略专家。基于以下用户评论洞察，生成3-5条可执行的策略卡建议。
+
+返回JSON：{"strategies":[{
+  "title":"策略标题",
+  "subtitle":"副标题", 
+  "priority":"P0|P1|P2",
+  "evidence":["评论证据1","评论证据2"],
+  "judgment":"业务判断（1-2句话）",
+  "content_ideas":["内容创意1","内容创意2"],
+  "test_variables":[{"group":"A","direction":"素材方向","variable":"测试变量","kpi":"CTR/CVR"}],
+  "kpis":["CTR","CVR"]
+}]}
+
+洞察数据：${context.substring(0,5000)}`;
+  const resp = await callLLM([{role:'user', content:prompt}], 4000);
+  try { return JSON.parse(resp); } catch(e) { return { strategies:[], raw: resp }; }
+}
+
+function addStrategyFromAI(index) {
+  const s = pipelineState.results.strategies?.strategies?.[index];
+  if (!s) return;
+  const newCard = {
+    id: demoData.strategyCards.length + 1,
+    title: s.title, subtitle: s.subtitle || 'AI 生成策略',
+    priority: s.priority || 'P2', status: 'draft',
+    evidence: s.evidence || [],
+    judgment: s.judgment || '',
+    contentSuggestions: s.content_ideas || [],
+    testSuggestions: (s.test_variables || []).map((v,i) => ({ group: v.group || String.fromCharCode(65+i), direction: v.direction || '', variable: v.variable || '', kpi: v.kpi || '' })),
+    kpis: s.kpis || []
+  };
+  demoData.strategyCards.push(newCard);
+  demoData.metrics.strategyCards += 1;
+  demoData.metrics.cardsTrend = '+' + demoData.strategyCards.length;
+  alert(`策略卡"${s.title}"已加入策略卡库`);
+  renderAIAnalysis();
+}
+
+// Render AI Analysis Page
+function renderAIAnalysis() {
+  const hasKey = apiSettings.apiKey || apiSettings.provider === 'custom';
+  const pipelineSteps = [
+    { icon:'🧹', title:'评论清洗', desc:'去重、去噪、格式化', var:'clean' },
+    { icon:'🔍', title:'语义分析', desc:'情感、意图、实体识别', var:'analyses' },
+    { icon:'🧩', title:'洞察聚类', desc:'需求、障碍、竞品信号', var:'clusters' },
+    { icon:'🎯', title:'策略生成', desc:'策略卡建议输出', var:'strategies' }
+  ];
+  const clusters = pipelineState.results.clusters || {};
+  const strategies = pipelineState.results.strategies || {};
+
+  return `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>🧠 AI 分析中心</h2>
+        <p>接入大模型 API，自动完成评论清洗 → 语义分析 → 洞察聚类 → 策略生成的完整分析链路</p></div>
+        <button class="btn-secondary" onclick="showApiSettingsModal()" style="display:flex;align-items:center;gap:6px">
+          <span>⚙️</span> API 设置
+        </button>
+      </div>
+    </div>
+
+    ${!hasKey ? `
+    <div class="security-banner" style="margin-bottom:20px;justify-content:center;font-size:14px">
+      <span>🔑</span><span>请先配置 API Key 后开始分析 — 点击右上角"API 设置"按钮</span>
+    </div>` : ''}
+
+    <!-- Control Panel -->
+    <div class="glass-card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:13px;color:var(--fg-dim)">分析范围：</span>
+          <span class="badge badge-tag">自有品牌评论 (${demoData.comments.filter(c=>!c.isCompetitor).length}条)</span>
+          <span style="font-size:12px;color:var(--fg-dim)">全部参与分析</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn-primary" onclick="runAnalysisPipeline()" ${!hasKey?'disabled style="opacity:.5;cursor:not-allowed"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5;cursor:not-allowed"':''}>
+            ${pipelineState.status==='running'?'🔄 分析中...':'🚀 开始分析'}
+          </button>
+          <button class="btn-secondary" onclick="pipelineState={step:0,status:'idle',results:{},logs:[]};renderAIAnalysis()">重置</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Progress -->
+    <div class="pipeline-grid">
+      ${pipelineSteps.map((s,i) => {
+        let statusClass = '';
+        if (pipelineState.status === 'error' && i === pipelineState.step) statusClass = 'error';
+        else if (pipelineState.results[s.var]) statusClass = 'done';
+        else if (pipelineState.status === 'running' && i === pipelineState.step) statusClass = 'active';
+
+        return `<div class="pipeline-card ${statusClass}">
+          <div class="pipeline-icon">${s.icon}</div>
+          <div class="pipeline-step">Step ${i+1}</div>
+          <div class="pipeline-title">${s.title}</div>
+          <div style="font-size:11px;color:var(--fg-dim)">${s.desc}</div>
+          <div class="pipeline-status">
+            ${statusClass === 'done' ? '✅ 完成' : statusClass === 'active' ? '<span class="spinner"></span>运行中' : statusClass === 'error' ? '❌ 失败' : '⏳ 等待'}
+          </div>
+          ${statusClass === 'active' ? '<div class="pipeline-progress"><div class="pipeline-progress-bar" style="width:60%"></div></div>' : ''}
+          ${statusClass === 'done' && s.var === 'clean' && pipelineState.results.clean ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">保留 ${pipelineState.results.clean.kept} 条</div>` : ''}
+          ${statusClass === 'done' && s.var === 'analyses' && pipelineState.results.analyses ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">分析 ${pipelineState.results.analyses.length} 条</div>` : ''}
+          ${statusClass === 'done' && s.var === 'clusters' && clusters.key_insights ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">${clusters.key_insights.length} 条洞察</div>` : ''}
+          ${statusClass === 'done' && s.var === 'strategies' && strategies.strategies ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">${strategies.strategies.length} 条策略</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Log Stream -->
+    ${pipelineState.logs.length > 0 ? `
+    <div class="log-stream">
+      ${pipelineState.logs.map(l => `<div class="log-line ${l.type==='error'?'highlight':''}">[${l.time}] ${l.msg}</div>`).join('')}
+    </div>` : ''}
+
+    <!-- Results: Overview -->
+    ${clusters.overview ? `
+    <div class="section-title" style="margin-top:28px">📊 分析概览</div>
+    <div class="metric-grid" style="margin-bottom:24px">
+      <div class="metric-card"><div class="metric-value gradient-text">${clusters.overview.total||0}</div><div class="metric-label">分析评论数</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#4ade80">${clusters.overview.positive||0}</div><div class="metric-label">正面评论</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#f87171">${clusters.overview.negative||0}</div><div class="metric-label">负面评论</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#fbbf24">${clusters.overview.high_intent||0}</div><div class="metric-label">高购买意向</div></div>
+    </div>` : ''}
+
+    <!-- Results: Demands -->
+    ${clusters.demands?.length > 0 ? `
+    <div class="section-title">🗣️ 用户需求聚类</div>
+    ${clusters.demands.map(d => `
+      <div class="insight-card">
+        <h5>${d.demand}</h5>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <span style="font-size:18px;font-weight:800;color:#60a5fa">${d.frequency}</span>
+          <span class="badge badge-tag">${d.trend||'stable'}</span>
+        </div>
+        <div class="stat-bar"><div class="stat-bar-fill fill-blue" style="width:${Math.min(100,(d.frequency/(clusters.demands[0]?.frequency||1))*100)}%"></div></div>
+        <p style="font-size:11px;color:var(--fg-muted);margin-top:6px">💡 ${d.suggested_action}</p>
+      </div>`).join('')}` : ''}
+
+    <!-- Results: Barriers -->
+    ${clusters.barriers?.length > 0 ? `
+    <div class="section-title">🛡️ 购买障碍聚类</div>
+    ${clusters.barriers.map(b => `
+      <div class="insight-card" style="border-left:3px solid ${b.severity==='high'?'#f87171':b.severity==='medium'?'#fbbf24':'#60a5fa'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <h5>${b.barrier}</h5>
+          <span class="badge" style="background:${b.severity==='high'?'var(--badge-red)':b.severity==='medium'?'var(--badge-amber)':'var(--badge-blue)'};color:${b.severity==='high'?'var(--badge-red-fg)':b.severity==='medium'?'var(--badge-amber-fg)':'var(--badge-blue-fg)'}">${b.severity==='high'?'严重':b.severity==='medium'?'中等':'轻微'}</span>
+        </div>
+        <span class="badge badge-tag" style="margin-bottom:8px">${b.type}</span>
+        <p style="font-size:11px;color:var(--fg-muted)">💡 ${b.solution}</p>
+      </div>`).join('')}` : ''}
+
+    <!-- Results: Competitor Signals -->
+    ${clusters.competitor_signals?.length > 0 ? `
+    <div class="section-title">🎯 竞品信号</div>
+    ${clusters.competitor_signals.map(c => `
+      <div class="insight-card">
+        <h5>${c.competitor}</h5>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0">
+          <div style="font-size:11px">👍 <span style="color:#4ade80">${c.strength}</span></div>
+          <div style="font-size:11px">👎 <span style="color:#f87171">${c.weakness}</span></div>
+        </div>
+        <p style="font-size:11px;color:var(--fg-muted)">🎯 ${c.opportunity}</p>
+      </div>`).join('')}` : ''}
+
+    <!-- Results: Key Insights -->
+    ${clusters.key_insights?.length > 0 ? `
+    <div class="section-title">💡 关键洞察</div>
+    <div class="glass-card">${clusters.key_insights.map((k,i) => `<div class="insight-item"><span style="color:var(--accent);font-weight:700">${i+1}.</span> <span>${k}</span></div>`).join('')}</div>` : ''}
+
+    <!-- Results: Strategy Suggestions -->
+    ${strategies.strategies?.length > 0 ? `
+    <div class="section-title">📋 AI 策略建议</div>
+    ${strategies.strategies.map((s,i) => `
+      <div class="glass-card hover-card" style="margin-bottom:12px">
+        <div class="card-header">
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge ${s.priority==='P0'?'badge-p0':s.priority==='P1'?'badge-p1':'badge-p2'}">${s.priority||'P2'}</span>
+            <span style="font-size:11px;color:var(--fg-dim)">AI 生成</span>
+          </div>
+          <button class="btn-primary" onclick="addStrategyFromAI(${i})" style="font-size:11px;padding:4px 12px">+ 加入策略卡库</button>
+        </div>
+        <h4 style="font-size:15px;font-weight:700">${s.title}</h4>
+        <p style="font-size:12px;color:var(--fg-dim);margin-bottom:8px">${s.subtitle||''}</p>
+        <div style="font-size:12px;color:var(--fg-muted);line-height:1.6">${s.judgment||''}</div>
+        ${(s.content_ideas||[]).length > 0 ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${s.content_ideas.map(ci => `<span style="font-size:10px;background:var(--tag-bg);color:var(--tag-fg);padding:2px 8px;border-radius:4px">${ci}</span>`).join('')}</div>` : ''}
+      </div>`).join('')}` : ''}
+  `;
+}
+
+// Migrate existing comments to include new fields
+function migrateCommentFields() {
+  const defaults = { userName:'',douyinId:'',likes:0,commentTime:'',ipAddress:'',subCommentCount:0,
+    videoId:'',videoLink:'',userUid:'',userLink:'',
+    parentCommentId:'',parentCommentContent:'',parentUserUid:'',parentUserName:'',
+    refCommentId:'',refCommentContent:'',refUserUid:'',refUserName:'' };
+  demoData.comments.forEach(c => {
+    Object.keys(defaults).forEach(k => { if (c[k] === undefined) c[k] = defaults[k]; });
+    if (!c.userName) c.userName = c.author || '匿名';
+    if (!c.douyinId && c.author) c.douyinId = 'dy_' + c.author.replace(/\s/g,'_').toLowerCase();
+  });
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  // Migrate data
+  migrateCommentFields();
+  // Load theme
+  const saved = localStorage.getItem('voc-theme');
+  if (saved) setTheme(saved);
+  // Load API settings
+  loadApiSettings();
+  // Render initial page
+  renderPage('dashboard');
+  // Close sidebar on main content click (mobile)
+  document.getElementById('mainContent').addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+  });
+});
+
+// Keyboard shortcut: ESC to close modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
