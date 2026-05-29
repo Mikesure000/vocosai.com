@@ -2251,32 +2251,40 @@ function showImportResult(result, customError) {
   html += `</div>`;
 
   html += `<div style="margin-top:12px;display:flex;gap:10px">
-    <button class="btn-primary" onclick="confirmImport(${JSON.stringify(result.comments).replace(/"/g, '&quot;')})">确认导入 (${result.total}条)</button>
-    <button class="btn-secondary" onclick="document.getElementById('importResult').innerHTML=''">取消</button>
+    <button class="btn-primary" id="btnConfirmImport" onclick="doConfirmImport()">确认导入 (${result.total}条)</button>
+    <button class="btn-secondary" onclick="document.getElementById('importResult').innerHTML='';window._importData=null">取消</button>
   </div>`;
 
   // Store parsed comments for confirmation
   window._importData = result.comments;
-  html = html.replace(`confirmImport(${JSON.stringify(result.comments).replace(/"/g, '&quot;')})`, 'confirmImport()');
-
   div.innerHTML = html;
 }
 
-function confirmImport() {
+function doConfirmImport() {
   const data = window._importData;
-  if (!data || data.length === 0) return;
+  if (!data || data.length === 0) { alert('导入数据为空'); return; }
 
   // Add to demoData.comments
   demoData.comments = [...demoData.comments, ...data];
-
-  // Update metrics
   demoData.metrics.totalComments += data.length;
   demoData.metrics.newCommentsThisWeek += data.length;
 
   const resultDiv = document.getElementById('importResult');
-  resultDiv.innerHTML = `<div class="import-result success">🎉 成功导入 ${data.length} 条评论！数据已加入评论信号池</div>`;
+  if (resultDiv) resultDiv.innerHTML = `<div class="import-result success">🎉 成功导入 ${data.length} 条评论！引擎自动启动分析...</div>`;
+  window._importData = null;
 
-  // Refresh comments page and offer auto-analysis
+  setTimeout(async () => {
+    closeImportModal();
+    renderPage('comments');
+    // Auto-trigger agent chain
+    if (data.length >= 3) {
+      try { await runAgentChain('comments'); } catch(e) { console.error('Agent chain error:', e); }
+    }
+  }, 500);
+}
+
+// Backup the original confirmImport reference (kept for backward compat)
+const _origConfirmImport = doConfirmImport;
   setTimeout(() => {
     closeImportModal();
     renderPage('comments');
@@ -2592,18 +2600,8 @@ async function runAgentChain(startId) {
 
 function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
 
-// 导入后自动触发引擎
-const _origConfirmImport = confirmImport;
-confirmImport = function() {
-  const data = window._importData;
-  if (!data || data.length === 0) return;
-  demoData.comments = [...demoData.comments, ...data];
-  demoData.metrics.totalComments += data.length;
-  demoData.metrics.newCommentsThisWeek += data.length;
-  document.getElementById('importResult').innerHTML = '<div class="import-result success">🎉 成功导入 ' + data.length + ' 条评论！引擎自动启动分析...</div>';
-  window._importData = null;
-  setTimeout(async () => { closeImportModal(); renderPage('comments'); await runAgentChain('comments'); }, 600);
-};
+// 导入后自动触发引擎（已集成到 doConfirmImport）
+function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
 
 function openAgentModal(agentId) {
   const agent = agents[agentId];
