@@ -2298,17 +2298,6 @@ function doConfirmImport() {
 
 // Compatibility reference
 const _origConfirmImport = doConfirmImport;
-  setTimeout(() => {
-    closeImportModal();
-    renderPage('comments');
-    if (data.length >= 5 && confirm(`已导入 ${data.length} 条评论。\n\n是否立即启动 AI 自动化引擎进行分析？`)) {
-      navigateTo('ai-analysis', document.querySelector('[data-page=ai-analysis]'));
-      setTimeout(() => runAutomationPipeline('insight'), 500);
-    }
-  }, 800);
-
-  window._importData = null;
-}
 
 // ==================== CONTENT POOL ====================
 function renderContentPool() {
@@ -2614,7 +2603,6 @@ async function runAgentChain(startId) {
 function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
 
 // 导入后自动触发引擎（已集成到 doConfirmImport）
-function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
 
 function openAgentModal(agentId) {
   const agent = agents[agentId];
