@@ -2048,15 +2048,13 @@ function processFile(file) {
     reader.onload = function(e) {
       try {
         const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd hh:mm:ss' });
+        const wb = XLSX.read(data, { type: 'array', cellDates: true });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, dateNF: 'yyyy-mm-dd hh:mm:ss' });
-        const parsed = normalizeComments(rows);
-        showImportResult(parsed);
-      } catch(err) {
-        showImportResult([], 'Excel 解析失败: ' + err.message);
-      }
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+        showImportResult(normalizeComments(rows));
+      } catch(err) { showImportResult(null, 'Excel 解析失败: ' + err.message); }
     };
+    reader.onerror = function() { showImportResult(null, '文件读取失败'); };
     reader.readAsArrayBuffer(file);
     return;
   }
@@ -2065,15 +2063,14 @@ function processFile(file) {
   reader.onload = function(e) {
     const text = e.target.result;
     let parsed = [];
-    if (ext === 'json') {
-      parsed = parseJSON(text);
-    } else if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
-      parsed = parseCSV(text, ext === 'tsv' ? '\t' : ',');
-    } else {
-      try { parsed = parseJSON(text); } catch(_) { parsed = parseCSV(text); }
-    }
+    try {
+      if (ext === 'json') parsed = parseJSON(text);
+      else if (ext === 'csv' || ext === 'tsv') parsed = parseCSV(text, ext === 'tsv' ? '\t' : ',');
+      else parsed = parseCSV(text);
+    } catch(err) { showImportResult(null, '文件解析失败: ' + err.message); return; }
     showImportResult(parsed);
   };
+  reader.onerror = function() { showImportResult(null, '文件读取失败'); };
   reader.readAsText(file);
 }
 
@@ -2262,28 +2259,31 @@ function showImportResult(result, customError) {
 
 function doConfirmImport() {
   const data = window._importData;
-  if (!data || data.length === 0) { alert('导入数据为空'); return; }
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    alert('导入数据为空，请重新上传文件');
+    return;
+  }
 
-  // Add to demoData.comments
-  demoData.comments = [...demoData.comments, ...data];
+  // Merge into demo data
+  demoData.comments = demoData.comments.concat(data);
   demoData.metrics.totalComments += data.length;
   demoData.metrics.newCommentsThisWeek += data.length;
 
   const resultDiv = document.getElementById('importResult');
-  if (resultDiv) resultDiv.innerHTML = `<div class="import-result success">🎉 成功导入 ${data.length} 条评论！引擎自动启动分析...</div>`;
+  if (resultDiv) resultDiv.innerHTML = `<div class="import-result success">✅ 成功导入 ${data.length} 条评论！</div>`;
   window._importData = null;
 
-  setTimeout(async () => {
+  setTimeout(() => {
     closeImportModal();
     renderPage('comments');
-    // Auto-trigger agent chain
-    if (data.length >= 3) {
-      try { await runAgentChain('comments'); } catch(e) { console.error('Agent chain error:', e); }
+    // Auto-trigger agent chain if API key configured
+    if (data.length >= 3 && apiSettings.apiKey) {
+      runAgentChain('comments').catch(e => console.error('Agent chain:', e));
     }
   }, 500);
 }
 
-// Backup the original confirmImport reference (kept for backward compat)
+// Compatibility reference
 const _origConfirmImport = doConfirmImport;
   setTimeout(() => {
     closeImportModal();
@@ -3364,19 +3364,21 @@ function migrateCommentFields() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Migrate data
-  migrateCommentFields();
-  // Load theme
-  const saved = localStorage.getItem('voc-theme');
-  if (saved) setTheme(saved);
-  // Load API settings
-  loadApiSettings();
-  // Render initial page
-  renderPage('dashboard');
-  // Close sidebar on main content click (mobile)
-  document.getElementById('mainContent').addEventListener('click', () => {
-    document.querySelector('.sidebar').classList.remove('open');
-  });
+  try {
+    migrateCommentFields();
+    const saved = localStorage.getItem('voc-theme');
+    if (saved) setTheme(saved);
+    loadApiSettings();
+    renderPage('dashboard');
+    const main = document.getElementById('mainContent');
+    if (main) main.addEventListener('click', () => {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) sidebar.classList.remove('open');
+    });
+  } catch(e) {
+    console.error('Init error:', e);
+    document.getElementById('mainContent').innerHTML = '<div style="padding:60px;text-align:center"><h3>加载失败</h3><p>' + e.message + '</p><button onclick="location.reload()">刷新重试</button></div>';
+  }
 });
 
 // Keyboard shortcut: ESC to close modal
