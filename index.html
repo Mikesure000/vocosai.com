@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voice of Consumer OS — 评论驱动的品牌内容投放决策系统</title>
+<style>
+/* Fallback styles - works even without Tailwind CDN */
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#0f1117; color:#e5e7eb; }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:260px; background:#15171e; border-right:1px solid #1e2130; overflow-y:auto; z-index:100; }
+.main-content { margin-left:260px; padding:24px; min-height:100vh; }
+h2 { font-size:24px; font-weight:800; margin:0 0 4px 0; }
+.btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:14px; cursor:pointer; }
+.btn-secondary { background:#1e2130; color:#a1a1aa; border:1px solid #2d3040; border-radius:10px; padding:10px 20px; font-size:14px; cursor:pointer; }
+.page-header { margin-bottom:24px; }
+.page-header p { color:#6b7280; font-size:14px; margin:4px 0 0 0; }
+.loading-screen { display:flex; align-items:center; justify-content:center; height:100vh; color:#6b7280; font-size:16px; }
+@media (max-width:768px) { .sidebar { display:none; } .main-content { margin-left:0; } }
+</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -3365,19 +3378,25 @@ function migrateCommentFields() {
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   try {
+    var loading = document.getElementById('loading-app');
+    if (loading) loading.style.display = 'none';
     migrateCommentFields();
-    const saved = localStorage.getItem('voc-theme');
+    var saved = localStorage.getItem('voc-theme');
     if (saved) setTheme(saved);
     loadApiSettings();
     renderPage('dashboard');
-    const main = document.getElementById('mainContent');
-    if (main) main.addEventListener('click', () => {
-      const sidebar = document.querySelector('.sidebar');
+    var main = document.getElementById('mainContent');
+    if (main) main.addEventListener('click', function() {
+      var sidebar = document.querySelector('.sidebar');
       if (sidebar) sidebar.classList.remove('open');
     });
   } catch(e) {
-    console.error('Init error:', e);
-    document.getElementById('mainContent').innerHTML = '<div style="padding:60px;text-align:center"><h3>加载失败</h3><p>' + e.message + '</p><button onclick="location.reload()">刷新重试</button></div>';
+    console.error('Init error:', e.message);
+    var loading = document.getElementById('loading-app');
+    var main = document.getElementById('mainContent');
+    var html = '<div style="padding:60px;text-align:center"><h3 style="color:#f87171;font-size:20px">加载失败</h3><p style="color:#9ca3af">' + e.message + '</p><button onclick="location.reload()" class="btn-primary" style="margin-top:12px">刷新重试</button></div>';
+    if (loading) loading.innerHTML = html;
+    else if (main) main.innerHTML = html;
   }
 });
 
@@ -3386,5 +3405,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
 </script>
+<div id="loading-app" class="loading-screen">⏳ 系统加载中...</div>
 </body>
 </html>
