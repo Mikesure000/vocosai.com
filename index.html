@@ -230,6 +230,9 @@ tailwind.config = {
   .log-line.highlight { color:#fbbf24; opacity:1; }
   .security-banner { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2); border-radius:10px; padding:12px 16px; font-size:12px; color:#fbbf24; margin-bottom:20px; display:flex;align-items:start;gap:8px; }
 
+  .agent-bar { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:8px 14px; display:flex; align-items:center; gap:12px; transition:all .3s; }
+  .agent-running { border-color:#60a5fa; background:rgba(59,130,246,.05); }
+  .agent-error { border-color:#f87171; background:rgba(239,68,68,.05); }
   @media (max-width:900px) { .pipeline-grid { grid-template-columns:repeat(2,1fr); } }
   @media (max-width:600px) { .pipeline-grid { grid-template-columns:1fr; } }
 </style>
@@ -875,6 +878,7 @@ function renderDashboard() {
       <h2>本周内容投放决策台</h2>
       <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p>
     </div>
+    ${renderAgentBar('dashboard')}
 
     <div class="metric-grid" style="margin-bottom:28px">
       <div class="metric-card">
@@ -992,6 +996,8 @@ function renderComments() {
       </button>
     </div>
 
+    ${renderAgentBar('comments')}
+
     <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
       <div class="search-wrap" style="flex:1;min-width:200px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1094,6 +1100,7 @@ function renderDemands() {
       <h2>用户需求地图</h2>
       <p>从评论中识别的用户真实需求，按频率和趋势排序</p>
     </div>
+    ${renderAgentBar('demands')}
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value gradient-text">${demoData.demands.length}</div><div class="metric-label">识别需求类别</div></div>
       <div class="metric-card"><div class="metric-value" style="color:#60a5fa">${demoData.demands.reduce((s,d)=>s+d.frequency,0)}</div><div class="metric-label">需求提及总次数</div></div>
@@ -1128,6 +1135,7 @@ function renderBarriers() {
       <h2>购买障碍地图</h2>
       <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p>
     </div>
+    ${renderAgentBar('barriers')}
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value" style="color:#f87171">${demoData.barriers.filter(b=>b.severity==='high').length}</div><div class="metric-label">高严重度障碍</div></div>
       <div class="metric-card"><div class="metric-value" style="color:#fbbf24">${demoData.barriers.length}</div><div class="metric-label">障碍类型总计</div></div>
@@ -1161,6 +1169,7 @@ function renderCompetitors() {
       <h2>竞品机会地图</h2>
       <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p>
     </div>
+    ${renderAgentBar('competitors')}
     <div class="cards-grid" style="margin-bottom:32px">
       ${demoData.competitorOpps.map(o => `
         <div class="glass-card hover-card">
@@ -1212,6 +1221,7 @@ function renderXHSStrategies() {
       <h2>📕 小红书内容策略卡</h2>
       <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p>
     </div>
+    ${renderAgentBar('xhs')}
     <div class="cards-grid-2">
       ${demoData.xhsStrategyCards.map(c => `
         <div class="glass-card hover-card" style="cursor:pointer" onclick="showXHSDetail(${c.id})">
@@ -1277,14 +1287,8 @@ function renderDYStrategies() {
       <h2>🎵 抖音内容策略卡</h2>
       <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p>
     </div>
-    <div class="page-header">
-      <h2>🧪 内容实验室</h2>
-      <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
-    </div>
-    <div class="page-header">
-      <h2>复盘归因中心</h2>
-      <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
-    </div>
+    ${renderAgentBar('douyin')}
+    <div class="cards-grid-2">
     <div class="cards-grid-2">
       ${demoData.dyStrategyCards.map(c => `
         <div class="glass-card hover-card" style="cursor:pointer" onclick="showDYDetail(${c.id})">
@@ -1837,6 +1841,7 @@ function renderLab() {
       <h2>🧪 内容实验室</h2>
       <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
     </div>
+    ${renderAgentBar('lab')}
     ${demoData.testPlans.map(tp => `
       <div class="glass-card" style="margin-bottom:20px">
         <div class="card-header">
@@ -1884,6 +1889,7 @@ function renderReviews() {
       <h2>复盘归因中心</h2>
       <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
     </div>
+    ${renderAgentBar('reviews')}
     ${demoData.reviews.map(r => `
       <div class="glass-card" style="margin-bottom:20px">
         <div class="card-header">
@@ -2298,6 +2304,8 @@ function renderContentPool() {
       </div>
     </div>
 
+    ${renderAgentBar('content')}
+
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value gradient-text">${items.length}</div><div class="metric-label">内容总数</div></div>
       <div class="metric-card"><div class="metric-value" style="color:#60a5fa">${analyzed}</div><div class="metric-label">已 AI 分析</div></div>
@@ -2528,6 +2536,72 @@ const agents = {
       return '✅ 归因分析完成';
     }
   }
+};
+
+// === Agent 自动运转引擎 ===
+const agentStatus = {};
+
+function getAgentStatus(agentId) {
+  const def = { icon:'🤖', name:'Agent', skill:'', lastRun:null, count:0, state:'idle' };
+  return agentStatus[agentId] || (agentStatus[agentId] = Object.assign({}, def, agents[agentId]||{icon:'🤖',name:agentId,skill:''}));
+}
+
+function renderAgentBar(agentId) {
+  const s = getAgentStatus(agentId);
+  if (s.state === 'idle' && !s.lastRun) return ''; // Don't show if never used
+  const cls = s.state === 'running' ? 'agent-bar agent-running' : s.state === 'error' ? 'agent-bar agent-error' : 'agent-bar';
+  return `<div class="${cls}" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:8px;width:100%">
+      <span style="font-size:16px">${s.icon}</span>
+      <span style="font-weight:700;font-size:12px">${s.name} Agent</span>
+      <span style="font-size:10px;color:var(--fg-dim);background:var(--card-hover);padding:2px 8px;border-radius:10px">${s.skill}</span>
+      ${s.lastRun ? `<span style="font-size:10px;color:var(--fg-dim);margin-left:auto">上次: ${s.lastRun} · ${s.count}条</span>` : ''}
+      <span style="font-size:10px;margin-left:8px">${s.state==='running'?'<span class="spinner"></span> 运行中':s.state==='error'?'<span style="color:#f87171">⚠️</span>':'<span style="color:#4ade80">● 就绪</span>'}</span>
+    </div>
+  </div>`;
+}
+
+async function runAgentChain(startId) {
+  const chain = { comments:['demands','barriers','competitors'], demands:['xhs','douyin'], barriers:['xhs','douyin'], competitors:['xhs','douyin'], content:['lab'], xhs:['dashboard'], douyin:['dashboard'], lab:['dashboard'] };
+
+  const runOne = async (id) => {
+    const agent = agents[id];
+    if (!agent) return;
+    if (agentStatus[id]?.state === 'running') return;
+    agentStatus[id] = getAgentStatus(id);
+    agentStatus[id].state = 'running';
+    refreshCurrentPage();
+    try {
+      const ctx = { comments: demoData.comments, demands: demoData.demands, barriers: demoData.barriers, competitorOpps: demoData.competitorOpps, contentItems: demoData.contentItems };
+      const prompt = agent.buildPrompt(ctx);
+      if (!prompt) { agentStatus[id].state = 'idle'; return; }
+      const resp = await callLLM([{role:'user', content:prompt}], 2500);
+      let parsed = resp;
+      try { if (resp.includes('```json')) parsed = resp.split('```json')[1].split('```')[0].trim(); } catch(e) {}
+      agent.applyResult(parsed);
+      agentStatus[id].state = 'done';
+      agentStatus[id].lastRun = new Date().toLocaleTimeString();
+      agentStatus[id].count = ctx.comments.length;
+    } catch(e) { agentStatus[id].state = 'error'; }
+    refreshCurrentPage();
+    if (chain[id]) { for (const nextId of chain[id]) { await runOne(nextId); } }
+  };
+  await runOne(startId);
+}
+
+function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
+
+// 导入后自动触发引擎
+const _origConfirmImport = confirmImport;
+confirmImport = function() {
+  const data = window._importData;
+  if (!data || data.length === 0) return;
+  demoData.comments = [...demoData.comments, ...data];
+  demoData.metrics.totalComments += data.length;
+  demoData.metrics.newCommentsThisWeek += data.length;
+  document.getElementById('importResult').innerHTML = '<div class="import-result success">🎉 成功导入 ' + data.length + ' 条评论！引擎自动启动分析...</div>';
+  window._importData = null;
+  setTimeout(async () => { closeImportModal(); renderPage('comments'); await runAgentChain('comments'); }, 600);
 };
 
 function openAgentModal(agentId) {
