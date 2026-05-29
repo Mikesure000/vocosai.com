@@ -308,7 +308,7 @@ tailwind.config = {
     <div class="nav-section">AI 引擎</div>
     <button class="nav-item" data-page="ai-analysis" onclick="navigateTo('ai-analysis', this)">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.1-.4 2.1-1.2 2.8l2.7 2.7a4 4 0 01-5.6 0L9.2 8.8A4 4 0 0112 2z"/><path d="M2 22l1.5-4.5L7 14l3 3-3.5 3.5L2 22z"/><path d="M22 22l-1.5-4.5L14 14l3 3 3.5 3.5L22 22z"/></svg>
-      AI 分析中心
+      AI 自动化引擎
     </button>
 
     <div class="sidebar-footer">
@@ -872,11 +872,8 @@ function renderDashboard() {
   const m = demoData.metrics;
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>本周内容投放决策台</h2>
-        <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('dashboard')" style="display:flex;align-items:center;gap:6px">🤖 Agent 汇总</button>
-      </div>
+      <h2>本周内容投放决策台</h2>
+      <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p>
     </div>
 
     <div class="metric-grid" style="margin-bottom:28px">
@@ -989,9 +986,7 @@ function renderComments() {
         <h2>评论信号池</h2>
         <p>${demoData.brand.name} 及竞品在多平台的用户评论数据，共 ${allComments.length} 条</p>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-secondary" onclick="openAgentModal('comments')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
-        <button class="btn-primary" onclick="showImportModal()" style="display:flex;align-items:center;gap:6px">
+      <button class="btn-primary" onclick="showImportModal()" style="display:flex;align-items:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         导入评论
       </button>
@@ -1096,11 +1091,8 @@ function toggleCommentRow(row, detailId) {
 function renderDemands() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>用户需求地图</h2>
-        <p>从评论中识别的用户真实需求，按频率和趋势排序</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('demands')" style="display:flex;align-items:center;gap:6px">🤖 Agent 洞察</button>
-      </div>
+      <h2>用户需求地图</h2>
+      <p>从评论中识别的用户真实需求，按频率和趋势排序</p>
     </div>
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value gradient-text">${demoData.demands.length}</div><div class="metric-label">识别需求类别</div></div>
@@ -1133,11 +1125,8 @@ function renderBarriers() {
   const severityColors = { high:'fill-red', medium:'fill-amber', low:'fill-blue' };
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>购买障碍地图</h2>
-        <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('barriers')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
-      </div>
+      <h2>购买障碍地图</h2>
+      <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p>
     </div>
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value" style="color:#f87171">${demoData.barriers.filter(b=>b.severity==='high').length}</div><div class="metric-label">高严重度障碍</div></div>
@@ -1169,11 +1158,8 @@ function renderBarriers() {
 function renderCompetitors() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>竞品机会地图</h2>
-        <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('competitors')" style="display:flex;align-items:center;gap:6px">🤖 Agent 洞察</button>
-      </div>
+      <h2>竞品机会地图</h2>
+      <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p>
     </div>
     <div class="cards-grid" style="margin-bottom:32px">
       ${demoData.competitorOpps.map(o => `
@@ -1223,11 +1209,8 @@ function renderCompetitors() {
 function renderXHSStrategies() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>📕 小红书内容策略卡</h2>
-        <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('xhs')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
-      </div>
+      <h2>📕 小红书内容策略卡</h2>
+      <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p>
     </div>
     <div class="cards-grid-2">
       ${demoData.xhsStrategyCards.map(c => `
@@ -1291,11 +1274,16 @@ function showXHSDetail(id) {
 function renderDYStrategies() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>🎵 抖音内容策略卡</h2>
-        <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('douyin')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
-      </div>
+      <h2>🎵 抖音内容策略卡</h2>
+      <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p>
+    </div>
+    <div class="page-header">
+      <h2>🧪 内容实验室</h2>
+      <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
+    </div>
+    <div class="page-header">
+      <h2>复盘归因中心</h2>
+      <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
     </div>
     <div class="cards-grid-2">
       ${demoData.dyStrategyCards.map(c => `
@@ -1846,11 +1834,8 @@ function closeModal() {
 function renderLab() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>🧪 内容实验室</h2>
-        <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('lab')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
-      </div>
+      <h2>🧪 内容实验室</h2>
+      <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
     </div>
     ${demoData.testPlans.map(tp => `
       <div class="glass-card" style="margin-bottom:20px">
@@ -1896,11 +1881,8 @@ function renderLab() {
 function renderReviews() {
   return `
     <div class="page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>复盘归因中心</h2>
-        <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p></div>
-        <button class="btn-secondary" onclick="openAgentModal('reviews')" style="display:flex;align-items:center;gap:6px">🤖 Agent 归因</button>
-      </div>
+      <h2>复盘归因中心</h2>
+      <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
     </div>
     ${demoData.reviews.map(r => `
       <div class="glass-card" style="margin-bottom:20px">
@@ -2287,8 +2269,15 @@ function confirmImport() {
   const resultDiv = document.getElementById('importResult');
   resultDiv.innerHTML = `<div class="import-result success">🎉 成功导入 ${data.length} 条评论！数据已加入评论信号池</div>`;
 
-  // Refresh comments page
-  setTimeout(() => { closeImportModal(); renderPage('comments'); }, 800);
+  // Refresh comments page and offer auto-analysis
+  setTimeout(() => {
+    closeImportModal();
+    renderPage('comments');
+    if (data.length >= 5 && confirm(`已导入 ${data.length} 条评论。\n\n是否立即启动 AI 自动化引擎进行分析？`)) {
+      navigateTo('ai-analysis', document.querySelector('[data-page=ai-analysis]'));
+      setTimeout(() => runAutomationPipeline('insight'), 500);
+    }
+  }, 800);
 
   window._importData = null;
 }
@@ -2302,9 +2291,7 @@ function renderContentPool() {
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div><h2>📺 内容池</h2>
         <p>上传品牌和竞品的内容资产，AI 自动拆解内容框架、识别类型和标签 — 与评论信号池对称的内容分析工作台</p></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-secondary" onclick="openAgentModal('content')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
-          <button class="btn-primary" onclick="showContentImport()" style="display:flex;align-items:center;gap:6px">
+        <button class="btn-primary" onclick="showContentImport()" style="display:flex;align-items:center;gap:6px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           导入内容
         </button>
@@ -3137,159 +3124,156 @@ async function testSingleComment() {
 
 function renderAIAnalysis() {
   const hasKey = apiSettings.apiKey || apiSettings.provider === 'custom';
-  const pipelineSteps = [
-    { icon:'🧹', title:'评论清洗', desc:'去重、去噪、格式化', var:'clean' },
-    { icon:'🔍', title:'语义分析', desc:'情感、意图、实体识别', var:'analyses' },
-    { icon:'🧩', title:'洞察聚类', desc:'需求、障碍、竞品信号', var:'clusters' },
-    { icon:'🎯', title:'策略生成', desc:'策略卡建议输出', var:'strategies' }
+  const agentFlow = [
+    { phase:'数据层', agents:[
+      { id:'comments', icon:'💬', name:'评论分析', desc:'清洗+语义标注+意图分类' },
+      { id:'content', icon:'📺', name:'内容分析', desc:'框架拆解+类型+标签' }
+    ]},
+    { phase:'洞察层', agents:[
+      { id:'demands', icon:'🗺️', name:'需求洞察', desc:'需求聚类+趋势+场景' },
+      { id:'barriers', icon:'🛡️', name:'障碍分析', desc:'8类障碍+严重度+对策' },
+      { id:'competitors', icon:'🎯', name:'竞品洞察', desc:'竞品信号+SWOT' }
+    ]},
+    { phase:'策略层', agents:[
+      { id:'xhs', icon:'📕', name:'小红书策略', desc:'封面+标题+正文+标签' },
+      { id:'douyin', icon:'🎵', name:'抖音策略', desc:'钩子+分镜+BGM+达人' },
+      { id:'lab', icon:'🧪', name:'素材测试', desc:'A/B方案+预算+规则' }
+    ]},
+    { phase:'决策层', agents:[
+      { id:'dashboard', icon:'🏠', name:'决策汇总', desc:'Top5动作+优先级' },
+      { id:'reviews', icon:'📊', name:'复盘归因', desc:'归因分析+优化建议' }
+    ]}
   ];
-  const clusters = pipelineState.results.clusters || {};
-  const strategies = pipelineState.results.strategies || {};
 
   return `
     <div class="page-header">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><h2>🧠 AI 分析中心</h2>
-        <p>接入大模型 API，自动完成评论清洗 → 语义分析 → 洞察聚类 → 策略生成的完整分析链路</p></div>
-        <button class="btn-secondary" onclick="showApiSettingsModal()" style="display:flex;align-items:center;gap:6px">
-          <span>⚙️</span> API 设置
-        </button>
+        <div><h2>🧠 AI 自动化引擎</h2>
+        <p>系统内部 Agent 自动链式运转——数据流入后，Agent 按依赖关系自动执行全链路分析</p></div>
+        <button class="btn-secondary" onclick="showApiSettingsModal()" style="display:flex;align-items:center;gap:6px">⚙️ 系统设置</button>
       </div>
     </div>
 
     ${!hasKey ? `
     <div class="security-banner" style="margin-bottom:20px;justify-content:center;font-size:14px">
-      <span>🔑</span><span>请先配置 API Key 后开始分析 — 点击右上角"API 设置"按钮</span>
+      <span>🔑</span><span>请先配置 API Key 后启动自动化引擎</span>
     </div>` : ''}
 
-    <!-- Control Panel -->
+    <!-- Execution Modes -->
     <div class="glass-card" style="margin-bottom:24px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:13px;color:var(--fg-dim)">分析范围：</span>
-          <span class="badge badge-tag">自有品牌评论 (${demoData.comments.filter(c=>!c.isCompetitor).length}条)</span>
-          <span style="font-size:12px;color:var(--fg-dim)">全部参与分析</span>
+        <div style="font-size:13px;color:var(--fg-dim)">
+          📊 数据: 评论${demoData.comments.length} | 内容${demoData.contentItems.length} | 需求${demoData.demands.length} | 障碍${demoData.barriers.length}
         </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn-primary" onclick="runAnalysisPipeline()" ${!hasKey?'disabled style="opacity:.5;cursor:not-allowed"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5;cursor:not-allowed"':''}>
-            ${pipelineState.status==='running'?'🔄 分析中...':'🚀 开始完整分析'}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="runAutomationPipeline('full')" ${!hasKey?'disabled style="opacity:.5"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5"':''}>
+            🚀 全链路运转 (10 Agent)
           </button>
-          <button class="btn-secondary" onclick="testSingleComment()" ${!hasKey?'disabled style="opacity:.5;cursor:not-allowed"':''}>🔬 单条测试</button>
+          <button class="btn-secondary" onclick="runAutomationPipeline('insight')" ${!hasKey?'disabled style="opacity:.5"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5"':''}>
+            🔍 仅数据洞察 (5 Agent)
+          </button>
+          <button class="btn-secondary" onclick="runAutomationPipeline('strategy')" ${!hasKey?'disabled style="opacity:.5"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5"':''}>
+            🎯 仅策略生成 (5 Agent)
+          </button>
+          <button class="btn-secondary" onclick="testSingleComment()" ${!hasKey?'disabled style="opacity:.5"':''}>🔬 单条测试</button>
           <button class="btn-secondary" onclick="pipelineState={step:0,status:'idle',results:{},logs:[]};renderAIAnalysis()">重置</button>
         </div>
       </div>
     </div>
 
-    <!-- Pipeline Progress -->
-    <div class="pipeline-grid">
-      ${pipelineSteps.map((s,i) => {
-        let statusClass = '';
-        if (pipelineState.status === 'error' && i === pipelineState.step) statusClass = 'error';
-        else if (pipelineState.results[s.var]) statusClass = 'done';
-        else if (pipelineState.status === 'running' && i === pipelineState.step) statusClass = 'active';
-
-        return `<div class="pipeline-card ${statusClass}">
-          <div class="pipeline-icon">${s.icon}</div>
-          <div class="pipeline-step">Step ${i+1}</div>
-          <div class="pipeline-title">${s.title}</div>
-          <div style="font-size:11px;color:var(--fg-dim)">${s.desc}</div>
-          <div class="pipeline-status">
-            ${statusClass === 'done' ? '✅ 完成' : statusClass === 'active' ? '<span class="spinner"></span>运行中' : statusClass === 'error' ? '❌ 失败' : '⏳ 等待'}
+    <!-- Agent Dependency Flow -->
+    <div style="margin-bottom:24px">
+      ${agentFlow.map((phase, pi) => `
+        <div style="margin-bottom:${pi<agentFlow.length-1?16:0}px">
+          <div style="font-size:11px;font-weight:700;color:var(--fg-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">${phase.phase}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+            ${phase.agents.map(a => {
+              const statusIcon = pipelineState.results[`agent_${a.id}`] ? '✅' : pipelineState.currentAgent === a.id ? '<span class="spinner"></span>' : '⏳';
+              return `<div class="glass-card card-sm" style="text-align:center;border-color:${pipelineState.currentAgent===a.id?'#60a5fa':pipelineState.results['agent_'+a.id]?'var(--accent)':'var(--border)'}">
+                <div style="font-size:20px">${a.icon}</div>
+                <div style="font-size:12px;font-weight:700;margin:4px 0">${a.name}</div>
+                <div style="font-size:10px;color:var(--fg-dim)">${a.desc}</div>
+                <div style="margin-top:4px">${statusIcon}</div>
+              </div>`;
+            }).join('')}
           </div>
-          ${statusClass === 'active' ? '<div class="pipeline-progress"><div class="pipeline-progress-bar" style="width:60%"></div></div>' : ''}
-          ${statusClass === 'done' && s.var === 'clean' && pipelineState.results.clean ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">保留 ${pipelineState.results.clean.kept} 条</div>` : ''}
-          ${statusClass === 'done' && s.var === 'analyses' && pipelineState.results.analyses ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">分析 ${pipelineState.results.analyses.length} 条</div>` : ''}
-          ${statusClass === 'done' && s.var === 'clusters' && clusters.key_insights ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">${clusters.key_insights.length} 条洞察</div>` : ''}
-          ${statusClass === 'done' && s.var === 'strategies' && strategies.strategies ? `<div style="font-size:11px;color:var(--accent);margin-top:8px">${strategies.strategies.length} 条策略</div>` : ''}
-        </div>`;
-      }).join('')}
+          ${pi < agentFlow.length - 1 ? '<div style="text-align:center;color:var(--fg-dim);font-size:18px;margin:4px 0">↓</div>' : ''}
+        </div>
+      `).join('')}
     </div>
 
     <!-- Log Stream -->
     ${pipelineState.logs.length > 0 ? `
-    <div class="log-stream">
+    <div class="log-stream" style="margin-bottom:12px">
       ${pipelineState.logs.map(l => `<div class="log-line ${l.type==='error'?'highlight':''}">[${l.time}] ${l.msg}</div>`).join('')}
     </div>` : ''}
-    ${pipelineState.status === 'error' && pipelineState.errorMsg ? `
-    <div class="import-result error" style="margin-top:12px">
-      <strong>⚠️ 分析中断</strong><br>
-      ${pipelineState.errorMsg}<br>
-      <span style="font-size:11px;margin-top:4px;display:block">常见原因：1) API Key 无效 2) 网络不通 3) CORS 跨域 — 请在系统设置中填入代理地址</span>
+
+    ${pipelineState.status === 'error' ? `
+    <div class="import-result error" style="margin-bottom:12px">❌ ${pipelineState.errorMsg||'分析中断'}<br><span style="font-size:11px">💡 常见原因：1) API Key无效 2) 网络不通 3) CORS跨域 — 请在系统设置中配置代理</span></div>` : ''}
+
+    ${pipelineState.status === 'done' ? `
+    <div class="import-result success" style="margin-bottom:12px">
+      ✅ 自动化引擎执行完成！已更新：${Object.keys(pipelineState.results).length} 个模块
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="navigateTo('dashboard',document.querySelector('[data-page=dashboard]'))">📊 查看决策台</button>
+        <button class="btn-secondary" onclick="navigateTo('demands',document.querySelector('[data-page=demands]'))">🗺️ 查看需求</button>
+        <button class="btn-secondary" onclick="navigateTo('barriers',document.querySelector('[data-page=barriers]'))">🛡️ 查看障碍</button>
+        <button class="btn-secondary" onclick="navigateTo('xhs-strategies',document.querySelector('[data-page=xhs-strategies]'))">📕 查看策略</button>
+      </div>
     </div>` : ''}
-
-    <!-- Results: Overview -->
-    ${clusters.overview ? `
-    <div class="section-title" style="margin-top:28px">📊 分析概览</div>
-    <div class="metric-grid" style="margin-bottom:24px">
-      <div class="metric-card"><div class="metric-value gradient-text">${clusters.overview.total||0}</div><div class="metric-label">分析评论数</div></div>
-      <div class="metric-card"><div class="metric-value" style="color:#4ade80">${clusters.overview.positive||0}</div><div class="metric-label">正面评论</div></div>
-      <div class="metric-card"><div class="metric-value" style="color:#f87171">${clusters.overview.negative||0}</div><div class="metric-label">负面评论</div></div>
-      <div class="metric-card"><div class="metric-value" style="color:#fbbf24">${clusters.overview.high_intent||0}</div><div class="metric-label">高购买意向</div></div>
-    </div>` : ''}
-
-    <!-- Results: Demands -->
-    ${clusters.demands?.length > 0 ? `
-    <div class="section-title">🗣️ 用户需求聚类</div>
-    ${clusters.demands.map(d => `
-      <div class="insight-card">
-        <h5>${d.demand}</h5>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-          <span style="font-size:18px;font-weight:800;color:#60a5fa">${d.frequency}</span>
-          <span class="badge badge-tag">${d.trend||'stable'}</span>
-        </div>
-        <div class="stat-bar"><div class="stat-bar-fill fill-blue" style="width:${Math.min(100,(d.frequency/(clusters.demands[0]?.frequency||1))*100)}%"></div></div>
-        <p style="font-size:11px;color:var(--fg-muted);margin-top:6px">💡 ${d.suggested_action}</p>
-      </div>`).join('')}` : ''}
-
-    <!-- Results: Barriers -->
-    ${clusters.barriers?.length > 0 ? `
-    <div class="section-title">🛡️ 购买障碍聚类</div>
-    ${clusters.barriers.map(b => `
-      <div class="insight-card" style="border-left:3px solid ${b.severity==='high'?'#f87171':b.severity==='medium'?'#fbbf24':'#60a5fa'}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <h5>${b.barrier}</h5>
-          <span class="badge" style="background:${b.severity==='high'?'var(--badge-red)':b.severity==='medium'?'var(--badge-amber)':'var(--badge-blue)'};color:${b.severity==='high'?'var(--badge-red-fg)':b.severity==='medium'?'var(--badge-amber-fg)':'var(--badge-blue-fg)'}">${b.severity==='high'?'严重':b.severity==='medium'?'中等':'轻微'}</span>
-        </div>
-        <span class="badge badge-tag" style="margin-bottom:8px">${b.type}</span>
-        <p style="font-size:11px;color:var(--fg-muted)">💡 ${b.solution}</p>
-      </div>`).join('')}` : ''}
-
-    <!-- Results: Competitor Signals -->
-    ${clusters.competitor_signals?.length > 0 ? `
-    <div class="section-title">🎯 竞品信号</div>
-    ${clusters.competitor_signals.map(c => `
-      <div class="insight-card">
-        <h5>${c.competitor}</h5>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0">
-          <div style="font-size:11px">👍 <span style="color:#4ade80">${c.strength}</span></div>
-          <div style="font-size:11px">👎 <span style="color:#f87171">${c.weakness}</span></div>
-        </div>
-        <p style="font-size:11px;color:var(--fg-muted)">🎯 ${c.opportunity}</p>
-      </div>`).join('')}` : ''}
-
-    <!-- Results: Key Insights -->
-    ${clusters.key_insights?.length > 0 ? `
-    <div class="section-title">💡 关键洞察</div>
-    <div class="glass-card">${clusters.key_insights.map((k,i) => `<div class="insight-item"><span style="color:var(--accent);font-weight:700">${i+1}.</span> <span>${k}</span></div>`).join('')}</div>` : ''}
-
-    <!-- Results: Strategy Suggestions -->
-    ${strategies.strategies?.length > 0 ? `
-    <div class="section-title">📋 AI 策略建议</div>
-    ${strategies.strategies.map((s,i) => `
-      <div class="glass-card hover-card" style="margin-bottom:12px">
-        <div class="card-header">
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="badge ${s.priority==='P0'?'badge-p0':s.priority==='P1'?'badge-p1':'badge-p2'}">${s.priority||'P2'}</span>
-            <span style="font-size:11px;color:var(--fg-dim)">AI 生成</span>
-          </div>
-          <button class="btn-primary" onclick="addStrategyFromAI(${i})" style="font-size:11px;padding:4px 12px">+ 加入策略卡库</button>
-        </div>
-        <h4 style="font-size:15px;font-weight:700">${s.title}</h4>
-        <p style="font-size:12px;color:var(--fg-dim);margin-bottom:8px">${s.subtitle||''}</p>
-        <div style="font-size:12px;color:var(--fg-muted);line-height:1.6">${s.judgment||''}</div>
-        ${(s.content_ideas||[]).length > 0 ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${s.content_ideas.map(ci => `<span style="font-size:10px;background:var(--tag-bg);color:var(--tag-fg);padding:2px 8px;border-radius:4px">${ci}</span>`).join('')}</div>` : ''}
-      </div>`).join('')}` : ''}
   `;
+}
+
+async function runAutomationPipeline(mode) {
+  const s = apiSettings;
+  if (!s.apiKey && s.provider !== 'custom') { alert('请先配置 API Key'); return; }
+
+  const ctx = { comments: demoData.comments, demands: demoData.demands, barriers: demoData.barriers, competitorOpps: demoData.competitorOpps, contentItems: demoData.contentItems };
+
+  // Define agent execution order based on mode
+  let agentQueue = [];
+  if (mode === 'full') agentQueue = ['comments','content','demands','barriers','competitors','xhs','douyin','lab','dashboard','reviews'];
+  else if (mode === 'insight') agentQueue = ['comments','content','demands','barriers','competitors'];
+  else if (mode === 'strategy') agentQueue = ['xhs','douyin','lab','dashboard','reviews'];
+
+  pipelineState = { step:0, status:'running', results:{}, logs:[], currentAgent:null };
+  renderAIAnalysis();
+  addLog(`启动 ${mode==='full'?'全链路':mode==='insight'?'数据洞察':'策略生成'} 模式，共 ${agentQueue.length} 个 Agent`);
+
+  for (const agentId of agentQueue) {
+    const agent = agents[agentId];
+    if (!agent) continue;
+    pipelineState.currentAgent = agentId;
+    renderAIAnalysis();
+
+    const prompt = agent.buildPrompt(ctx);
+    if (!prompt) { addLog(`⏭️ Agent[${agentId}] 跳过：无可用数据`); continue; }
+
+    addLog(`🔄 Agent[${agentId}] ${agent.name} 执行中...`);
+    try {
+      const resp = await callLLM([{role:'user', content:prompt}], 3000);
+      let parsed = resp;
+      try { if (resp.includes('```json')) parsed = resp.split('```json')[1].split('```')[0].trim(); else if (resp.includes('```')) parsed = resp.split('```')[1].split('```')[0].trim(); } catch(e) {}
+      const msg = agent.applyResult(parsed);
+      pipelineState.results[`agent_${agentId}`] = { success: true, msg };
+      addLog(`✅ Agent[${agentId}] 完成: ${msg}`);
+      // Refresh context for downstream agents
+      ctx.comments = demoData.comments;
+      ctx.demands = demoData.demands;
+      ctx.barriers = demoData.barriers;
+      ctx.competitorOpps = demoData.competitorOpps;
+      ctx.contentItems = demoData.contentItems;
+    } catch(e) {
+      pipelineState.results[`agent_${agentId}`] = { success: false, error: e.message };
+      addLog(`❌ Agent[${agentId}] 失败: ${e.message}`, 'error');
+      // Continue to next agent even if one fails
+    }
+    renderAIAnalysis();
+  }
+
+  pipelineState.currentAgent = null;
+  pipelineState.status = 'done';
+  renderAIAnalysis();
 }
 
 // Migrate existing comments to include new fields
