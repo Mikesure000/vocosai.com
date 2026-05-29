@@ -2482,11 +2482,30 @@ function doConfirmImport() {
   setTimeout(() => {
     closeImportModal();
     renderPage('comments');
-    // Auto-trigger agent chain if API key configured
+    // 系统自动运转：导入后立即启动Agent链
     if (data.length >= 3 && apiSettings.apiKey) {
-      runAgentChain('comments').catch(e => console.error('Agent chain:', e));
+      // 显示运行状态
+      addToast('🧠 系统自动运转中：评论分析→需求洞察→障碍分析→竞品洞察→策略生成');
+      runAgentChain('comments').then(() => {
+        addToast('✅ 全链路分析完成！各模块已更新');
+        renderPage('comments');
+      }).catch(e => {
+        addToast('⚠️ 分析异常: ' + e.message);
+      });
     }
   }, 500);
+}
+
+// Toast通知
+function addToast(msg) {
+  var existing = document.getElementById('voc-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'voc-toast';
+  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#15171e;border:1px solid #6366f1;color:#e5e7eb;padding:12px 20px;border-radius:12px;font-size:13px;z-index:999;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideUp .3s ease';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 8000);
 }
 
 // Compatibility reference
@@ -2774,6 +2793,7 @@ async function runAgentChain(startId) {
     if (agentStatus[id]?.state === 'running') return;
     agentStatus[id] = getAgentStatus(id);
     agentStatus[id].state = 'running';
+    addToast(`${agent.icon} ${agent.name} 自动运行中...`);
     refreshCurrentPage();
     try {
       const ctx = { comments: demoData.comments, demands: demoData.demands, barriers: demoData.barriers, competitorOpps: demoData.competitorOpps, contentItems: demoData.contentItems };
