@@ -872,8 +872,11 @@ function renderDashboard() {
   const m = demoData.metrics;
   return `
     <div class="page-header">
-      <h2>本周内容投放决策台</h2>
-      <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>本周内容投放决策台</h2>
+        <p>基于 ${demoData.brand.name} 近30天评论数据，为您生成本周最应执行的5个动作</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('dashboard')" style="display:flex;align-items:center;gap:6px">🤖 Agent 汇总</button>
+      </div>
     </div>
 
     <div class="metric-grid" style="margin-bottom:28px">
@@ -986,7 +989,9 @@ function renderComments() {
         <h2>评论信号池</h2>
         <p>${demoData.brand.name} 及竞品在多平台的用户评论数据，共 ${allComments.length} 条</p>
       </div>
-      <button class="btn-primary" onclick="showImportModal()" style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="openAgentModal('comments')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
+        <button class="btn-primary" onclick="showImportModal()" style="display:flex;align-items:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         导入评论
       </button>
@@ -1091,8 +1096,11 @@ function toggleCommentRow(row, detailId) {
 function renderDemands() {
   return `
     <div class="page-header">
-      <h2>用户需求地图</h2>
-      <p>从评论中识别的用户真实需求，按频率和趋势排序</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>用户需求地图</h2>
+        <p>从评论中识别的用户真实需求，按频率和趋势排序</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('demands')" style="display:flex;align-items:center;gap:6px">🤖 Agent 洞察</button>
+      </div>
     </div>
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value gradient-text">${demoData.demands.length}</div><div class="metric-label">识别需求类别</div></div>
@@ -1125,8 +1133,11 @@ function renderBarriers() {
   const severityColors = { high:'fill-red', medium:'fill-amber', low:'fill-blue' };
   return `
     <div class="page-header">
-      <h2>购买障碍地图</h2>
-      <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>购买障碍地图</h2>
+        <p>用户为什么犹豫、不信、不买——识别并转化为行动建议</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('barriers')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
+      </div>
     </div>
     <div class="metric-grid" style="margin-bottom:24px">
       <div class="metric-card"><div class="metric-value" style="color:#f87171">${demoData.barriers.filter(b=>b.severity==='high').length}</div><div class="metric-label">高严重度障碍</div></div>
@@ -1158,8 +1169,11 @@ function renderBarriers() {
 function renderCompetitors() {
   return `
     <div class="page-header">
-      <h2>竞品机会地图</h2>
-      <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>竞品机会地图</h2>
+        <p>分析竞品评论区中的用户信号，识别我方可以切入的机会</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('competitors')" style="display:flex;align-items:center;gap:6px">🤖 Agent 洞察</button>
+      </div>
     </div>
     <div class="cards-grid" style="margin-bottom:32px">
       ${demoData.competitorOpps.map(o => `
@@ -1209,8 +1223,11 @@ function renderCompetitors() {
 function renderXHSStrategies() {
   return `
     <div class="page-header">
-      <h2>📕 小红书内容策略卡</h2>
-      <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>📕 小红书内容策略卡</h2>
+        <p>小红书平台专属内容策略——封面、标题、正文、标签、发布时机全覆盖</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('xhs')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
+      </div>
     </div>
     <div class="cards-grid-2">
       ${demoData.xhsStrategyCards.map(c => `
@@ -1274,8 +1291,11 @@ function showXHSDetail(id) {
 function renderDYStrategies() {
   return `
     <div class="page-header">
-      <h2>🎵 抖音内容策略卡</h2>
-      <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>🎵 抖音内容策略卡</h2>
+        <p>抖音平台专属内容策略——开头钩子、脚本结构、BGM、达人匹配全覆盖</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('douyin')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
+      </div>
     </div>
     <div class="cards-grid-2">
       ${demoData.dyStrategyCards.map(c => `
@@ -1826,8 +1846,11 @@ function closeModal() {
 function renderLab() {
   return `
     <div class="page-header">
-      <h2>🧪 内容实验室</h2>
-      <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>🧪 内容实验室</h2>
+        <p>将内容策略转化为投放团队可执行的 A/B 测试方案，覆盖小红书和抖音多平台素材测试</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('lab')" style="display:flex;align-items:center;gap:6px">🤖 Agent 生成</button>
+      </div>
     </div>
     ${demoData.testPlans.map(tp => `
       <div class="glass-card" style="margin-bottom:20px">
@@ -1873,8 +1896,11 @@ function renderLab() {
 function renderReviews() {
   return `
     <div class="page-header">
-      <h2>复盘归因中心</h2>
-      <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>复盘归因中心</h2>
+        <p>将投放结果、内容表现和评论反馈结合，解释为什么有效/无效，并生成下一步建议</p></div>
+        <button class="btn-secondary" onclick="openAgentModal('reviews')" style="display:flex;align-items:center;gap:6px">🤖 Agent 归因</button>
+      </div>
     </div>
     ${demoData.reviews.map(r => `
       <div class="glass-card" style="margin-bottom:20px">
@@ -2276,7 +2302,9 @@ function renderContentPool() {
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div><h2>📺 内容池</h2>
         <p>上传品牌和竞品的内容资产，AI 自动拆解内容框架、识别类型和标签 — 与评论信号池对称的内容分析工作台</p></div>
-        <button class="btn-primary" onclick="showContentImport()" style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="openAgentModal('content')" style="display:flex;align-items:center;gap:6px">🤖 Agent 分析</button>
+          <button class="btn-primary" onclick="showContentImport()" style="display:flex;align-items:center;gap:6px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           导入内容
         </button>
@@ -2387,6 +2415,204 @@ function addContentItem() {
   if (!item.contentText) { alert('请输入内容文案'); return; }
   demoData.contentItems.unshift(item);
   closeModal(); renderPage('content-pool');
+}
+
+// ==================== AI AGENTS ====================
+const agents = {
+  comments: {
+    name:'评论分析Agent', icon:'💬', skill:'评论清洗+语义标注+意图分类',
+    description:'分析当前评论池中的数据，自动完成清洗、情感判断、意图分类和核心实体提取',
+    buildPrompt(ctx) {
+      const cmts = ctx.comments.slice(0, 20).map(c => `[${c.id}] ${c.content}`).join('\n');
+      return `你是护肤评论分析专家。分析以下评论，返回JSON：{"analyses":[{"id":"ID","sentiment":"positive|neutral|negative","intent":"demand|barrier|comparison|praise|complaint|intent","demand_types":[],"barrier_types":[],"entities":{"competitors":[],"skin_types":[]},"purchase_signal":"high|medium|low","keywords":[],"summary":"一句话"}]}\n\n${cmts}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.analyses) parsed.analyses.forEach(a => { const c = demoData.comments.find(x => x.id === parseInt(a.id)); if (c) { c.sentiment = a.sentiment; c.type = a.intent; if (a.keywords) c.labels = a.keywords; } }); } catch(e) {}
+      return '✅ 评论标注已更新！刷新评论池查看结果';
+    }
+  },
+  demands: {
+    name:'需求洞察Agent', icon:'🗺️', skill:'需求聚类+趋势识别+场景映射',
+    description:'从评论语义分析结果中聚类用户需求，识别高频需求、上升趋势和场景关联',
+    buildPrompt(ctx) {
+      const samples = ctx.comments.filter(c => c.type && c.sentiment).slice(0, 20).map(c => `[${c.author}] ${c.content} (意图:${c.type})`).join('\n');
+      return `你是用户需求分析师。从以下评论样本中聚类用户需求，返回JSON：{"demands":[{"category":"人群适配|场景需求|效果验证|使用教育|竞品替代|成分安全|价格替代","text":"需求描述","frequency":5,"trend":"rising|stable","suggested_action":"建议动作"}]}\n\n${samples}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.demands) { parsed.demands.forEach((d,i) => { demoData.demands.push({ id:demoData.demands.length+1, category:d.category, text:d.text, frequency:d.frequency||0, trend:d.trend||'stable', action:d.suggested_action }); }); } } catch(e) {}
+      return `✅ 新增 ${parsed.demands?.length||0} 条需求洞察！`;
+    }
+  },
+  barriers: {
+    name:'障碍分析Agent', icon:'🛡️', skill:'购买障碍识别+严重度排序+对策',
+    description:'从评论中识别8类购买障碍，评估严重度并生成应对方案',
+    buildPrompt(ctx) {
+      const samples = ctx.comments.filter(c => c.type === 'barrier' || c.type === 'complaint').slice(0, 15).map(c => `[${c.author}] ${c.content}`).join('\n');
+      return `你是购买障碍分析师。从以下评论中识别购买障碍，返回JSON：{"barriers":[{"type":"price|trust|effect|audience|usage|competitor|risk","text":"障碍描述","severity":"high|medium|low","count":10,"solution":"解决方案"}]}\n\n${samples}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.barriers) { parsed.barriers.forEach(b => { demoData.barriers.push({ id:demoData.barriers.length+1, type:b.type, typeLabel:b.type, text:b.text, severity:b.severity, count:b.count||0, solution:b.solution }); }); } } catch(e) {}
+      return `✅ 新增 ${parsed.barriers?.length||0} 条障碍洞察！`;
+    }
+  },
+  competitors: {
+    name:'竞品洞察Agent', icon:'🎯', skill:'竞品信号识别+SWOT分析',
+    description:'分析竞品评论中的信号，识别竞品优势、劣势和切入机会',
+    buildPrompt(ctx) {
+      const comps = ctx.comments.filter(c => c.isCompetitor).slice(0, 15).map(c => `[${demoData.competitors.find(co=>co.id===c.competitorId)?.name||'竞品'}] ${c.content}`).join('\n');
+      return `你是竞品分析师。从以下竞品评论中识别信号，返回JSON：{"competitor_signals":[{"competitor":"竞品名","strength":"优势","weakness":"劣势","opportunity":"我方机会","action":"建议动作"}],"key_insights":["洞察"]}\n\n${comps}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.competitor_signals) { parsed.competitor_signals.forEach(s => { const existing = demoData.competitorOpps.find(o => o.competitor === s.competitor); if (!existing) demoData.competitorOpps.push({ id:demoData.competitorOpps.length+1, competitor:s.competitor, strength:s.strength, weakness:s.weakness, opportunity:s.opportunity, action:s.action }); }); } } catch(e) {}
+      return `✅ 竞品洞察已更新！`;
+    }
+  },
+  content: {
+    name:'内容分析Agent', icon:'📺', skill:'内容框架拆解+类型标签+卖点识别',
+    description:'分析内容资产，拆解内容框架、识别类型和标签、提取卖点和语调',
+    buildPrompt(ctx) {
+      const items = ctx.contentItems.filter(i => !i.isAnalyzed).slice(0, 5);
+      if (items.length === 0) return null;
+      const texts = items.map(c => `[${c.id}] ${c.platform}-${c.title}: ${c.contentText.substring(0,200)}`).join('\n\n');
+      return `你是内容策略分析师。分析以下内容，每条返回JSON：{"analyses":[{"id":"内容ID","framework":"框架拆解","type":"种草测评|教程|剧情|口播|对比测评|合集","tags":[],"hookType":"钩子类型","soldPoint":[],"tone":"语调","summary":"总结"}]}\n\n${texts}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.analyses) parsed.analyses.forEach(a => { const c = demoData.contentItems.find(x => x.id === parseInt(a.id)); if (c) { c.aiAnalysis = a; c.isAnalyzed = true; } }); } catch(e) {}
+      return `✅ 内容分析完成！刷新内容池查看`;
+    }
+  },
+  xhs: {
+    name:'小红书策略Agent', icon:'📕', skill:'小红书专属策略卡生成',
+    description:'基于用户洞察生成小红书平台策略卡（封面/标题/正文/标签/发布时机）',
+    buildPrompt(ctx) {
+      const insights = `需求:${(demoData.demands||[]).slice(0,5).map(d=>d.text).join('; ')}。障碍:${(demoData.barriers||[]).slice(0,3).map(b=>b.text).join('; ')}。`;
+      return `你是小红书内容策略专家。基于以下洞察生成2-3条小红书策略卡，返回JSON：{"cards":[{"title":"标题","subtitle":"副标题","priority":"P0|P1|P2","coverDirection":{"style":"风格","layout":"布局","text":"文字"},"titleFormula":"标题公式","bodyStructure":["结构"],"hashtags":["标签"],"postTime":"时间","engagement":["互动"],"evidence":["证据"],"kpis":["指标"]}]}\n\n${insights}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.cards) parsed.cards.forEach(c => { demoData.xhsStrategyCards.push({...c, id:demoData.xhsStrategyCards.length+1, status:'draft'}); }); } catch(e) {}
+      return `✅ 新增 ${parsed.cards?.length||0} 条小红书策略卡！`;
+    }
+  },
+  douyin: {
+    name:'抖音策略Agent', icon:'🎵', skill:'抖音专属策略卡生成',
+    description:'基于用户洞察生成抖音平台策略（钩子/分镜/BGM/达人/人群定向）',
+    buildPrompt(ctx) {
+      const insights = `需求:${(demoData.demands||[]).slice(0,5).map(d=>d.text).join('; ')}。障碍:${(demoData.barriers||[]).slice(0,3).map(b=>b.text).join('; ')}。`;
+      return `你是抖音内容策略专家。基于洞察生成2-3条抖音策略卡，返回JSON：{"cards":[{"title":"标题","subtitle":"副标题","priority":"P0|P1|P2","hook":{"type":"钩子类型","line":"话术","duration":"秒数"},"script":[{"time":"时间","visual":"画面","voice":"口播","subtitle":"字幕"}],"bgm":"BGM","talentMatch":"达人类型","audienceTarget":["人群"],"commentScript":["互动"],"evidence":["证据"],"kpis":["指标"]}]}\n\n${insights}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.cards) parsed.cards.forEach(c => { demoData.dyStrategyCards.push({...c, id:demoData.dyStrategyCards.length+1, status:'draft'}); }); } catch(e) {}
+      return `✅ 新增 ${parsed.cards?.length||0} 条抖音策略卡！`;
+    }
+  },
+  dashboard: {
+    name:'决策汇总Agent', icon:'🏠', skill:'本周决策建议汇总+优先级排序',
+    description:'汇总所有模块洞察，生成本周Top 5 内容投放建议动作',
+    buildPrompt(ctx) {
+      const context = `评论:${ctx.comments.length}条。需求:${(ctx.demands||[]).slice(0,3).map(d=>d.text).join(';')}。障碍:${(ctx.barriers||[]).slice(0,3).map(b=>b.text).join(';')}。竞品:${(ctx.competitorOpps||[]).slice(0,2).map(o=>o.competitor+':'+o.opportunity).join(';')}`;
+      return `你是品牌内容投放策略总监。基于以下数据生成本周Top5建议动作，返回JSON：{"actions":[{"priority":"P0|P1|P2","title":"动作标题","reason":"依据","goal":"目标","targetMetric":"指标","urgency":"high|medium|low"}]}\n\n${context}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.actions) demoData.topActions = parsed.actions; } catch(e) {}
+      return `✅ 决策台已刷新！`;
+    }
+  },
+  lab: {
+    name:'素材测试Agent', icon:'🧪', skill:'A/B测试方案设计',
+    description:'基于策略卡生成素材A/B测试方案（测试组/变量/预算/规则）',
+    buildPrompt(ctx) {
+      const cards = (demoData.strategyCards||[]).slice(0,3).map(c => c.title).join('; ');
+      return `你是投放测试专家。基于以下策略卡生成2组测试方案，返回JSON：{"plans":[{"objective":"目标","cardTitle":"关联策略","variants":[{"group":"A","name":"方向","content":"内容","budget":"¥","status":"planned"}],"totalBudget":"¥","successRule":"放大规则","stopRule":"停止规则"}]}\n\n策略卡:${cards}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); if (parsed.plans) parsed.plans.forEach(p => { demoData.testPlans.push({...p, id:demoData.testPlans.length+1}); }); } catch(e) {}
+      return `✅ 已生成 ${parsed.plans?.length||0} 组测试方案！`;
+    }
+  },
+  reviews: {
+    name:'复盘归因Agent', icon:'📊', skill:'投放结果归因+优化建议',
+    description:'结合投放数据和评论变化，归因分析并生成下一轮优化建议',
+    buildPrompt(ctx) {
+      const latest = (demoData.reviews||[])[0];
+      return `你是投放复盘专家。基于以下数据生成归因分析和下一步建议，返回JSON：{"attribution":"归因结论","nextActions":["动作"]}\n\n最近数据:${latest?JSON.stringify(latest):'无'}`;
+    },
+    applyResult(data) {
+      try { const parsed = JSON.parse(data); alert('归因结论:\n' + parsed.attribution); } catch(e) {}
+      return '✅ 归因分析完成';
+    }
+  }
+};
+
+function openAgentModal(agentId) {
+  const agent = agents[agentId];
+  if (!agent) return;
+  if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { alert('请先在系统设置中配置 API Key'); return; }
+
+  const ctx = {
+    comments: demoData.comments,
+    demands: demoData.demands,
+    barriers: demoData.barriers,
+    competitorOpps: demoData.competitorOpps,
+    contentItems: demoData.contentItems
+  };
+
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:28px">${agent.icon}</span>
+          <h2 style="font-size:20px;font-weight:800">${agent.name}</h2>
+        </div>
+        <p style="font-size:12px;color:var(--fg-dim)">Skill: ${agent.skill}</p>
+        <p style="font-size:12px;color:var(--fg-muted);margin-top:4px">${agent.description}</p>
+      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div style="background:var(--card-hover);padding:12px;border-radius:8px;margin-bottom:16px;font-size:12px;color:var(--fg-dim)">
+      📊 当前数据: 评论${ctx.comments.length}条 | 需求${ctx.demands.length}条 | 障碍${ctx.barriers.length}条 | 内容${ctx.contentItems.length}条
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn-primary" onclick="runAgent('${agentId}')" style="flex:1">🚀 开始分析</button>
+      <button class="btn-secondary" onclick="closeModal()">关闭</button>
+    </div>
+    <div id="agentResult" style="font-size:12px"></div>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+async function runAgent(agentId) {
+  const agent = agents[agentId];
+  const ctx = {
+    comments: demoData.comments,
+    demands: demoData.demands,
+    barriers: demoData.barriers,
+    competitorOpps: demoData.competitorOpps,
+    contentItems: demoData.contentItems
+  };
+
+  const prompt = agent.buildPrompt(ctx);
+  if (!prompt) { document.getElementById('agentResult').innerHTML = '<span style="color:#fbbf24">⚠️ 当前没有可分析的数据，请先导入或添加</span>'; return; }
+
+  document.getElementById('agentResult').innerHTML = '<span style="color:#fbbf24"><span class="spinner"></span> Agent 分析中，请稍候...</span>';
+  try {
+    const resp = await callLLM([{role:'user', content:prompt}], 3000);
+    let parsed = resp;
+    try {
+      if (resp.includes('```json')) parsed = resp.split('```json')[1].split('```')[0].trim();
+      else if (resp.includes('```')) parsed = resp.split('```')[1].split('```')[0].trim();
+    } catch(e) {}
+    const msg = agent.applyResult(parsed);
+    document.getElementById('agentResult').innerHTML = `
+      <div class="import-result success">${msg}</div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;color:var(--fg-dim);margin-bottom:4px">📄 原始响应 (前500字):</div>
+        <div class="log-stream" style="max-height:200px">${resp.substring(0, 500).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
+      <button class="btn-primary" onclick="closeModal();renderPage('${agentId==='content'?'content-pool':agentId==='xhs'?'xhs-strategies':agentId==='douyin'?'dy-strategies':agentId==='dashboard'?'dashboard':agentId==='lab'?'lab':agentId==='reviews'?'reviews':agentId}')" style="margin-top:12px;width:100%">刷新页面查看结果</button>
+    `;
+  } catch(e) {
+    document.getElementById('agentResult').innerHTML = `<div class="import-result error">❌ ${e.message}</div>`;
+  }
 }
 
 // ==================== SYSTEM SETTINGS ====================
