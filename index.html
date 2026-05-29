@@ -270,6 +270,10 @@ tailwind.config = {
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="2" r="2"/></svg>
       竞品机会地图
     </button>
+    <button class="nav-item" data-page="content-pool" onclick="navigateTo('content-pool', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/><line x1="8" y1="10" x2="12" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/></svg>
+      内容池
+    </button>
     <div class="nav-section">内容策略</div>
     <button class="nav-item" data-page="xhs-strategies" onclick="navigateTo('xhs-strategies', this)">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -678,6 +682,28 @@ const demoData = {
       }
     ]
   },
+  contentItems: [
+    { id:1, title:'油皮夏日控油实测！8小时吸油纸对比', platform:'抖音', contentType:'短视频', contentUrl:'https://v.douyin.com/example1', author:'护肤成分党小美', publishDate:'2026-05-25',
+      contentText:'你是不是觉得所有控油精华都黏腻？今天实测轻氧修护精华，早上8点涂完，每两小时用吸油纸记录。到下午4点，吸油纸几乎没变色！成分表里依克多因+神经酰胺，从根源控油，不是表面吸油。链接在左下角。',
+      engagement:{likes:3200,comments:456,shares:128,saves:890}, isAnalyzed:true,
+      aiAnalysis:{framework:'痛点开场(0-3s) → 实测过程(3-15s) → 成分解析(15-22s) → 效果证明(22-28s) → 引导转化(28-30s)',type:'种草测评',tags:['控油','实测','成分解析','油皮'],hookType:'痛点质问型',sellingPoints:['清爽不黏腻','8小时控油','成分科学'],tone:'专业亲民',summary:'通过8小时吸油纸实测证明控油效果，成分科普建立信任，引导左下角购买'} },
+    { id:2, title:'敏感肌急救！这款面膜15分钟退红测评', platform:'小红书', contentType:'图文', contentUrl:'https://www.xiaohongshu.com/example2', author:'敏感肌的自我修养', publishDate:'2026-05-24',
+      contentText:'换季又泛红了！被闺蜜安利的轻氧急救面膜，敷了15分钟，红退了一大半！成分有泛醇B5和马齿苋提取物，械字号标准。我连续用了一周，角质层明显变厚了，不像以前一碰就红。姐妹们可以冲！',
+      engagement:{likes:5600,comments:823,shares:210,saves:1500}, isAnalyzed:true,
+      aiAnalysis:{framework:'痛点引入(封面+标题) → 使用过程(正文前半) → 成分说明 → 长期效果 → 推荐引导',type:'种草测评',tags:['敏感肌','急救面膜','退红','换季护肤'],hookType:'痛点场景型',sellingPoints:['15分钟退红','械字号标准','长期修护'],tone:'亲切分享',summary:'以换季泛红痛点为切入，展示急救效果和长期改善，用械字号标准增强可信度'} },
+    { id:3, title:'和润百颜比，轻氧到底差在哪？客观对比测评', platform:'抖音', contentType:'短视频', contentUrl:'https://v.douyin.com/example3', author:'护肤检测员老张', publishDate:'2026-05-23',
+      contentText:'都叫修护精华，轻氧凭什么比润百颜便宜100块？我们不讲虚的，直接看成分和28天实测。左边润百颜屏障修护次抛，右边轻氧修护精华。成分上都有依克多因，但轻氧多了神经酰胺和积雪草，对敏感肌更友好。28天后，两边的褪红效果基本持平，但轻氧肤感更清爽。单次使用成本，轻氧比润百颜低42%。总结：效果相当但更便宜、肤感更好。',
+      engagement:{likes:8900,comments:1200,shares:450,saves:2100}, isAnalyzed:false,
+      aiAnalysis:null },
+    { id:4, title:'打工人的VC亮肤日记 Day14', platform:'B站', contentType:'短视频', contentUrl:'https://www.bilibili.com/video/example4', author:'加班狂魔也要美', publishDate:'2026-05-22',
+      contentText:'第14天打卡！之前暗沉得像刚从地窖爬出来，用了轻氧VC安瓶14天，朋友说我白了至少一个色号。它用的是VC乙基醚，不感光白天也能用，每支独立包装保持活性。唯一槽点：一支量有点多，抹完脸还够抹脖子。',
+      engagement:{likes:2100,comments:345,shares:56,saves:780}, isAnalyzed:false,
+      aiAnalysis:null },
+    { id:5, title:'轻氧控油水乳全套使用教程 | 早C晚A平替方案', platform:'小红书', contentType:'图文', contentUrl:'https://www.xiaohongshu.com/example5', author:'护肤课代表', publishDate:'2026-05-21',
+      contentText:'很多人问我油皮怎么搭早C晚A！油敏皮不敢用高浓度VC和A醇的，试试这个平替方案。早上：轻氧VC安瓶（3%VC乙基醚，温和不刺激）+ 控油水。晚上：修护精华 + 控油乳。这个搭配的核心：白天抗氧化控油，晚上修护屏障。用了一个月，T区出油少了三分之二，毛孔也小了！',
+      engagement:{likes:4500,comments:678,shares:189,saves:1200}, isAnalyzed:false,
+      aiAnalysis:null }
+  ],
   xhsStrategyCards: [
     {
       id:1, title:'油皮姐妹看过来！这个精华我回购3次了', subtitle:'小红书-控油精华种草策略', priority:'P0', status:'active',
@@ -831,6 +857,7 @@ function renderPage(page) {
     case 'dy-strategies': main.innerHTML = renderDYStrategies(); break;
     case 'brand-center': main.innerHTML = renderBrandCenter(); break;
     case 'benchmark-center': main.innerHTML = renderBenchmarkCenter(); break;
+    case 'content-pool': main.innerHTML = renderContentPool(); break;
     case 'lab': main.innerHTML = renderLab(); break;
     case 'reviews': main.innerHTML = renderReviews(); break;
     case 'reports': main.innerHTML = renderReports(); break;
@@ -2240,6 +2267,128 @@ function confirmImport() {
   window._importData = null;
 }
 
+// ==================== CONTENT POOL ====================
+function renderContentPool() {
+  const items = demoData.contentItems;
+  const analyzed = items.filter(i => i.isAnalyzed).length;
+  return `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><h2>📺 内容池</h2>
+        <p>上传品牌和竞品的内容资产，AI 自动拆解内容框架、识别类型和标签 — 与评论信号池对称的内容分析工作台</p></div>
+        <button class="btn-primary" onclick="showContentImport()" style="display:flex;align-items:center;gap:6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          导入内容
+        </button>
+      </div>
+    </div>
+
+    <div class="metric-grid" style="margin-bottom:24px">
+      <div class="metric-card"><div class="metric-value gradient-text">${items.length}</div><div class="metric-label">内容总数</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#60a5fa">${analyzed}</div><div class="metric-label">已 AI 分析</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#a78bfa">${items.filter(i=>i.platform==='抖音').length}</div><div class="metric-label">抖音</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#f87171">${items.filter(i=>i.platform==='小红书').length}</div><div class="metric-label">小红书</div></div>
+    </div>
+
+    <div class="cards-grid-2">
+      ${items.map((c, i) => `
+        <div class="glass-card hover-card">
+          <div class="card-header">
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="badge badge-tag">${c.platform}</span>
+              <span class="badge badge-purple">${c.contentType}</span>
+              ${c.isAnalyzed ? '<span style="font-size:10px;color:#4ade80">✓ AI已分析</span>' : '<span style="font-size:10px;color:var(--fg-dim)">○ 待分析</span>'}
+            </div>
+            <span style="font-size:11px;color:var(--fg-dim)">${c.publishDate}</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.4">${c.title}</h4>
+          <p style="font-size:12px;color:var(--fg-muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px">${c.contentText}</p>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--fg-dim);margin-bottom:8px">
+            <span>👤 ${c.author}</span>
+            <span>❤️ ${c.engagement.likes.toLocaleString()}</span>
+            <span>💬 ${c.engagement.comments.toLocaleString()}</span>
+          </div>
+          ${c.isAnalyzed && c.aiAnalysis ? `
+          <div style="background:var(--card-hover);padding:12px;border-radius:8px;margin-top:8px">
+            <div style="font-size:11px;color:var(--fg-dim);margin-bottom:6px">🤖 AI 分析</div>
+            <div style="font-size:12px;color:var(--fg-muted);line-height:1.5;margin-bottom:6px"><strong>框架：</strong>${c.aiAnalysis.framework}</div>
+            <div style="font-size:12px;color:var(--fg-muted);line-height:1.5;margin-bottom:6px"><strong>类型：</strong>${c.aiAnalysis.type} · 钩子：${c.aiAnalysis.hookType} · 语调：${c.aiAnalysis.tone}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">${c.aiAnalysis.tags.map(t => `<span class="badge badge-tag" style="font-size:10px">${t}</span>`).join('')}</div>
+          </div>` : `
+          <button class="btn-primary" onclick="analyzeContentItem(${i})" style="font-size:12px;padding:4px 12px;margin-top:4px">🤖 AI 分析此内容</button>`}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function analyzeContentItem(index) {
+  const c = demoData.contentItems[index];
+  if (!c) return;
+  if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { alert('请先在系统设置中配置 API Key'); return; }
+  // Show loading on the button
+  demoData.contentItems[index]._loading = true;
+  renderPage('content-pool');
+
+  try {
+    const prompt = `你是内容策略分析专家。分析以下${c.platform}内容，返回JSON：
+{"framework":"内容框架拆解（如：痛点开场→实测→成分→效果→引导，每段标注秒数/段落）",
+"type":"内容类型（种草测评/教程/剧情/口播/对比测评/合集/日常vlog）",
+"tags":["标签1","标签2"],
+"hookType":"钩子类型（痛点质问型/好奇悬念型/效果对比型/价格型/教程型）",
+"soldPoint":["涉及的卖点"],
+"tone":"语调风格（专业亲民/亲切分享/严肃科普/搞笑娱乐/情感共鸣）",
+"summary":"一句话总结"}
+
+内容标题：${c.title}
+内容正文：${c.contentText}`;
+
+    const resp = await callLLM([{role:'user', content:prompt}], 2000);
+    const parsed = JSON.parse(resp);
+    c.aiAnalysis = parsed;
+    c.isAnalyzed = true;
+  } catch(e) {
+    alert('AI 分析失败: ' + e.message);
+  }
+  c._loading = false;
+  renderPage('content-pool');
+}
+
+function showContentImport() {
+  document.getElementById('strategyModalContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+      <div><h2 style="font-size:20px;font-weight:800">📺 导入内容数据</h2>
+      <p style="font-size:12px;color:var(--fg-dim)">支持 CSV/JSON 格式，或直接粘贴内容文本</p></div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:28px;line-height:1">&times;</button>
+    </div>
+    <div class="api-settings-section"><label>平台</label><select class="api-select" id="ci-platform"><option>抖音</option><option>小红书</option><option>B站</option><option>视频号</option></select></div>
+    <div class="api-settings-section"><label>内容类型</label><select class="api-select" id="ci-type"><option>短视频</option><option>图文</option><option>直播</option></select></div>
+    <div class="api-settings-section"><label>标题</label><input type="text" class="api-input" id="ci-title" placeholder="内容标题"></div>
+    <div class="api-settings-section"><label>作者</label><input type="text" class="api-input" id="ci-author" placeholder="作者名称"></div>
+    <div class="api-settings-section"><label>内容文案/字幕</label><textarea class="api-input" id="ci-text" style="min-height:120px;resize:vertical" placeholder="粘贴内容文案或视频字幕..."></textarea></div>
+    <button class="btn-primary" onclick="addContentItem()" style="margin-top:16px;width:100%">➕ 添加到内容池</button>
+  `;
+  document.getElementById('strategyModal').style.display = 'flex';
+}
+
+function addContentItem() {
+  const item = {
+    id: demoData.contentItems.length + 1,
+    title: document.getElementById('ci-title').value.trim() || '未命名内容',
+    platform: document.getElementById('ci-platform').value,
+    contentType: document.getElementById('ci-type').value,
+    author: document.getElementById('ci-author').value.trim() || '未知作者',
+    contentText: document.getElementById('ci-text').value.trim(),
+    publishDate: new Date().toISOString().split('T')[0],
+    contentUrl: '',
+    engagement: { likes: 0, comments: 0, shares: 0, saves: 0 },
+    isAnalyzed: false, aiAnalysis: null
+  };
+  if (!item.contentText) { alert('请输入内容文案'); return; }
+  demoData.contentItems.unshift(item);
+  closeModal(); renderPage('content-pool');
+}
+
 // ==================== SYSTEM SETTINGS ====================
 let callLogs = JSON.parse(localStorage.getItem('voc-call-logs')||'[]');
 
@@ -2457,7 +2606,7 @@ async function testApiConnection() {
   const result = document.getElementById('apiTestResult');
   result.innerHTML = '<span style="color:#fbbf24">🔄 正在测试连接...</span>';
   try {
-    const resp = await callLLM([{role:'user',content:'回复"OK"'}], 10, true);
+    const resp = await callLLM([{role:'user',content:'回复"OK"'}], 100, true);
     result.innerHTML = resp.includes('OK') ? '<span style="color:#4ade80">✅ 连接成功！模型响应正常</span>' : `<span style="color:#fbbf24">⚠️ 收到响应但内容异常: ${resp.substring(0,100)}</span>`;
   } catch(e) {
     result.innerHTML = `<span style="color:#f87171">❌ 连接失败: ${e.message}</span>`;
@@ -2497,10 +2646,13 @@ async function callLLM(messages, maxTokens = 2000, short = false) {
   }
 
   const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
   const resp = await fetch(fetchUrl, {
     method:'POST', headers,
-    body: JSON.stringify(body)
-  });
+    body: JSON.stringify(body),
+    signal: controller.signal
+  }).finally(() => clearTimeout(timeoutId));
   const latency = Date.now() - startTime;
 
   if (!resp.ok) {
@@ -2711,6 +2863,52 @@ function addStrategyFromAI(index) {
 }
 
 // Render AI Analysis Page
+async function testSingleComment() {
+  const s = apiSettings;
+  if (!s.apiKey && s.provider !== 'custom') { alert('请先配置 API Key'); return; }
+  const testComment = demoData.comments[0]?.content || '这个和几十块的有什么区别？';
+  pipelineState = { step:0, status:'running', results:{}, logs:[] };
+  renderAIAnalysis();
+  addLog('🔬 单条测试模式');
+  addLog(`测试评论: "${testComment}"`);
+  addLog(`API 端点: ${s.provider==='deepseek'?'DeepSeek V3':s.provider==='openai'?'OpenAI':'自定义'}`);
+  try {
+    updatePipelineStep(0, 'active');
+    addLog('正在发送请求...');
+    const t0 = Date.now();
+    const resp = await callLLM([{
+      role:'user',
+      content:`分析以下护肤评论，返回JSON：{"sentiment":"positive|neutral|negative","intent":"demand|barrier|comparison|praise|complaint|intent","summary":"一句话总结"}\n评论: ${testComment}`
+    }], 500);
+    const elapsed = Date.now() - t0;
+    addLog(`✅ 请求成功 (${elapsed}ms)`);
+    addLog(`响应: ${resp.substring(0, 300)}`);
+    try {
+      const parsed = JSON.parse(resp);
+      addLog(`解析成功: 情感=${parsed.sentiment}, 意图=${parsed.intent}, 摘要=${parsed.summary}`);
+    } catch(e) {
+      addLog(`⚠️ JSON解析失败，原始响应: ${resp.substring(0, 200)}`);
+    }
+    updatePipelineStep(0, 'done');
+    pipelineState.status = 'done';
+  } catch(e) {
+    addLog(`❌ 失败: ${e.message}`, 'error');
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      addLog('💡 可能是 CORS 跨域问题，请在系统设置中配置 CORS 代理', 'warn');
+    } else if (e.message.includes('401')) {
+      addLog('💡 API Key 无效，请重新生成', 'warn');
+    } else if (e.message.includes('402')) {
+      addLog('💡 DeepSeek 余额不足，请充值', 'warn');
+    } else if (e.message.includes('timeout') || e.message.includes('abort')) {
+      addLog('💡 请求超时(90s)，请检查网络或使用代理', 'warn');
+    }
+    pipelineState.status = 'error';
+    pipelineState.errorMsg = e.message;
+    updatePipelineStep(0, 'error');
+  }
+  renderAIAnalysis();
+}
+
 function renderAIAnalysis() {
   const hasKey = apiSettings.apiKey || apiSettings.provider === 'custom';
   const pipelineSteps = [
@@ -2748,8 +2946,9 @@ function renderAIAnalysis() {
         </div>
         <div style="display:flex;gap:10px">
           <button class="btn-primary" onclick="runAnalysisPipeline()" ${!hasKey?'disabled style="opacity:.5;cursor:not-allowed"':''} ${pipelineState.status==='running'?'disabled style="opacity:.5;cursor:not-allowed"':''}>
-            ${pipelineState.status==='running'?'🔄 分析中...':'🚀 开始分析'}
+            ${pipelineState.status==='running'?'🔄 分析中...':'🚀 开始完整分析'}
           </button>
+          <button class="btn-secondary" onclick="testSingleComment()" ${!hasKey?'disabled style="opacity:.5;cursor:not-allowed"':''}>🔬 单条测试</button>
           <button class="btn-secondary" onclick="pipelineState={step:0,status:'idle',results:{},logs:[]};renderAIAnalysis()">重置</button>
         </div>
       </div>
