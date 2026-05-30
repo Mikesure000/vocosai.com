@@ -19,20 +19,31 @@ jobs:
       - name: Verify deployment secrets
         env:
           VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
+          VOCOS_SSH_PASSWORD: ${{ secrets.VOCOS_SSH_PASSWORD }}
         run: |
           test -n "$VOCOS_SSH_HOST"
           test -n "$VOCOS_SSH_USER"
           test -n "$VOCOS_SSH_PORT"
-          test -n "$VOCOS_SSH_KEY"
+          if [ -z "$VOCOS_SSH_KEY" ] && [ -z "$VOCOS_SSH_PASSWORD" ]; then
+            echo "Set either VOCOS_SSH_KEY or VOCOS_SSH_PASSWORD in repository secrets."
+            exit 1
+          fi
 
       - name: Deploy over SSH
         env:
           VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
+          VOCOS_SSH_PASSWORD: ${{ secrets.VOCOS_SSH_PASSWORD }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          printf '%s\n' "$VOCOS_SSH_KEY" > ~/.ssh/vocos_key
-          chmod 600 ~/.ssh/vocos_key
           ssh-keyscan -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/vocos_key -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_USER@$VOCOS_SSH_HOST" \
-            "set -euo pipefail; curl -fsSL https://raw.githubusercontent.com/Mikesure000/vocosai.com/main/fullstack/deploy/deploy-vocos.sh -o /tmp/deploy-vocos.sh; sudo bash /tmp/deploy-vocos.sh"
+          deploy_command="set -euo pipefail; curl -fsSL https://raw.githubusercontent.com/Mikesure000/vocosai.com/main/fullstack/deploy/deploy-vocos.sh -o /tmp/deploy-vocos.sh; sudo bash /tmp/deploy-vocos.sh"
+          if [ -n "$VOCOS_SSH_KEY" ]; then
+            printf '%s\n' "$VOCOS_SSH_KEY" > ~/.ssh/vocos_key
+            chmod 600 ~/.ssh/vocos_key
+            ssh -i ~/.ssh/vocos_key -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_USER@$VOCOS_SSH_HOST" "$deploy_command"
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+            sshpass -p "$VOCOS_SSH_PASSWORD" ssh -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_USER@$VOCOS_SSH_HOST" "$deploy_command"
+          fi
