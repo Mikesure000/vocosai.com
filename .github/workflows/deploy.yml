@@ -11,23 +11,23 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VOCOS_SSH_HOST: ${{ vars.VOCOS_SSH_HOST || '1.15.171.17' }}
+      VOCOS_SSH_USER: ${{ vars.VOCOS_SSH_USER || 'root' }}
+      VOCOS_SSH_PORT: ${{ vars.VOCOS_SSH_PORT || '22' }}
     steps:
       - name: Verify deployment secrets
         env:
-          VOCOS_SSH_HOST: ${{ secrets.VOCOS_SSH_HOST }}
-          VOCOS_SSH_USER: ${{ secrets.VOCOS_SSH_USER }}
           VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
         run: |
           test -n "$VOCOS_SSH_HOST"
           test -n "$VOCOS_SSH_USER"
+          test -n "$VOCOS_SSH_PORT"
           test -n "$VOCOS_SSH_KEY"
 
       - name: Deploy over SSH
         env:
-          VOCOS_SSH_HOST: ${{ secrets.VOCOS_SSH_HOST }}
-          VOCOS_SSH_USER: ${{ secrets.VOCOS_SSH_USER }}
           VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
-          VOCOS_SSH_PORT: ${{ secrets.VOCOS_SSH_PORT || '22' }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
