@@ -3,30 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Voice of Consumer OS</title>
+  <title>VOCOS | Voice of Consumer OS</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="VOCOS navigation">
     <div class="brand">
-      <strong>Voice of Consumer OS</strong>
-      <span id="activeBrandLabel">加载品牌中</span>
+      <div class="brand-mark" aria-hidden="true">V</div>
+      <div>
+        <strong>VOCOS</strong>
+        <span id="activeBrandLabel">加载品牌中...</span>
+      </div>
     </div>
+    <div class="sidebar-section">Workspace</div>
     <button class="nav active" data-view="dashboard">本周决策台</button>
     <button class="nav" data-view="brands">多品牌管理</button>
     <button class="nav" data-view="comments">持续导入</button>
     <button class="nav" data-view="review">审核工作台</button>
     <button class="nav" data-view="briefs">策略 Brief</button>
     <button class="nav" data-view="search">全局搜索</button>
+    <div class="sidebar-section">Insight</div>
     <button class="nav" data-view="demands">用户需求地图</button>
     <button class="nav" data-view="barriers">购买障碍地图</button>
     <button class="nav" data-view="competitors">竞品机会地图</button>
+    <div class="sidebar-section">Activation</div>
     <button class="nav" data-view="xhs">小红书策略卡</button>
     <button class="nav" data-view="douyin">抖音策略卡</button>
     <button class="nav" data-view="content">内容资产池</button>
     <button class="nav" data-view="lab">内容实验室</button>
     <button class="nav" data-view="reviews">复盘归因中心</button>
     <button class="nav" data-view="reports">报告中心</button>
+    <div class="sidebar-section">System</div>
     <button class="nav" data-view="brand">品牌中心</button>
     <button class="nav" data-view="benchmark">对标中心</button>
     <button class="nav" data-view="knowledge">品类知识库</button>
@@ -36,15 +43,53 @@
 
   <main>
     <header class="topbar">
-      <div>
+      <div class="view-heading">
+        <span class="eyebrow">Consumer intelligence workspace</span>
         <h1 id="viewTitle">本周决策台</h1>
         <p id="viewDesc">评论驱动的品牌内容投放策略系统</p>
       </div>
-      <div class="status" id="apiStatus">连接中...</div>
+      <div class="top-actions">
+        <button class="nav top-action" data-view="search">搜索</button>
+        <button class="nav top-action primary-action" data-view="ai">运行 AI</button>
+        <div class="status" id="apiStatus">连接中...</div>
+      </div>
     </header>
 
     <section id="app"></section>
   </main>
+
+  <aside class="inspector" aria-label="AI copilot">
+    <div class="copilot-head">
+      <span class="pulse" aria-hidden="true"></span>
+      <div>
+        <strong>Strategy Copilot</strong>
+        <span>实时把评论转成行动</span>
+      </div>
+    </div>
+    <div class="assistant-card">
+      <span class="badge">Live workflow</span>
+      <h2>Import → Analyze → Brief → Review</h2>
+      <p>保持现有全栈功能不变，将核心流程压缩成一个可协作的深色工作台。</p>
+      <div class="assistant-actions">
+        <button class="nav" data-view="comments">导入评论</button>
+        <button class="nav" data-view="review">审核产出</button>
+        <button class="nav" data-view="briefs">生成 Brief</button>
+      </div>
+    </div>
+    <div class="assistant-card compact">
+      <div class="mini-row">
+        <span>Decision quality</span>
+        <strong>92%</strong>
+      </div>
+      <div class="mini-meter"><span style="width:92%"></span></div>
+      <p>优先处理 P0 策略、待审 AI 产出和最新导入批次。</p>
+    </div>
+    <div class="assistant-card compact">
+      <label for="copilotPrompt">Command</label>
+      <textarea id="copilotPrompt" placeholder="例如：帮我找到本周最高频的购买障碍"></textarea>
+      <button class="nav assistant-submit" data-view="ai">打开 AI 引擎</button>
+    </div>
+  </aside>
 
   <template id="loading">
     <div class="empty">加载中...</div>
