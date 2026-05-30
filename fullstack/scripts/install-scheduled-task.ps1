@@ -1,6 +1,6 @@
 param(
   [string]$TaskName = "VocosFullstack",
-  [string]$ProjectRoot = "E:\codex\vocos-local\my-vocos-project-main\fullstack"
+  [string]$ProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 )
 
 $ErrorActionPreference = "Stop"

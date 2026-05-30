@@ -1,12 +1,12 @@
 param(
-  [string]$ProjectRoot = "E:\codex\vocos-local\my-vocos-project-main\fullstack",
-  [string]$Python = "C:\Users\daxia\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+  [string]$ProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path,
+  [string]$Python = "python"
 )
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path -LiteralPath $Python)) {
-  throw "Python executable not found: $Python"
+if (-not (Get-Command $Python -ErrorAction SilentlyContinue)) {
+  throw "Python executable not found on PATH: $Python"
 }
 
 if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot "app.py"))) {

@@ -13,7 +13,7 @@ This directory contains a runnable full-stack implementation of the original sin
 
 ```powershell
 $env:VOC_PORT="8090"
-C:\Users\daxia\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe app.py
+python app.py
 ```
 
 Open:
@@ -84,8 +84,8 @@ Use `.env.example` as the template for future deployments. After future code cha
 sync only source files and run:
 
 ```powershell
-C:\Users\daxia\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m py_compile fullstack\app.py
-C:\Users\daxia\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --check fullstack\public\app.js
+python -m py_compile fullstack\app.py
+node --check fullstack\public\app.js
 ```
 
 ## Fixed Domain Deployment
