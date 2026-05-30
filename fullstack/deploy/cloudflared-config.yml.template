@@ -1,0 +1,21 @@
+# Copy this file to:
+#   C:\Users\<you>\.cloudflared\config.yml
+#
+# Then replace:
+#   <TUNNEL_ID> with the id returned by `cloudflared tunnel create vocos`
+#   <USER> with your Windows user folder name
+#
+# The hostnames below use the subdomains:
+#   vocosai.com
+#   www.vocosai.com
+# If that is a placeholder, replace it with your real domain before routing DNS.
+
+tunnel: <TUNNEL_ID>
+credentials-file: C:\Users\<USER>\.cloudflared\<TUNNEL_ID>.json
+
+ingress:
+  - hostname: vocosai.com
+    service: http://127.0.0.1:8090
+  - hostname: www.vocosai.com
+    service: http://127.0.0.1:8090
+  - service: http_status:404

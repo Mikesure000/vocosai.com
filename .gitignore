@@ -1,7 +1,30 @@
-node_modules/
-dist/
-*.log
+# System files
 .DS_Store
-.token
-git_push*.py
-git-askpass.sh
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+
+# Local runtime data and secrets
+fullstack/data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.pem
+*.key

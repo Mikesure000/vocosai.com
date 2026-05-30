@@ -1,36 +1,74 @@
-# VOCOS - Voice of Consumer OS
+# Voice of Consumer OS
 
-消费者评论分析智能工作台
+Voice of Consumer OS turns real user comments from Douyin, Xiaohongshu, Bilibili,
+and other social platforms into executable brand content strategy.
 
-将抖音、小红书、B站、微信的消费者评论转化为品牌与 Agency 的内容投放策略。
+The current runnable implementation is in `fullstack/`.
 
-## 技术栈
+## What It Does
 
-- **前端**: Vite + React 18 + MUI 6 + Tailwind CSS 3
-- **路由**: React Router v6
-- **部署**: GitHub Pages + GitHub Actions
+- Imports comments from CSV, JSON, or pasted text.
+- Stores comments, brand data, benchmark data, strategies, reports, and reviews in SQLite.
+- Runs a 10-step Agent pipeline for comment analysis, demand mapping, barrier analysis,
+  competitor opportunities, platform strategy, experiments, decisions, and reviews.
+- Provides 14 product modules across decision, insight, strategy, execution, asset, and AI engine views.
+- Supports DeepSeek, OpenAI, or custom OpenAI-compatible providers through server-side settings.
+- Can run publicly through Cloudflare Tunnel or a Linux server at `vocosai.com`.
 
-## 快速开始
+## Structure
 
-### GitHub Codespaces（推荐）
-
-点击仓库右上角 `Code` → `Open with Codespaces`，自动安装依赖并启动开发服务器，无需任何本地配置。
-
-### 本地开发
-
-```bash
-npm install
-npm run dev
+```text
+.
+|-- fullstack/
+|   |-- app.py
+|   |-- public/
+|   |-- scripts/
+|   |-- deploy/
+|   |-- .env.example
+|   `-- README.md
+|-- sample_comments.csv
+|-- sample_comments.json
+|-- overview.md
+`-- README.md
 ```
 
-### 构建部署
+Runtime secrets and data are intentionally not committed:
 
-```bash
-npm run build
+- `fullstack/.env`
+- `fullstack/data/`
+- database files
+- logs
+- Cloudflare credentials and private keys
+
+## Run Locally
+
+```powershell
+cd fullstack
+$env:VOC_PORT="8090"
+python app.py
 ```
 
-提交到 `main` 分支自动触发 GitHub Actions 构建并部署到 GitHub Pages。
+Open `http://127.0.0.1:8090`.
 
-## 项目状态
+For the exact Windows runtime path and public tunnel setup, see `fullstack/README.md`.
 
-🚧 内测开发中
+## Team Development
+
+- Use `main` as the production branch and `develop` as the shared integration branch.
+- Create feature branches from `develop`, open pull requests, and require at least one review before merging.
+- Keep runtime secrets and local SQLite data out of Git. Use `fullstack/.env.example` as the only committed environment template.
+- GitHub Codespaces is supported through `.devcontainer/devcontainer.json`; it starts the app on port `8090`.
+- Pull requests run Python and frontend JavaScript syntax validation through GitHub Actions.
+
+## Production Deployment
+
+Production deployment files live in `fullstack/deploy/`.
+
+To deploy from GitHub Actions, configure repository secrets:
+
+- `VOCOS_SSH_HOST`
+- `VOCOS_SSH_USER`
+- `VOCOS_SSH_KEY`
+- optional `VOCOS_SSH_PORT`
+
+Run the `Deploy Production` workflow manually. To deploy automatically after merges to `main`, set repository variable `VOCOS_AUTO_DEPLOY=true`.

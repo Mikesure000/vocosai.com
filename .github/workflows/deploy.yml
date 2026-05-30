@@ -1,53 +1,39 @@
-name: Deploy to GitHub Pages
+name: Deploy Production
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.VOCOS_AUTO_DEPLOY == 'true' }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Verify deployment secrets
+        env:
+          VOCOS_SSH_HOST: ${{ secrets.VOCOS_SSH_HOST }}
+          VOCOS_SSH_USER: ${{ secrets.VOCOS_SSH_USER }}
+          VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
+        run: |
+          test -n "$VOCOS_SSH_HOST"
+          test -n "$VOCOS_SSH_USER"
+          test -n "$VOCOS_SSH_KEY"
+
+      - name: Deploy over SSH
+        env:
+          VOCOS_SSH_HOST: ${{ secrets.VOCOS_SSH_HOST }}
+          VOCOS_SSH_USER: ${{ secrets.VOCOS_SSH_USER }}
+          VOCOS_SSH_KEY: ${{ secrets.VOCOS_SSH_KEY }}
+          VOCOS_SSH_PORT: ${{ secrets.VOCOS_SSH_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VOCOS_SSH_KEY" > ~/.ssh/vocos_key
+          chmod 600 ~/.ssh/vocos_key
+          ssh-keyscan -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/vocos_key -p "$VOCOS_SSH_PORT" "$VOCOS_SSH_USER@$VOCOS_SSH_HOST" \
+            "set -euo pipefail; curl -fsSL https://raw.githubusercontent.com/Mikesure000/vocosai.com/main/fullstack/deploy/deploy-vocos.sh -o /tmp/deploy-vocos.sh; sudo bash /tmp/deploy-vocos.sh"

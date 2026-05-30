@@ -1,0 +1,39 @@
+# Voice of Consumer OS - systemd 服务
+# 部署位置: /etc/systemd/system/vocos.service
+# 启动: sudo systemctl enable --now vocos.service
+
+[Unit]
+Description=Voice of Consumer OS - AI-powered Comment Analysis Platform
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+
+# 工作目录
+WorkingDirectory=/opt/vocosai
+
+# 环境变量（从 .env 文件读取）
+EnvironmentFile=/opt/vocosai/.env
+
+# 使用系统的 Python3 运行
+ExecStart=/usr/bin/python3 /opt/vocosai/app.py
+
+# 自动重启
+Restart=always
+RestartSec=5
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+
+# 安全限制
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

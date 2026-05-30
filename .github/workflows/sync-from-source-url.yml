@@ -1,0 +1,51 @@
+name: Sync From Source URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: Source ZIP URL
+        required: true
+        default: https://vocosai.com/vocos-source.zip
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download source archive
+        run: |
+          curl -fsSL "${{ inputs.source_url }}" -o /tmp/vocos-source.zip
+          rm -rf /tmp/vocos-source
+          mkdir -p /tmp/vocos-source
+          unzip -q /tmp/vocos-source.zip -d /tmp/vocos-source
+
+      - name: Replace source files
+        run: |
+          rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/workflows/' \
+            --exclude 'fullstack/.env' \
+            --exclude 'fullstack/data/' \
+            --exclude '*.db' \
+            --exclude '*.sqlite' \
+            --exclude '*.sqlite3' \
+            --exclude '*.log' \
+            /tmp/vocos-source/ ./
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes to sync."
+          else
+            git commit -m "Sync Vocos source"
+            git push
+          fi

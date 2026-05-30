@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice of Consumer OS</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <strong>Voice of Consumer OS</strong>
+      <span id="activeBrandLabel">加载品牌中</span>
+    </div>
+    <button class="nav active" data-view="dashboard">本周决策台</button>
+    <button class="nav" data-view="brands">多品牌管理</button>
+    <button class="nav" data-view="comments">持续导入</button>
+    <button class="nav" data-view="review">审核工作台</button>
+    <button class="nav" data-view="briefs">策略 Brief</button>
+    <button class="nav" data-view="search">全局搜索</button>
+    <button class="nav" data-view="demands">用户需求地图</button>
+    <button class="nav" data-view="barriers">购买障碍地图</button>
+    <button class="nav" data-view="competitors">竞品机会地图</button>
+    <button class="nav" data-view="xhs">小红书策略卡</button>
+    <button class="nav" data-view="douyin">抖音策略卡</button>
+    <button class="nav" data-view="content">内容资产池</button>
+    <button class="nav" data-view="lab">内容实验室</button>
+    <button class="nav" data-view="reviews">复盘归因中心</button>
+    <button class="nav" data-view="reports">报告中心</button>
+    <button class="nav" data-view="brand">品牌中心</button>
+    <button class="nav" data-view="benchmark">对标中心</button>
+    <button class="nav" data-view="knowledge">品类知识库</button>
+    <button class="nav" data-view="ai">AI 分析引擎</button>
+    <button class="nav" data-view="system">系统修复</button>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <h1 id="viewTitle">本周决策台</h1>
+        <p id="viewDesc">评论驱动的品牌内容投放策略系统</p>
+      </div>
+      <div class="status" id="apiStatus">连接中...</div>
+    </header>
+
+    <section id="app"></section>
+  </main>
+
+  <template id="loading">
+    <div class="empty">加载中...</div>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
