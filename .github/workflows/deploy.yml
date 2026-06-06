@@ -20,34 +20,36 @@ jobs:
           npm install
           npx vite build
           test -f dist/index.html || { echo "BUILD FAILED"; exit 1; }
-          echo "Frontend built successfully"
 
-      - name: Setup SSH
+      - name: Setup SSH key
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "Host vocos" >> ~/.ssh/config
-          echo "  HostName ${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/config
-          echo "  User ${{ secrets.DEPLOY_USER }}" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/deploy_key" >> ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy via rsync
+      - name: Deploy backend source
         run: |
-          rsync -avz --delete \
-            backend/src/ vocos:/opt/vocosai/backend/src/
-          rsync -avz \
-            backend/db/ vocos:/opt/vocosai/backend/db/
-          rsync -avz \
-            backend/package.json vocos:/opt/vocosai/backend/package.json
-          rsync -avz --delete \
-            frontend/dist/ vocos:/opt/vocosai/frontend/dist/
-          echo "Deployed successfully"
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            backend/src/ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/vocosai/backend/src/
+
+      - name: Deploy backend data
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            backend/db/ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/vocosai/backend/db/
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            backend/package.json ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/vocosai/backend/package.json
+
+      - name: Deploy frontend
+        run: |
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            frontend/dist/ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/vocosai/frontend/dist/
 
       - name: Restart service
         run: |
-          ssh vocos "
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
             cd /opt/vocosai/backend
             npm install --omit=dev
             systemctl restart vocos-node
