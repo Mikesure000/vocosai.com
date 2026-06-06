@@ -21,10 +21,13 @@ import { contentDispositionAttachment } from "./text-utils.mjs";
 // CORS 配置
 // ============================================================
 
-const ALLOWED_ORIGINS =
-  process.env.NODE_ENV === "production"
-    ? ["https://vocosai.com"]
-    : ["http://localhost:5173", "http://127.0.0.1:3000", "http://localhost:3000"];
+// P2-7: 从环境变量读取允许的跨域来源，支持逗号分隔
+const DEFAULT_DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:3000", "http://localhost:3000"];
+const DEFAULT_PROD_ORIGINS = ["https://vocosai.com"];
+
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean).length > 0
+  ? (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean)
+  : (process.env.NODE_ENV === "production" ? DEFAULT_PROD_ORIGINS : DEFAULT_DEV_ORIGINS);
 
 function getAllowOrigin(origin) {
   if (!origin) return null;
@@ -327,6 +330,15 @@ async function handleRegister({ store, body, context, req }) {
 
   if (password.length < 8) {
     throw badRequest("密码至少需要8位");
+  }
+
+  // P2-6: name 长度检查和 email 格式验证
+  if (name.length > 50) {
+    throw badRequest("昵称不能超过50个字符");
+  }
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!EMAIL_REGEX.test(email)) {
+    throw badRequest("邮箱格式不正确");
   }
 
   // 限流检查

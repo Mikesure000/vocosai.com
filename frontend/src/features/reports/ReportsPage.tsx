@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../../shared/services/api";
-import { Box, Card, CardContent, Typography, CircularProgress } from "@mui/material";
+import { Box, Card, CardContent, Typography, CircularProgress, Alert } from "@mui/material";
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [cost, setCost] = useState<any>(null);
   const [quality, setQuality] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
@@ -17,7 +18,8 @@ export default function ReportsPage() {
       setCost(c);
       setQuality(q);
       setHealth(h);
-    }).finally(() => setLoading(false));
+    }).catch((err) => setError(err.message || "加载报告数据失败"))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Box sx={{ p: 4 }}><CircularProgress /></Box>;
@@ -28,6 +30,8 @@ export default function ReportsPage() {
       <Typography color="text.secondary" sx={{ mb: 3 }}>
         系统版本: {health?.version} · 存储: {health?.storeDriver} · 任务: {health?.tasks} · AI运行: {health?.aiRuns}
       </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {cost && (
         <Card sx={{ mb: 2 }}>

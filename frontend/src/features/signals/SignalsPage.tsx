@@ -24,6 +24,7 @@ export default function SignalsPage() {
   const [mapping, setMapping] = useState<any>(null);
 
   const pollRef = useRef<any>(null);
+  const fileReaderRef = useRef<FileReader | null>(null);
 
   useEffect(() => { api.listTasks().then(d => setTasks(d?.data || [])); }, []);
 
@@ -58,7 +59,10 @@ export default function SignalsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadedFile(file);
+    // P2-4: 中止上一个 FileReader 避免竞态
+    fileReaderRef.current?.abort();
     const reader = new FileReader();
+    fileReaderRef.current = reader;
     reader.onload = (ev) => setFileContent(ev.target?.result as string || "");
     reader.readAsText(file);
   };
@@ -113,8 +117,11 @@ export default function SignalsPage() {
     } catch (e: any) { setError(e.message); setRunning(false); }
   };
 
-  // Cleanup poll on unmount
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+  // Cleanup poll and FileReader on unmount
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    fileReaderRef.current?.abort();
+  }, []);
 
   return (
     <Box sx={{ p: 3 }}>

@@ -13,12 +13,15 @@ export default function DemandsPage() {
   const [pieData, setPieData] = useState<any[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
     api.listTasks().then(d => {
+      if (cancelled) return;
       const items = d?.data || [];
       setTasks(items);
       if (items.length > 0) loadSignals(items[items.length - 1].id);
       else setLoading(false);
     });
+    return () => { cancelled = true; };
   }, []);
 
   const loadSignals = async (taskId: string) => {
