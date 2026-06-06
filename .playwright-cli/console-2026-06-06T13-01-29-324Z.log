@@ -1,0 +1,4 @@
+[    1326ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://vocosai.com/api/health:0
+[    1329ms] Error: Route not found
+    at Lb (https://vocosai.com/assets/index-ugtu0FsY.js:200:13501)
+    at async Promise.all (index 2)

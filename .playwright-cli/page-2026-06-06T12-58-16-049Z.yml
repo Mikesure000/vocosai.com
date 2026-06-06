@@ -1,0 +1,105 @@
+- generic [ref=e23]:
+  - banner [ref=e24]:
+    - heading "VOCOS Voice of Consumer OS" [level=6] [ref=e26]
+  - list [ref=e30]:
+    - listitem [ref=e31]:
+      - link "决策台" [ref=e32] [cursor=pointer]:
+        - /url: /
+        - img [ref=e34]
+        - generic [ref=e37]: 决策台
+    - listitem [ref=e38]:
+      - link "评论信号池" [ref=e39] [cursor=pointer]:
+        - /url: /signals
+        - img [ref=e41]
+        - generic [ref=e44]: 评论信号池
+    - listitem [ref=e45]:
+      - link "需求地图" [ref=e46] [cursor=pointer]:
+        - /url: /demands
+        - img [ref=e48]
+        - generic [ref=e51]: 需求地图
+    - listitem [ref=e52]:
+      - link "购买障碍" [ref=e53] [cursor=pointer]:
+        - /url: /obstacles
+        - img [ref=e55]
+        - generic [ref=e59]: 购买障碍
+    - listitem [ref=e60]:
+      - link "竞品机会" [ref=e61] [cursor=pointer]:
+        - /url: /competitor
+        - img [ref=e63]
+        - generic [ref=e66]: 竞品机会
+    - listitem [ref=e67]:
+      - link "内容实验室" [ref=e68] [cursor=pointer]:
+        - /url: /content-lab
+        - img [ref=e70]
+        - generic [ref=e73]: 内容实验室
+    - listitem [ref=e74]:
+      - link "策略 & Agent" [ref=e75] [cursor=pointer]:
+        - /url: /strategy
+        - img [ref=e77]
+        - generic [ref=e80]: 策略 & Agent
+    - listitem [ref=e81]:
+      - link "AI 分析中心" [ref=e82] [cursor=pointer]:
+        - /url: /ai-center
+        - img [ref=e84]
+        - generic [ref=e88]: AI 分析中心
+    - listitem [ref=e89]:
+      - link "复盘归因" [ref=e90] [cursor=pointer]:
+        - /url: /attribution
+        - img [ref=e92]
+        - generic [ref=e95]: 复盘归因
+    - listitem [ref=e96]:
+      - link "品牌中心" [ref=e97] [cursor=pointer]:
+        - /url: /brand
+        - img [ref=e99]
+        - generic [ref=e102]: 品牌中心
+    - listitem [ref=e103]:
+      - link "对标中心" [ref=e104] [cursor=pointer]:
+        - /url: /benchmark
+        - img [ref=e106]
+        - generic [ref=e109]: 对标中心
+    - listitem [ref=e110]:
+      - link "报告中心" [ref=e111] [cursor=pointer]:
+        - /url: /reports
+        - img [ref=e113]
+        - generic [ref=e116]: 报告中心
+  - main [ref=e117]:
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - heading "决策台" [level=4] [ref=e122]
+          - paragraph [ref=e123]: 品牌内容智能分析工作站 v0.2.0
+        - button "刷新" [ref=e124] [cursor=pointer]
+      - generic [ref=e125]:
+        - generic [ref=e127]:
+          - text: 任务总数
+          - heading "0" [level=5] [ref=e128]
+        - generic [ref=e130]:
+          - text: 已完成
+          - heading "0" [level=5] [ref=e131]
+        - generic [ref=e133]:
+          - text: 分析中
+          - heading "0" [level=5] [ref=e134]
+        - generic [ref=e136]:
+          - text: Agent 数
+          - heading "17" [level=5] [ref=e137]
+        - generic [ref=e139]:
+          - text: 月度成本
+          - heading "$0.00" [level=5] [ref=e140]
+        - generic [ref=e142]:
+          - text: 就绪
+          - heading "SQLite" [level=5] [ref=e143]
+      - heading "分析任务" [level=6] [ref=e144]
+      - table [ref=e146]:
+        - rowgroup [ref=e147]:
+          - row "任务 平台 品牌 状态 创建" [ref=e148]:
+            - columnheader "任务" [ref=e149]
+            - columnheader "平台" [ref=e150]
+            - columnheader "品牌" [ref=e151]
+            - columnheader "状态" [ref=e152]
+            - columnheader "创建" [ref=e153]
+        - rowgroup [ref=e154]:
+          - row "还没有分析任务 去创建第一个任务" [ref=e155]:
+            - cell "还没有分析任务 去创建第一个任务" [ref=e156]:
+              - paragraph [ref=e157]: 还没有分析任务
+              - link "去创建第一个任务" [ref=e158] [cursor=pointer]:
+                - /url: /signals

@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { assertTeamAccess, buildRequestContext, filterByTeam, hashPassword, loginTracker, PERMISSIONS, refreshBlacklist, requirePermission, ROLE_PERMISSIONS, signToken, verifyPassword, verifyToken } from "./auth.mjs";
+import { assertTeamAccess, buildRequestContext, filterByTeam, hashPassword, JWT_SECRET, loginTracker, PERMISSIONS, refreshBlacklist, requirePermission, ROLE_PERMISSIONS, signToken, verifyPassword, verifyToken } from "./auth.mjs";
 import crypto from "node:crypto";
 import { createId, createStore, now } from "./store.mjs";
 import { buildCostSummary } from "./cost-governance.mjs";
@@ -86,6 +86,15 @@ function authError(code, message, statusCode = 401) {
 }
 
 export async function createApiServer({ dbPath = "backend/data/vocos.sqlite" } = {}) {
+  // P0-1: JWT_SECRET 安全启动检查，禁止使用默认弱密钥
+  if (!process.env.VOCOS_JWT_SECRET || process.env.VOCOS_JWT_SECRET === "vocos-dev-secret-change-in-production") {
+    console.error("[vocos] FATAL: VOCOS_JWT_SECRET 环境变量未设置或仍为默认值。");
+    console.error("[vocos] 默认 JWT Secret 是不安全的，任何人都可以伪造 JWT Token。");
+    console.error("[vocos] 请在环境变量中设置安全的 VOCOS_JWT_SECRET 后重新启动。");
+    console.error("[vocos] 生成建议: node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
+    process.exit(1);
+  }
+
   const store = createStore({ dbPath });
   await store.markInterruptedPipelineJobs?.();
   const jobs = new Map();
