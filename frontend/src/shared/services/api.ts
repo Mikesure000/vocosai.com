@@ -75,7 +75,7 @@ async function request<T = any>(path: string, opts?: RequestInit, _retried = fal
 }
 
 export const api = {
-  health: () => request("/health"),
+  health: () => fetch("/health").then(r => r.json()),
 
   // Tasks
   listTasks: () => request("/tasks"),

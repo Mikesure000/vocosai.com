@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../shared/services/api";
-import { Box, Card, CardContent, Typography, CircularProgress, Chip } from "@mui/material";
+import { Box, Card, CardContent, Typography, CircularProgress, Chip, Button } from "@mui/material";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ["#1976d2", "#388e3c", "#f57c00", "#d32f2f", "#7b1fa2", "#0288d1", "#689f38", "#ffa000", "#c2185b", "#0097a7"];
@@ -34,7 +34,12 @@ export default function DemandsPage() {
   };
 
   if (loading) return <Box sx={{ p: 4 }}><CircularProgress /></Box>;
-  if (!selected) return <Box sx={{ p: 4 }}><Typography color="text.secondary">暂无数据</Typography></Box>;
+  if (!selected) return (
+    <Box sx={{ p: 4, textAlign: "center" }}>
+      <Typography color="text.secondary" sx={{ mb: 2 }}>暂无数据</Typography>
+      <Button variant="outlined" href="/signals">创建任务</Button>
+    </Box>
+  );
 
   return (
     <Box sx={{ p: 3 }}>

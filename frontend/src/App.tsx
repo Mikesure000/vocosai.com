@@ -13,6 +13,7 @@ import {
   Business as BrandIcon, Assessment as BenchmarkIcon,
 } from "@mui/icons-material";
 import AuthGuard from "./shared/auth/AuthGuard";
+import ErrorBoundary from "./shared/auth/ErrorBoundary";
 import { useAuth } from "./shared/auth/AuthContext";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import SignalsPage from "./features/signals/SignalsPage";
@@ -29,6 +30,7 @@ import BenchmarkPage from "./features/benchmark/BenchmarkPage";
 import LoginPage from "./features/auth/LoginPage";
 import RegisterPage from "./features/auth/RegisterPage";
 import ForbiddenPage from "./features/auth/ForbiddenPage";
+import NotFoundPage from "./features/auth/NotFoundPage";
 
 const drawerWidth = 240;
 
@@ -122,6 +124,7 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
+        <ErrorBoundary>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -142,7 +145,9 @@ export default function App() {
             } />
             <Route path="reports" element={<ReportsPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </ThemeProvider>
   );
