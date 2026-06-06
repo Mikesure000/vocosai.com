@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../../shared/services/api";
-import { Box, Card, CardContent, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Button } from "@mui/material";
+import { Box, Card, CardContent, Typography, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Button, Alert } from "@mui/material";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [health, setHealth] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [schema, setSchema] = useState<any>(null);
@@ -11,12 +12,14 @@ export default function DashboardPage() {
 
   const refresh = () => {
     setLoading(true);
+    setError("");
     Promise.all([
       api.health(), api.listTasks(), api.getSchema(),
       api.getCostSummary("?period=current_month").catch(() => null)
     ]).then(([h, t, s, c]) => {
       setHealth(h); setTasks(t?.data || []); setSchema(s); setCost(c);
-    }).catch(console.error).finally(() => setLoading(false));
+    }).catch((err) => setError(err.message || "加载仪表板数据失败"))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { refresh(); }, []);
@@ -36,6 +39,9 @@ export default function DashboardPage() {
         </Box>
         <Button variant="outlined" onClick={refresh} size="small">刷新</Button>
       </Box>
+
+      {/* P2-1: 错误提示 */}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {/* Quick stats */}
       <Box sx={{ display: "flex", gap: 3, mb: 3, flexWrap: "wrap" }}>
