@@ -85,6 +85,8 @@ export const api = {
   startPipeline: (id: string) => request(`/tasks/${id}/start`, { method: "POST" }),
   getCommentSignals: (id: string) => request(`/tasks/${id}/comment-signals`),
   getSignalComments: (id: string, key: string) => request(`/tasks/${id}/comment-signals/${key}/comments`),
+  parseComments: (id: string, data: any) => request(`/tasks/${id}/parse-comments`, { method: "POST", body: JSON.stringify(data) }),
+  confirmMapping: (id: string, data: any) => request(`/tasks/${id}/confirm-mapping`, { method: "POST", body: JSON.stringify(data) }),
 
   // AI
   listAiRuns: () => request("/ai/runs"),

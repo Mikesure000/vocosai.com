@@ -67,12 +67,11 @@ export default function SignalsPage() {
     if (!selectedTask || !fileContent) return;
     setLoading(true); setError("");
     try {
-      const res = await fetch(`/api/tasks/${selectedTask.id}/parse-comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: uploadedFile?.name || "comments.csv", fileContent, platform: selectedTask.platform || "douyin" })
+      const data = await api.parseComments(selectedTask.id, {
+        fileName: uploadedFile?.name || "comments.csv",
+        fileContent,
+        platform: selectedTask.platform || "douyin"
       });
-      const data = await res.json();
       setMapping(data?.data?.file || data?.file);
       setStep(2);
     } catch (e: any) { setError(e.message); }
@@ -83,10 +82,8 @@ export default function SignalsPage() {
     if (!selectedTask || !mapping) return;
     setLoading(true);
     try {
-      await fetch(`/api/tasks/${selectedTask.id}/confirm-mapping`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mapping: mapping.mappingConfig || mapping })
+      await api.confirmMapping(selectedTask.id, {
+        mapping: mapping.mappingConfig || mapping
       });
       setStep(3);
       await selectTask(selectedTask);
@@ -105,7 +102,8 @@ export default function SignalsPage() {
         try {
           const stat = await api.getTaskStatus(selectedTask.id);
           setStatus(stat?.data || stat);
-          if (stat?.data?.task?.status === "completed" || stat?.task?.status === "completed") {
+          const taskStatus = stat?.data?.task?.status || stat?.task?.status;
+          if (taskStatus === "completed" || taskStatus === "partially_failed" || taskStatus === "failed") {
             clearInterval(pollRef.current);
             setRunning(false);
             await selectTask(selectedTask);
