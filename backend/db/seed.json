@@ -1,0 +1,141 @@
+{
+  "users": [
+    {
+      "id": "user_demo",
+      "name": "Demo Admin",
+      "email": "admin@vocos.local",
+      "role": "super_admin",
+      "password_hash": "6c7ef377f07bf1de861770a08d22881a:85c771a2b48d12e6cad156f351ad311c2f29a7c9e8bf2605d4e4710f194ad1392d1b88acfa85c8ae7ea31fed735d61ca99a7d19af84eced0d2ab1a63acc40c4f",
+      "defaultTeamId": "team_demo",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": "user_ai_admin",
+      "name": "Demo AI Engineer",
+      "email": "ai@vocos.local",
+      "role": "ai_engineer_admin",
+      "password_hash": "74e64e46b43987fa2c5bc26ce8eaca99:da59cbd53e843ccdb0b38bca9b3bdff0b90e0a48558468dc62817dd97c7b56c66d2beb869ae70676177b5bf6f19251c6aecb6a0a361b1f0e1da760610ff72f18",
+      "defaultTeamId": "team_demo",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": "user_member",
+      "name": "Demo Member",
+      "email": "member@vocos.local",
+      "role": "member",
+      "password_hash": "6e60958bf1bf6e8fff5757e86831a6e9:ef8ac5476b7df4d82dbda5e44eae91b1dcc554947c7d87dc7b41918dc524f975bc621e7f6c2e204b4f1602379d6830266c6308686e27a31f3063b5925906aff4",
+      "defaultTeamId": "team_demo",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "team_demo",
+      "name": "Vocos Demo Team",
+      "planType": "internal",
+      "monthlyQuota": 1000000,
+      "usedQuota": 0,
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    }
+  ],
+  "teamMembers": [
+    {
+      "id": "member_demo_admin",
+      "teamId": "team_demo",
+      "userId": "user_demo",
+      "role": "super_admin",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": "member_demo_ai_admin",
+      "teamId": "team_demo",
+      "userId": "user_ai_admin",
+      "role": "ai_engineer_admin",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": "member_demo_member",
+      "teamId": "team_demo",
+      "userId": "user_member",
+      "role": "member",
+      "status": "active",
+      "createdAt": "2026-06-04T00:00:00.000Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "project_demo",
+      "teamId": "team_demo",
+      "name": "某美妆品牌 5 月复盘",
+      "brandName": "AURA LAB",
+      "productName": "修护精华",
+      "industry": "beauty",
+      "status": "active",
+      "createdBy": "user_demo",
+      "createdAt": "2026-06-04T00:00:00.000Z",
+      "updatedAt": "2026-06-04T00:00:00.000Z"
+    }
+  ],
+  "tasks": [],
+  "commentFiles": [],
+  "comments": [],
+  "aiRuns": [],
+  "aiQualityFeedback": [],
+  "auditLogs": [],
+  "reports": [],
+  "modelProviders": [
+    {
+      "id": "provider_openai",
+      "providerName": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "status": "configured"
+    },
+    {
+      "id": "provider_deepseek",
+      "providerName": "deepseek",
+      "baseUrl": "https://api.deepseek.com",
+      "status": "configured"
+    }
+  ],
+  "modelConfigs": [
+    {
+      "id": "model_gpt_4_1",
+      "providerId": "provider_openai",
+      "modelName": "gpt-4.1",
+      "modelType": "reasoning_generation",
+      "contextWindow": 128000,
+      "inputTokenPrice": 0.00002,
+      "outputTokenPrice": 0.00008,
+      "isActive": true
+    },
+    {
+      "id": "model_deepseek_chat",
+      "providerId": "provider_deepseek",
+      "modelName": "deepseek-v4-flash",
+      "modelType": "batch_semantic",
+      "contextWindow": 64000,
+      "inputTokenPrice": 0.000002,
+      "outputTokenPrice": 0.000004,
+      "isActive": true
+    },
+    {
+      "id": "model_deepseek_v4_pro",
+      "providerId": "provider_deepseek",
+      "modelName": "deepseek-v4-pro",
+      "modelType": "reasoning_generation",
+      "contextWindow": 128000,
+      "inputTokenPrice": 0.000004,
+      "outputTokenPrice": 0.000012,
+      "isActive": true
+    }
+  ],
+  "agents": [],
+  "aiSchemas": [],
+  "aiPrompts": []
+}

@@ -1,0 +1,126 @@
+classDiagram
+    class Brand {
+        +string id
+        +string name
+        +string industry
+        +string categoryId
+        +string logoUrl
+        +string createdAt
+        +BrandConfig config
+        +Competitor[] competitors
+        +BrandStats stats
+    }
+
+    class BrandConfig {
+        +Product[] products
+        +string brandStory
+        +string visualStyle
+        +string tone
+        +object keywords
+        +object contentGuidelines
+    }
+
+    class Competitor {
+        +string id
+        +string name
+        +string positioning
+        +string[] strengths
+        +string[] weaknesses
+        +string[] keyProducts
+        +object swot
+    }
+
+    class Comment {
+        +number id
+        +string brandId
+        +string sourceHash
+        +string content
+        +string platform
+        +string type
+        +string sentiment
+        +string[] labels
+        +boolean isAnalyzed
+        +string importBatchId
+        +string importedAt
+        +boolean isCompetitor
+    }
+
+    class ImportBatch {
+        +string id
+        +string brandId
+        +string timestamp
+        +number totalRows
+        +number imported
+        +number duplicated
+    }
+
+    class Insight {
+        +string id
+        +string brandId
+        +string type
+        +string title
+        +string content
+        +number confidence
+        +ReviewStatus reviewStatus
+        +number[] sourceCommentIds
+        +ReviewLog[] reviewLog
+    }
+
+    class StrategyCard {
+        +string id
+        +string brandId
+        +string platform
+        +string title
+        +string priority
+        +ReviewStatus reviewStatus
+        +string[] evidence
+        +ABTestVariable[] abTestVariables
+        +KPI[] expectedKPIs
+        +string[] linkedInsightIds
+        +number[] linkedContentIds
+    }
+
+    class ReviewLog {
+        +string action
+        +string timestamp
+        +string operator
+        +string changes
+    }
+
+    class Category {
+        +string id
+        +string name
+        +TagSet tags
+    }
+
+    class WeeklySnapshot {
+        +string id
+        +string brandId
+        +string weekStart
+        +number totalComments
+        +number newComments
+    }
+
+    class VosDB {
+        +Table~Comment~ comments
+        +Table~ImportBatch~ importHistory
+        +Table~Insight~ insights
+        +Table~StrategyCard~ strategyCards
+        +Table~WeeklySnapshot~ weeklySnapshots
+    }
+
+    Brand "1" --> "1" BrandConfig
+    Brand "1" --> "*" Competitor
+    Brand "1" --> "*" Comment : 拥有
+    Brand "1" --> "*" Insight : 拥有
+    Brand "1" --> "*" StrategyCard : 拥有
+    Brand "1" --> "1" Category : 关联品类
+    Comment "*" --> "1" ImportBatch : 批次
+    Insight "1" --> "*" ReviewLog : 审核日志
+    StrategyCard "1" --> "*" ReviewLog : 审核日志
+    Insight "*" --> "*" Comment : 关联评论
+    StrategyCard "*" --> "*" Insight : 关联洞察
+    VosDB --> Comment : 管理
+    VosDB --> Insight : 管理
+    VosDB --> StrategyCard : 管理
+    VosDB --> WeeklySnapshot : 管理

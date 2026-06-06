@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  backend:
+    build: .
+    image: vocos-ai:latest
+    container_name: vocos-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - vocos-data:/data
+      - ./backend/.env:/app/.env:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - VOCOS_STORE_DRIVER=sqlite
+      - VOCOS_SQLITE_PATH=/data/vocos.sqlite
+      - VOCOS_MODEL_MODE=mock
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: vocos-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+
+volumes:
+  vocos-data:

@@ -1,0 +1,20 @@
+sequenceDiagram
+    actor User
+    participant BrandSwitcher as BrandSwitcher
+    participant BrandStore as brandStore
+    participant CommentStore as commentStore
+    participant InsightStore as insightStore
+    participant DexieDB as DexieDB
+    participant LS as localStorage
+
+    User->>BrandSwitcher: 点击品牌切换下拉
+    BrandSwitcher->>BrandStore: setCurrentBrand(newBrandId)
+    BrandStore->>BrandStore: currentBrandId = newBrandId
+    BrandStore->>LS: 存储 lastBrandId
+    BrandStore-->>CommentStore: 触发 brand 变更
+    BrandStore-->>InsightStore: 触发 brand 变更
+    CommentStore->>DexieDB: comments.where({brandId: newBrandId})
+    DexieDB-->>CommentStore: 当前品牌评论
+    InsightStore->>DexieDB: insights.where({brandId: newBrandId})
+    DexieDB-->>InsightStore: 当前品牌洞察
+    BrandSwitcher-->>User: UI 完全刷新为新品牌数据

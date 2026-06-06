@@ -16,10 +16,20 @@ h2 { font-size:24px; font-weight:800; margin:0 0 4px 0; }
 .page-header p { color:#6b7280; font-size:14px; margin:4px 0 0 0; }
 .loading-screen { display:flex; align-items:center; justify-content:center; height:100vh; color:#6b7280; font-size:16px; }
 @media (max-width:768px) { .sidebar { display:none; } .main-content { margin-left:0; } }
+.no-tailwind .glass-card { border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; background:var(--card-bg); }
+.no-tailwind .cards-grid, .no-tailwind .cards-grid-2, .no-tailwind .cards-grid-3 { display:block; }
+.no-tailwind .cards-grid > *, .no-tailwind .cards-grid-2 > *, .no-tailwind .cards-grid-3 > * { margin-bottom:12px; }
+.no-tailwind .metric-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.no-tailwind .metric-card { flex:1; min-width:120px; }
+.no-tailwind .badge { display:inline-block; margin:2px; }
+.no-tailwind .btn-primary, .no-tailwind .btn-secondary { display:inline-block; margin:4px; }
 </style>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.tailwindcss.com" crossorigin="anonymous"
+  onerror="console.warn('Tailwind CDN failed, using fallback styles');document.documentElement.classList.add('no-tailwind')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" crossorigin="anonymous"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/crypto-js@4.2.0/crypto-js.min.js';s.onerror=function(){console.error('CryptoJS failed to load from all sources')};document.head.appendChild(s)"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" crossorigin="anonymous"
+  onerror="var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js';s.onerror=function(){console.warn('SheetJS failed to load, Excel import disabled')};document.head.appendChild(s)"></script>
 <script>
 tailwind.config = {
   darkMode: 'class',
@@ -118,6 +128,7 @@ tailwind.config = {
   /* Page sections */
   .page { display:none; animation:fadeIn .3s; }
   .page.active { display:block; }
+  .page-container { animation:fadeIn .3s; }
   .page-header { margin-bottom:28px; }
   .page-header h2 { font-size:26px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px; }
   .page-header p { font-size:14px; color:var(--fg-dim); }
@@ -341,7 +352,23 @@ tailwind.config = {
 
   <!-- Main Content -->
   <main class="main" id="mainContent">
-    <!-- Pages rendered by JS -->
+    <div id="page-dashboard" class="page-container"></div>
+    <div id="page-comments" class="page-container" style="display:none"></div>
+    <div id="page-demands" class="page-container" style="display:none"></div>
+    <div id="page-barriers" class="page-container" style="display:none"></div>
+    <div id="page-competitors" class="page-container" style="display:none"></div>
+    <div id="page-xhs-strategies" class="page-container" style="display:none"></div>
+    <div id="page-dy-strategies" class="page-container" style="display:none"></div>
+    <div id="page-brand-center" class="page-container" style="display:none"></div>
+    <div id="page-benchmark-center" class="page-container" style="display:none"></div>
+    <div id="page-content-pool" class="page-container" style="display:none"></div>
+    <div id="page-strategies" class="page-container" style="display:none"></div>
+    <div id="page-lab" class="page-container" style="display:none"></div>
+    <div id="page-reviews" class="page-container" style="display:none"></div>
+    <div id="page-reports" class="page-container" style="display:none"></div>
+    <div id="page-knowledge" class="page-container" style="display:none"></div>
+    <div id="page-ai-analysis" class="page-container" style="display:none"></div>
+    <div id="page-system-settings" class="page-container" style="display:none"></div>
   </main>
 </div>
 
@@ -1034,13 +1061,11 @@ let selectedStrategy = null;
 
 // ==================== NAVIGATION ====================
 function navigateTo(page, el) {
-  currentPage = page;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (el) el.classList.add('active');
   // Close mobile sidebar
   document.querySelector('.sidebar').classList.remove('open');
   // Scroll to top
   document.getElementById('mainContent').scrollTop = 0;
+  // renderPage 内部处理导航高亮和页面切换
   renderPage(page);
 }
 
@@ -1054,26 +1079,58 @@ function setTheme(mode) {
 }
 
 // ==================== RENDER ====================
-function renderPage(page) {
-  const main = document.getElementById('mainContent');
-  switch(page) {
-    case 'dashboard': main.innerHTML = renderDashboard(); break;
-    case 'comments': main.innerHTML = renderComments(); break;
-    case 'demands': main.innerHTML = renderDemands(); break;
-    case 'barriers': main.innerHTML = renderBarriers(); break;
-    case 'competitors': main.innerHTML = renderCompetitors(); break;
-    case 'strategies': main.innerHTML = '<div style="text-align:center;padding:60px"><h3 style="font-size:18px;font-weight:700;color:var(--fg-dim)">策略卡已拆分为：</h3><p style="margin-top:12px"><a href="#" onclick="navigateTo(\'xhs-strategies\',document.querySelector(\'[data-page=xhs-strategies]\'))" style="color:var(--accent)">📕 小红书策略卡</a> &nbsp;|&nbsp; <a href="#" onclick="navigateTo(\'dy-strategies\',document.querySelector(\'[data-page=dy-strategies]\'))" style="color:var(--accent)">🎵 抖音策略卡</a></p></div>'; break;
-    case 'xhs-strategies': main.innerHTML = renderXHSStrategies(); break;
-    case 'dy-strategies': main.innerHTML = renderDYStrategies(); break;
-    case 'brand-center': main.innerHTML = renderBrandCenter(); break;
-    case 'benchmark-center': main.innerHTML = renderBenchmarkCenter(); break;
-    case 'content-pool': main.innerHTML = renderContentPool(); break;
-    case 'lab': main.innerHTML = renderLab(); break;
-    case 'reviews': main.innerHTML = renderReviews(); break;
-    case 'reports': main.innerHTML = renderReports(); break;
-    case 'knowledge': main.innerHTML = renderKnowledge(); break;
-    case 'ai-analysis': main.innerHTML = renderAIAnalysis(); break;
-    case 'system-settings': main.innerHTML = renderSystemSettings(); break;
+function renderPage(page, forceRender) {
+  // 1. 更新导航高亮
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var navEl = document.querySelector('[data-page="' + page + '"]');
+  if (navEl) navEl.classList.add('active');
+  currentPage = page;
+
+  // 2. 页面ID映射
+  var pageId = 'page-' + page;
+  var container = document.getElementById(pageId);
+
+  // 3. 隐藏所有页面容器
+  var allPages = document.querySelectorAll('.page-container');
+  for (var i = 0; i < allPages.length; i++) {
+    allPages[i].style.display = 'none';
+  }
+
+  // 4. 显示目标容器
+  if (!container) {
+    // 如果容器不存在（比如旧代码引用了不存在的page），回退到innerHTML
+    var main = document.getElementById('mainContent');
+    main.innerHTML = '<div id="' + pageId + '" class="page-container"></div>';
+    container = document.getElementById(pageId);
+  }
+  container.style.display = 'block';
+
+  // 5. 按需渲染内容（首次或强制刷新）
+  if (forceRender !== false && !container.dataset.rendered) {
+    var html = '';
+    switch(page) {
+      case 'dashboard': html = renderDashboard(); break;
+      case 'comments': html = renderComments(); break;
+      case 'demands': html = renderDemands(); break;
+      case 'barriers': html = renderBarriers(); break;
+      case 'competitors': html = renderCompetitors(); break;
+      case 'strategies': html = '<div style="text-align:center;padding:60px"><h3 style="font-size:18px;font-weight:700;color:var(--fg-dim)">策略卡已拆分为：</h3><p style="margin-top:12px"><a href="#" onclick="navigateTo(\'xhs-strategies\',document.querySelector(\'[data-page=xhs-strategies]\'))" style="color:var(--accent)">📕 小红书策略卡</a> &nbsp;|&nbsp; <a href="#" onclick="navigateTo(\'dy-strategies\',document.querySelector(\'[data-page=dy-strategies]\'))" style="color:var(--accent)">🎵 抖音策略卡</a></p></div>'; break;
+      case 'xhs-strategies': html = renderXHSStrategies(); break;
+      case 'dy-strategies': html = renderDYStrategies(); break;
+      case 'brand-center': html = renderBrandCenter(); break;
+      case 'benchmark-center': html = renderBenchmarkCenter(); break;
+      case 'content-pool': html = renderContentPool(); break;
+      case 'lab': html = renderLab(); break;
+      case 'reviews': html = renderReviews(); break;
+      case 'reports': html = renderReports(); break;
+      case 'knowledge': html = renderKnowledge(); break;
+      case 'ai-analysis': html = renderAIAnalysis(); break;
+      case 'system-settings': html = renderSystemSettings(); break;
+    }
+    if (html) {
+      container.innerHTML = html;
+      container.dataset.rendered = 'true';
+    }
   }
 }
 
@@ -1659,7 +1716,7 @@ function loadBrandData() {
   if (saved) { try { const d=JSON.parse(saved); Object.assign(demoData.brandProfile, d); } catch(e){} }
 }
 
-function saveBrandData() { localStorage.setItem('voc-brand-data', JSON.stringify(demoData.brandProfile)); }
+function saveBrandData() { safeSetItem('voc-brand-data', JSON.stringify(demoData.brandProfile)); }
 
 function editBrandInfo() {
   const b = demoData.brandProfile;
@@ -1877,7 +1934,7 @@ function loadBenchmarkData() {
   if (saved) { try { const d=JSON.parse(saved); Object.assign(demoData.benchmarkData, d); } catch(e){} }
 }
 
-function saveBenchmarkData() { localStorage.setItem('voc-benchmark-data', JSON.stringify(demoData.benchmarkData)); }
+function saveBenchmarkData() { safeSetItem('voc-benchmark-data', JSON.stringify(demoData.benchmarkData)); }
 
 function editBenchmarkCompetitor(index) {
   const c = index >= 0 ? demoData.benchmarkData.competitors[index] : { name:'',positioning:'',strengths:[],weaknesses:[],keyProducts:[],contentStyle:'',commentHighlights:{praise:[],complaint:[]},swot:{S:'',W:'',O:'',T:''} };
@@ -2472,6 +2529,7 @@ function doConfirmImport() {
 
   // Merge into demo data
   demoData.comments = demoData.comments.concat(data);
+  saveComments();
   demoData.metrics.totalComments += data.length;
   demoData.metrics.newCommentsThisWeek += data.length;
 
@@ -2813,7 +2871,16 @@ async function runAgentChain(startId) {
   await runOne(startId);
 }
 
-function refreshCurrentPage() { if (typeof renderPage === 'function' && typeof currentPage === 'string') renderPage(currentPage); }
+function refreshCurrentPage() {
+  if (typeof renderPage === 'function' && typeof currentPage === 'string') {
+    var container = document.getElementById('page-' + currentPage);
+    if (container) {
+      // 清除已渲染标记，让下次 renderPage 重建内容
+      delete container.dataset.rendered;
+    }
+    renderPage(currentPage, true);
+  }
+}
 
 // 导入后自动触发引擎（已集成到 doConfirmImport）
 
@@ -2890,7 +2957,54 @@ async function runAgent(agentId) {
 }
 
 // ==================== SYSTEM SETTINGS ====================
-let callLogs = JSON.parse(localStorage.getItem('voc-call-logs')||'[]');
+let callLogs = [];
+try {
+  callLogs = JSON.parse(localStorage.getItem('voc-call-logs') || '[]');
+} catch(e) {
+  callLogs = [];
+  console.warn('callLogs parse failed, reset to empty');
+}
+
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch(e) {
+    if (e.name === 'QuotaExceededError') {
+      console.warn('localStorage full, failed to save:', key);
+      if (typeof addToast === 'function') {
+        addToast('⚠️ 存储空间不足，请导出数据后清理旧数据');
+      }
+    } else {
+      console.error('localStorage save error:', key, e);
+    }
+    return false;
+  }
+}
+
+function saveComments() {
+  try {
+    const data = JSON.stringify(demoData.comments);
+    safeSetItem('voc-comments', data);
+  } catch(e) {
+    console.warn('Failed to save comments:', e);
+  }
+}
+
+function loadComments() {
+  try {
+    const saved = localStorage.getItem('voc-comments');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        demoData.comments = parsed;
+        demoData.metrics.totalComments = parsed.length;
+      }
+    }
+  } catch(e) {
+    console.warn('Failed to load saved comments, using defaults');
+  }
+}
 
 function renderSystemSettings() {
   const s = apiSettings;
@@ -3008,8 +3122,13 @@ function saveSystemApiSettings() {
     apiSettings.customModel = document.getElementById('sysCustomModel').value;
   }
   if (!apiSettings.apiKey && apiSettings.provider !== 'custom') { document.getElementById('sysApiResult').innerHTML='<span style="color:#f87171">❌ 请输入 API Key</span>'; return; }
-  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
-  localStorage.setItem('voc-api-settings', encrypted);
+  if (typeof CryptoJS !== 'undefined') {
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
+    safeSetItem('voc-api-settings', encrypted);
+  } else {
+    console.warn('CryptoJS not loaded, saving API settings as plaintext fallback');
+    safeSetItem('voc-api-settings', JSON.stringify(apiSettings));
+  }
   document.getElementById('sysApiResult').innerHTML = '<span style="color:#4ade80">✅ API 配置已保存（AES-256 加密）</span>';
 }
 
@@ -3035,16 +3154,28 @@ function clearAllSettings() {
 function logAICall(model, tokens, latency, status) {
   callLogs.push({ time: new Date().toLocaleString(), model, tokens, latency, status });
   if (callLogs.length > 100) callLogs.shift();
-  localStorage.setItem('voc-call-logs', JSON.stringify(callLogs));
+  safeSetItem('voc-call-logs', JSON.stringify(callLogs));
 }
 
 // ==================== AI ANALYSIS SYSTEM ====================
 // API Settings
-const ENCRYPTION_KEY = 'voc-ai-analysis-' + (navigator.userAgent.length % 10000).toString();
+const ENCRYPTION_KEY = (function() {
+  const seed = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth
+  ].join('|');
+  return 'voc-' + CryptoJS.SHA256(seed).toString().substring(0, 32);
+})();
 let apiSettings = { provider:'deepseek', apiKey:'', customBaseUrl:'', customModel:'', model:'deepseek-chat', proxyUrl:'' };
 let pipelineState = { step:0, status:'idle', results:{}, logs:[] };
 
 function loadApiSettings() {
+  if (typeof CryptoJS === 'undefined') {
+    console.warn('CryptoJS not loaded, skipping API settings load');
+    return;
+  }
   try {
     const raw = localStorage.getItem('voc-api-settings');
     if (!raw) return;
@@ -3067,8 +3198,13 @@ function saveApiSettings() {
     alert('请输入 API Key');
     return;
   }
-  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
-  localStorage.setItem('voc-api-settings', encrypted);
+  if (typeof CryptoJS !== 'undefined') {
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(apiSettings), ENCRYPTION_KEY).toString();
+    safeSetItem('voc-api-settings', encrypted);
+  } else {
+    console.warn('CryptoJS not loaded, saving API settings as plaintext fallback');
+    safeSetItem('voc-api-settings', JSON.stringify(apiSettings));
+  }
   document.getElementById('apiTestResult').innerHTML = '<div style="color:#4ade80">✅ 设置已保存（AES 加密存储）</div>';
   setTimeout(closeApiSettingsModal, 1000);
 }
@@ -3582,6 +3718,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var loading = document.getElementById('loading-app');
     if (loading) loading.style.display = 'none';
     migrateCommentFields();
+    loadComments();
     var saved = localStorage.getItem('voc-theme');
     if (saved) setTheme(saved);
     loadApiSettings();

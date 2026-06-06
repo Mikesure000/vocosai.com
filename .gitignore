@@ -1,8 +1,6 @@
-# System files
+# System
 .DS_Store
 Thumbs.db
-
-# IDE
 .idea/
 .vscode/
 *.swp
@@ -10,7 +8,6 @@ Thumbs.db
 
 # Node
 node_modules/
-package-lock.json
 
 # Python
 __pycache__/
@@ -19,3 +16,24 @@ __pycache__/
 # Environment
 .env
 .env.local
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+backend/data/
+
+# Build
+dist/
+.vite/
+
+# Uploads / temp
+uploads/
+*.xlsx
+*.csv
+*.py
+fix_*.py
+clean_and_prep.py
+
+# Workbuddy
+.workbuddy/

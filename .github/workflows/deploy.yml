@@ -1,0 +1,44 @@
+name: Deploy to vocosai.com
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend deps & build
+        run: |
+          cd frontend
+          npm ci
+          npx vite build
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "backend/src,backend/db,backend/package.json,frontend/dist"
+          target: "/opt/vocosai/"
+          strip_components: 0
+
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/vocosai/backend
+            npm install --omit=dev
+            systemctl restart vocos-node
+            sleep 2
+            curl -s --max-time 5 http://127.0.0.1:3000/health
