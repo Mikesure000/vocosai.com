@@ -98,6 +98,8 @@ export async function createApiServer({ dbPath = "backend/data/vocos.sqlite" } =
   const store = createStore({ dbPath });
   await store.markInterruptedPipelineJobs?.();
   const jobs = new Map();
+  // P1-4: parseComments 互斥锁，防止并发调用互相覆盖
+  const parsingTaskIds = new Set();
 
   return createServer(async (request, response) => {
     try {
@@ -624,7 +626,10 @@ async function handleUpdateMe({ store, body, context }) {
 // T-AUTH-16: PUT /api/auth/me/password
 // ============================================================
 
-async function handleChangePassword({ store, body, context }) {
+async function handleChangePassword({ store, body, context, req }) {
+  // P1-6: 权限检查
+  requirePermission(context, PERMISSIONS.USER_MANAGE);
+
   const { oldPassword, newPassword } = body ?? {};
 
   if (!oldPassword || !newPassword) {
@@ -635,12 +640,16 @@ async function handleChangePassword({ store, body, context }) {
     throw badRequest("密码至少需要8位");
   }
 
+  // P2-5: 修改密码限流保护
+  const ip = getClientIp(req);
+  if (!checkRateLimit("change-password:" + ip, 5, 60000)) {
+    throw authError("too_many_attempts", "请求过于频繁，请稍后再试", 429);
+  }
+
   const user = context.user;
   if (!user || !verifyPassword(oldPassword, user.password_hash)) {
-    return {
-      error: "bad_request",
-      message: "旧密码不正确",
-    };
+    // P1-1: 验证失败应 throw 错误，而非 return 导致 HTTP 200
+    throw badRequest("旧密码不正确");
   }
 
   const passwordHash = hashPassword(newPassword);
@@ -1018,6 +1027,13 @@ async function parseComments({ store, params, body, context }) {
   requirePermission(context, PERMISSIONS.TASK_WRITE);
   const task = mustGet(store, "tasks", params[0]);
   assertTeamAccess(context, task.teamId);
+
+  // P1-4: 互斥锁防止并发 parse 互相覆盖
+  if (parsingTaskIds.has(task.id)) {
+    throw badRequest(`Task ${task.id} is already being parsed, please wait`);
+  }
+  parsingTaskIds.add(task.id);
+  try {
   const upload = normalizeCommentUpload(body, task);
   const parsed = upload.fileBuffer
     ? await parseCommentFileBuffer({
@@ -1038,7 +1054,7 @@ async function parseComments({ store, params, body, context }) {
   }
 
   const nextStatus = nextStatusForParsedFile({ needsMapping: parsed.needsMapping });
-  await store.update("tasks", task.id, { status: "uploaded" });
+  // P1-3: 直接跳到 nextStatus，不先写 "uploaded"
   await store.update("tasks", task.id, { status: nextStatus });
 
   const file = {
@@ -1070,6 +1086,10 @@ async function parseComments({ store, params, body, context }) {
       task: store.get("tasks", task.id)
     }
   };
+  } finally {
+    // P1-4: 释放互斥锁
+    parsingTaskIds.delete(task.id);
+  }
 }
 
 async function confirmMapping({ store, params, body, context }) {
@@ -1142,7 +1162,11 @@ async function startTaskPipeline({ store, jobs, params, context }) {
   }
 
   assertTransition(task.status, "analyzing");
-  await store.replaceAll("aiRuns", store.list("aiRuns").filter((run) => run.taskId !== task.id));
+  // P1-7: 逐个删除当前任务旧 aiRuns，避免 replaceAll 竞态覆盖其他任务
+  const oldRuns = store.list("aiRuns").filter((run) => run.taskId === task.id);
+  for (const run of oldRuns) {
+    await store.delete("aiRuns", run.id);
+  }
   const updatedTask = await store.update("tasks", task.id, {
     status: "analyzing",
     startedAt: now(),
