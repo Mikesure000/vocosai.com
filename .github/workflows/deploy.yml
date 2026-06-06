@@ -14,11 +14,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install frontend deps & build
+      - name: Build frontend
         run: |
           cd frontend
-          npm ci
+          npm install
           npx vite build
+          ls -la dist/index.html || exit 1
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
@@ -29,6 +30,7 @@ jobs:
           source: "backend/src,backend/db,backend/package.json,frontend/dist"
           target: "/opt/vocosai/"
           strip_components: 0
+          rm: true
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.2.1
@@ -39,6 +41,8 @@ jobs:
           script: |
             cd /opt/vocosai/backend
             npm install --omit=dev
+            # Clean old frontend assets
+            find /opt/vocosai/frontend/dist/assets -name "*.js" ! -newer /opt/vocosai/frontend/dist/index.html -delete 2>/dev/null
             systemctl restart vocos-node
-            sleep 2
+            sleep 3
             curl -s --max-time 5 http://127.0.0.1:3000/health
