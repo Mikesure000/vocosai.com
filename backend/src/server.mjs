@@ -38,6 +38,8 @@ function getAllowOrigin(origin) {
 // 请求限流器
 // ============================================================
 
+// TODO(P3-6): rateLimiters 和 loginTracker 存于内存，进程重启会丢失。
+// 后续应持久化到 Redis 或数据库，以支持多进程/集群部署。
 const rateLimiters = new Map();
 
 function getClientIp(request) {
@@ -274,7 +276,7 @@ async function handleLogin({ store, body, context, req }) {
   // 查询团队成员关系
   const membership = store.list("teamMembers")?.find((m) => m.userId === user.id) ?? null;
   const teamId = membership?.teamId ?? "team_demo";
-  const role = membership?.role ?? "super_admin";
+  const role = membership?.role ?? "viewer";
   const permissions = ROLE_PERMISSIONS[role] ?? ROLE_PERMISSIONS.super_admin;
   const team = store.list("teams")?.find((t) => t.id === teamId) ?? null;
 
@@ -529,7 +531,7 @@ async function handleRefreshToken({ store, req }) {
 
   const membership = store.list("teamMembers")?.find((m) => m.userId === user.id) ?? null;
   const teamId = membership?.teamId ?? "team_demo";
-  const role = membership?.role ?? user.role ?? "super_admin";
+  const role = membership?.role ?? user.role ?? "viewer";
   const permissions = ROLE_PERMISSIONS[role] ?? ROLE_PERMISSIONS.super_admin;
   const team = store.get("teams", teamId);
 
@@ -574,7 +576,8 @@ async function handleRefreshToken({ store, req }) {
 // T-AUTH-14: GET /api/auth/me
 // ============================================================
 
-async function handleGetMe({ context }) {
+// P3-4: 公共函数，避免 handleGetMe 和 getAuthContext 重复代码
+function buildAuthMeResponse(context) {
   const user = context.user;
   const team = context.team;
 
@@ -598,6 +601,10 @@ async function handleGetMe({ context }) {
       permissions: context.permissions,
     },
   };
+}
+
+async function handleGetMe({ context }) {
+  return buildAuthMeResponse(context);
 }
 
 // ============================================================
@@ -680,29 +687,7 @@ async function handleChangePassword({ store, body, context, req }) {
 // ============================================================
 
 async function getAuthContext({ context }) {
-  const user = context.user;
-  const team = context.team;
-
-  return {
-    data: {
-      user: user ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role ?? context.role,
-        phone: user.phone ?? null,
-        avatarUrl: user.avatarUrl ?? null,
-        status: user.status,
-        createdAt: user.createdAt,
-      } : null,
-      team: team ? {
-        id: team.id,
-        teamName: team.teamName ?? team.name,
-        planType: team.planType,
-      } : null,
-      permissions: context.permissions,
-    },
-  };
+  return buildAuthMeResponse(context);
 }
 
 async function schema({ store, context }) {
