@@ -21,12 +21,9 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.0.1",
     "@mui/material": "^9.0.1",
-    "axios": "^1.17.0",
-    "dexie": "^4.4.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.17.0",
-    "recharts": "^3.8.1",
-    "zustand": "^5.0.14"
+    "recharts": "^3.8.1"
   }
 }
