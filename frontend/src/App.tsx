@@ -27,6 +27,7 @@ import AiCenterPage from "./features/ai-center/AiCenterPage";
 import AttributionPage from "./features/attribution/AttributionPage";
 import AttributionWorkbench from "./features/attribution/AttributionWorkbench";
 import ProductionCardsPage from "./features/production-cards/ProductionCardsPage";
+import ProjectsDashboard from "./features/projects/ProjectsDashboard";
 import PlatformMethodologyPage from "./features/methodology/PlatformMethodologyPage";
 import CategoryKnowledgePage from "./features/category/CategoryKnowledgePage";
 import BrandPage from "./features/brand/BrandPage";
@@ -51,6 +52,7 @@ const menuItems = [
   { text: "需求地图",     icon: <DemandsIcon />,      path: "/demands",     permission: "task.read" },
   { text: "购买障碍",     icon: <ObstaclesIcon />,    path: "/obstacles",   permission: "task.read" },
   { text: "竞品机会",     icon: <CompetitorIcon />,   path: "/competitor",  permission: "task.read" },
+  { text: "项目中心",     icon: <DashboardIcon />,   path: "/projects",     permission: "task.read" },
   { text: "内容实验室",   icon: <ContentLabIcon />,   path: "/content-lab", permission: "task.read" },
   { text: "策略 & Agent", icon: <StrategyIcon />,     path: "/strategy",    permission: "schema.read" },
   { text: "AI 分析中心",  icon: <AiCenterIcon />,     path: "/ai-center",   permission: "ai_run.read" },

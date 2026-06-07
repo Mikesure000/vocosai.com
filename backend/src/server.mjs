@@ -25,6 +25,8 @@ import { generateProductionCard } from "./production-card-engine.mjs";
 
 // BL-009: 质检系统
 import { runQualityCheck } from "./quality-check.mjs";
+import { generateCommentOps } from "./comment-ops-engine.mjs";
+import { scoreAdFit } from "./ad-fit-engine.mjs";
 
 // ============================================================
 // CORS 配置
@@ -212,6 +214,8 @@ function matchRoute(method, pathname) {
     ["GET", /^\/api\/production-cards\/([^/]+)$/, getProductionCard],
     // BL-009: 质检 API
     ["POST", /^\/api\/production-cards\/([^/]+)\/quality-check$/, runQualityCheckHandler, 201],
+    ["POST", /^\/api\/tasks\/([^/]+)\/comment-ops$/, generateCommentOpsHandler, 201],
+    ["POST", /^\/api\/production-cards\/([^/]+)\/ad-fit$/, scoreAdFitHandler, 200],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2282,4 +2286,28 @@ async function runQualityCheckHandler({ store, params, context }) {
   });
 
   return { data: qcResult };
+}
+
+async function generateCommentOpsHandler({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.TASK_READ);
+  const taskId = params[0];
+  const task = store.get("tasks", taskId);
+  if (!task) { const e = new Error("Not found"); e.statusCode = 404; e.code = "not_found"; throw e; }
+
+  const attrs = store.list("attributionResults");
+  const attr = attrs.find(a => a.taskId === taskId) || {};
+  const categoryKnowledge = store.list("categoryKnowledge");
+  const ops = generateCommentOps({ attribution: attr, categoryKnowledge: categoryKnowledge[0], platform: task.platform || "douyin" });
+  return { data: ops };
+}
+
+async function scoreAdFitHandler({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.TASK_READ);
+  const card = store.get("productionCards", params[0]);
+  if (!card) { const e = new Error("Not found"); e.statusCode = 404; e.code = "not_found"; throw e; }
+
+  const attrs = store.list("attributionResults");
+  const attr = attrs.find(a => a.taskId === card.taskId) || {};
+  const result = scoreAdFit(card, attr);
+  return { data: result };
 }
