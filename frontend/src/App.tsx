@@ -27,6 +27,7 @@ import AiCenterPage from "./features/ai-center/AiCenterPage";
 import AttributionPage from "./features/attribution/AttributionPage";
 import AttributionWorkbench from "./features/attribution/AttributionWorkbench";
 import ProductionCardsPage from "./features/production-cards/ProductionCardsPage";
+import PlatformMethodologyPage from "./features/methodology/PlatformMethodologyPage";
 import BrandPage from "./features/brand/BrandPage";
 import BenchmarkPage from "./features/benchmark/BenchmarkPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -56,6 +57,7 @@ const menuItems = [
   { text: "内容生产卡",   icon: <ContentLabIcon />,   path: "/production-cards", permission: "task.read" },
   { text: "品牌中心",     icon: <BrandIcon />,        path: "/brand",       permission: null },
   { text: "对标中心",     icon: <BenchmarkIcon />,    path: "/benchmark",   permission: null },
+  { text: "平台方法论",   icon: <DemandsIcon />,       path: "/methodology", permission: "task.read" },
   { text: "报告中心",     icon: <ReportsIcon />,      path: "/reports",     permission: "report.read" },
 ];
 
@@ -144,6 +146,7 @@ export default function App() {
             <Route path="attribution/:taskId" element={<AttributionWorkbench />} />
             <Route path="production-cards" element={<ProductionCardsPage />} />
             <Route path="production-cards/:taskId" element={<ProductionCardsPage />} />
+            <Route path="methodology" element={<PlatformMethodologyPage />} />
             <Route path="brand" element={<BrandPage />} />
             <Route path="benchmark" element={<BenchmarkPage />} />
             <Route path="strategy" element={
