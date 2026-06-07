@@ -28,6 +28,7 @@ import { runQualityCheck } from "./quality-check.mjs";
 import { generateCommentOps } from "./comment-ops-engine.mjs";
 import { scoreAdFit } from "./ad-fit-engine.mjs";
 import { listReportTemplates, buildWhiteLabelReport } from "./white-label-engine.mjs";
+import { assignTask, getTaskAssignments, listMyTasks, submitForReview, approveCard, rejectCard, getCardReviews, getPendingReviews, getTeamStats } from "./team-collab-engine.mjs";
 
 // ============================================================
 // CORS 配置
@@ -219,6 +220,16 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/production-cards\/([^/]+)\/ad-fit$/, scoreAdFitHandler, 200],
     ["GET", /^\/api\/reports\/templates$/, listReportTemplatesHandler],
     ["POST", /^\/api\/reports\/generate$/, generateWhiteLabelReport, 201],
+    // BL-026: 团队协作 API
+    ["GET", /^\/api\/team\/stats$/, getTeamStatsHandler],
+    ["GET", /^\/api\/team\/my-tasks$/, listMyTasksHandler],
+    ["POST", /^\/api\/tasks\/([^/]+)\/assign$/, assignTaskHandler, 200],
+    ["GET", /^\/api\/tasks\/([^/]+)\/assignments$/, getTaskAssignmentsHandler],
+    ["POST", /^\/api\/production-cards\/([^/]+)\/submit-review$/, submitReviewHandler, 200],
+    ["POST", /^\/api\/production-cards\/([^/]+)\/approve$/, approveCardHandler, 200],
+    ["POST", /^\/api\/production-cards\/([^/]+)\/reject$/, rejectCardHandler, 200],
+    ["GET", /^\/api\/production-cards\/([^/]+)\/reviews$/, getCardReviewsHandler],
+    ["GET", /^\/api\/pending-reviews$/, getPendingReviewsHandler],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2324,4 +2335,34 @@ async function generateWhiteLabelReport({ store, context, body }) {
   const { template, whiteLabelConfig, reportData } = body || {};
   const result = buildWhiteLabelReport({ reportData, template: template || "weekly", whiteLabelConfig });
   return { data: result };
+}
+
+// ============ BL-026: 团队协作 Handlers ============
+async function getTeamStatsHandler({ store, context }) {
+  return { data: getTeamStats(store, context.teamId) };
+}
+async function listMyTasksHandler({ store, context }) {
+  return { data: listMyTasks(store, context.userId) };
+}
+async function assignTaskHandler({ store, params, context, body }) {
+  const result = assignTask(store, { taskId: params[0], assigneeId: body.assigneeId, assignedBy: context.userId });
+  return { data: result };
+}
+async function getTaskAssignmentsHandler({ store, params }) {
+  return { data: getTaskAssignments(store, params[0]) };
+}
+async function submitReviewHandler({ store, params, context }) {
+  return { data: submitForReview(store, { cardId: params[0], submittedBy: context.userId }) };
+}
+async function approveCardHandler({ store, params, context, body }) {
+  return { data: approveCard(store, { cardId: params[0], reviewerId: context.userId, comment: body?.comment }) };
+}
+async function rejectCardHandler({ store, params, context, body }) {
+  return { data: rejectCard(store, { cardId: params[0], reviewerId: context.userId, comment: body?.comment }) };
+}
+async function getCardReviewsHandler({ store, params }) {
+  return { data: getCardReviews(store, params[0]) };
+}
+async function getPendingReviewsHandler({ store, context }) {
+  return { data: getPendingReviews(store, context.userId }) };
 }
