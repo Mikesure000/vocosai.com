@@ -25,6 +25,8 @@ import CompetitorPage from "./features/competitor/CompetitorPage";
 import ContentLabPage from "./features/content-lab/ContentLabPage";
 import AiCenterPage from "./features/ai-center/AiCenterPage";
 import AttributionPage from "./features/attribution/AttributionPage";
+import AttributionWorkbench from "./features/attribution/AttributionWorkbench";
+import ProductionCardsPage from "./features/production-cards/ProductionCardsPage";
 import BrandPage from "./features/brand/BrandPage";
 import BenchmarkPage from "./features/benchmark/BenchmarkPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -51,6 +53,7 @@ const menuItems = [
   { text: "策略 & Agent", icon: <StrategyIcon />,     path: "/strategy",    permission: "schema.read" },
   { text: "AI 分析中心",  icon: <AiCenterIcon />,     path: "/ai-center",   permission: "ai_run.read" },
   { text: "复盘归因",     icon: <AttributionIcon />,  path: "/attribution", permission: "task.read" },
+  { text: "内容生产卡",   icon: <ContentLabIcon />,   path: "/production-cards", permission: "task.read" },
   { text: "品牌中心",     icon: <BrandIcon />,        path: "/brand",       permission: null },
   { text: "对标中心",     icon: <BenchmarkIcon />,    path: "/benchmark",   permission: null },
   { text: "报告中心",     icon: <ReportsIcon />,      path: "/reports",     permission: "report.read" },
@@ -138,6 +141,9 @@ export default function App() {
             <Route path="content-lab" element={<ContentLabPage />} />
             <Route path="ai-center" element={<AiCenterPage />} />
             <Route path="attribution" element={<AttributionPage />} />
+            <Route path="attribution/:taskId" element={<AttributionWorkbench />} />
+            <Route path="production-cards" element={<ProductionCardsPage />} />
+            <Route path="production-cards/:taskId" element={<ProductionCardsPage />} />
             <Route path="brand" element={<BrandPage />} />
             <Route path="benchmark" element={<BenchmarkPage />} />
             <Route path="strategy" element={

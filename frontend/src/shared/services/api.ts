@@ -99,4 +99,16 @@ export const api = {
 
   // Schema
   getSchema: () => request("/schema"),
+
+  // Categories (BL-001)
+  listCategories: () => request("/categories"),
+
+  // Attribution (BL-003/004)
+  runAttribution: (id: string) => request(`/tasks/${id}/attribution/run`, { method: "POST" }),
+  getAttribution: (id: string) => request(`/tasks/${id}/attribution`),
+
+  // Production Cards (BL-008)
+  generateProductionCard: (id: string, platform: string) => request(`/tasks/${id}/production-cards/generate`, { method: "POST", body: JSON.stringify({ platform }) }),
+  listProductionCards: (id: string) => request(`/tasks/${id}/production-cards`),
+  getProductionCard: (id: string) => request(`/production-cards/${id}`),
 };
