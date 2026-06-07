@@ -27,7 +27,7 @@ function loadSeedData() {
     base = JSON.parse(readFileSync(seedPath, "utf8"));
   } else {
     base = {
-      users: [], teams: [], teamMembers: [], categoryKnowledge: [], projects: [],
+      users: [], teams: [], teamMembers: [], categoryKnowledge: [], attributionResults: [], projects: [],
       tasks: [], commentFiles: [], comments: [], aiRuns: [],
       aiQualityFeedback: [], auditLogs: [], reports: [],
       modelProviders: [], modelConfigs: [],

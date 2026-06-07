@@ -17,6 +17,9 @@ import { validateJsonSchema } from "./schema-validator.mjs";
 import { buildWorkbookXlsx } from "./xlsx-exporter.mjs";
 import { contentDispositionAttachment } from "./text-utils.mjs";
 
+// BL-003: 归因引擎
+import { runAttribution } from "./attribution-engine.mjs";
+
 // ============================================================
 // CORS 配置
 // ============================================================
@@ -190,6 +193,9 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/tasks\/([^/]+)\/reports$/, createTaskReport, 201],
     ["GET", /^\/api\/tasks\/([^/]+)\/status$/, getTaskStatus],
     ["GET", /^\/api\/tasks\/([^/]+)\/agent-runs$/, listTaskAiRuns],
+    // BL-003/004: 归因分析 API
+    ["POST", /^\/api\/tasks\/([^/]+)\/attribution\/run$/, runTaskAttribution, 202],
+    ["GET", /^\/api\/tasks\/([^/]+)\/attribution$/, getTaskAttribution],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2040,4 +2046,81 @@ async function getSkillIterationHistory({ store, params, context }) {
   requirePermission(context, PERMISSIONS.COST_READ);
   const agentCode = params[0];
   return { data: buildSkillIterationHistory({ store, agentCode }) };
+}
+
+// BL-003/004: 归因分析 handlers
+async function runTaskAttribution({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_WRITE);
+  const taskId = params[0];
+  const task = store.get("tasks", taskId);
+  if (!task) {
+    const error = new Error("Task not found");
+    error.statusCode = 404;
+    error.code = "not_found";
+    throw error;
+  }
+
+  // 获取输入数据
+  const signals = await getTaskCommentSignals({ store, params, context });
+  const categoryKnowledge = store.list("categoryKnowledge");
+  const category = categoryKnowledge[0] || null;
+
+  // 构建归因输入
+  const input = {
+    taskId,
+    content: {
+      title: task.contentTitle || task.taskName || "",
+      body: task.contentBody || task.description || "",
+      platform: task.platform || "抖音",
+      brandInfo: task.brandInfo || ""
+    },
+    signals: signals.data || signals,
+    categoryKnowledge: category,
+    llmCall: mockLlmCall // mock 模式下的 LLM 调用
+  };
+
+  // 执行归因分析
+  const result = await runAttribution(input);
+
+  // 保存结果
+  const attributionId = createId("attr");
+  await store.insert("attributionResults", {
+    id: attributionId,
+    taskId,
+    result: result.attributionMatrix,
+    contentGaps: result.contentGaps,
+    sellingPointRanking: result.sellingPointRanking,
+    contentPoints: result.contentPoints,
+    metadata: result._metadata,
+    createdAt: now()
+  });
+
+  return { data: { attributionId, ...result } };
+}
+
+async function getTaskAttribution({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.TASK_READ);
+  const taskId = params[0];
+
+  const attrs = store.list("attributionResults");
+  const attr = attrs.find(a => a.taskId === taskId);
+  if (!attr) {
+    return { data: { message: "No attribution data yet. Run attribution first." } };
+  }
+
+  return { data: attr };
+}
+
+// Mock LLM call for attribution (will be replaced by real model-gateway calls)
+function mockLlmCall(model, messages) {
+  const userMsg = messages.find(m => m.role === "user")?.content || "";
+  const insightCount = (userMsg.match(/"text"/g) || []).length || 5;
+
+  const mockInsights = Array.from({ length: Math.min(insightCount, 5) }, (_, i) => ({
+    contentPointId: `cp_${i + 1}`,
+    insightText: `该内容要点引发了用户的${i % 2 === 0 ? "正面共鸣" : "质疑反应"}，因为表达方式${i % 2 === 0 ? "准确传达了产品价值" : "未能充分解释产品优势"}。建议下一条内容中${i % 2 === 0 ? "保持这种表达方式" : "增加数据支撑和案例说明"}。`,
+    nextAction: i % 2 === 0 ? "保持并放大" : "增加信任背书后重试"
+  }));
+
+  return JSON.stringify({ insights: mockInsights });
 }
