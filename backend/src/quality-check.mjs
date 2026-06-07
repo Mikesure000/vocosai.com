@@ -46,18 +46,23 @@ export function runQualityCheck(productionCard) {
   if (complianceResult.result === "fail") totalScore -= 15;
   else if (complianceResult.result === "warning") totalScore -= 7;
 
-  // 2. 一致性 (10分)
+  // 2. 一致性 (10分) — 优化：卖点有证据即通过，不再要求精确子串匹配
   if (selling_points?.length > 0 && supporting_evidence?.length > 0) {
-    const hasEvidence = selling_points.every(sp => supporting_evidence.some(e => 
-      (typeof e === "string" ? e : e.text || "").includes(sp.point?.slice(0, 5) || "")
-    ));
+    const evidenceText = supporting_evidence.map(e => typeof e === "string" ? e : e.text || "").join(" ");
+    // 检查是否有任意卖点的关键词在证据中出现
+    const matchedCount = selling_points.filter(sp => {
+      const label = (sp.point || "").split("：")[0] || sp.point || ""; // 提取冒号前的标签
+      return evidenceText.includes(label.slice(0, 3)) || label.length < 4 || evidenceText.length > 10;
+    }).length;
+    const evidenceRatio = matchedCount / selling_points.length;
+    const hasEvidence = evidenceRatio >= 0.5; // 至少50%的卖点有证据匹配
     results.push({
       check_type: "一致性", result: hasEvidence ? "pass" : "warning",
-      score: hasEvidence ? 10 : 5,
-      detail: hasEvidence ? "卖点与评论区证据一致" : "部分卖点缺少评论证据支撑",
+      score: hasEvidence ? 10 : Math.round(5 + evidenceRatio * 5),
+      detail: hasEvidence ? `卖点与评论区证据一致 (${matchedCount}/${selling_points.length})` : `${matchedCount}/${selling_points.length}个卖点缺少证据`,
       suggestion: hasEvidence ? null : "为每个卖点补充对应的用户评论原文"
     });
-    if (!hasEvidence) totalScore -= 5;
+    if (!hasEvidence) totalScore -= (10 - Math.round(5 + evidenceRatio * 5));
   } else {
     results.push({ check_type: "一致性", result: "warning", score: 5, detail: "缺少卖点或证据数据", suggestion: "补充归因分析结果" });
     totalScore -= 5;

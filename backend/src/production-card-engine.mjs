@@ -25,8 +25,8 @@ export async function generateProductionCard(input) {
 
   // 生成抖音/小红书差异化内容
   const card = platform === "xiaohongshu" 
-    ? buildXiaohongshuCard(content, topBarriers, topDemands, evidence, tactics)
-    : buildDouyinCard(content, topBarriers, topDemands, evidence, tactics);
+    ? buildXiaohongshuCard(content, topBarriers, topDemands, evidence, tactics, categoryKnowledge)
+    : buildDouyinCard(content, topBarriers, topDemands, evidence, tactics, categoryKnowledge);
 
   // LLM 增强标题和文案
   try {
@@ -38,7 +38,7 @@ export async function generateProductionCard(input) {
 }
 
 // ===== 抖音生产卡 =====
-function buildDouyinCard(content, barriers, demands, evidence, tactics) {
+function buildDouyinCard(content, barriers, demands, evidence, tactics, categoryKnowledge) {
   const primaryBarrier = barriers[0]?.label || "效果怀疑";
   const primaryDemand = demands[0]?.label || "性价比";
 
@@ -60,7 +60,7 @@ function buildDouyinCard(content, barriers, demands, evidence, tactics) {
     copywriting: buildDouyinScript(content, primaryBarrier, evidence),
     asset_specs: { type: "短视频口播", duration: "30-90s", format: "9:16竖屏", visuals: ["评论截图", "产品特写", "用户反馈截图"] },
     supporting_evidence: evidence.slice(0, 3).map(e => e.text),
-    selling_points: demands.slice(0, 3).map(d => ({ point: d.demandLabel || d.label || d.demandCode, evidence: evidence[0]?.text?.slice(0, 20) || "评论区反馈" })),
+    selling_points: demands.slice(0, 3).map(d => enrichSellingPoint(d, evidence, categoryKnowledge)),
     objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.barrierLabel || b.label, response: `${b.barrierLabel || b.label}是品类常见问题，下条内容重点拆解` })),
     expected_outcome: `降低${primaryBarrier}相关疑问50%，提升购买意图信号30%`,
     ab_test_variables: [
@@ -74,7 +74,7 @@ function buildDouyinScript(content, primaryBarrier, evidence) {
 }
 
 // ===== 小红书生产卡 =====
-function buildXiaohongshuCard(content, barriers, demands, evidence, tactics) {
+function buildXiaohongshuCard(content, barriers, demands, evidence, tactics, categoryKnowledge) {
   const primaryBarrier = barriers[0]?.label || "效果怀疑";
   const hookStrategies = tactics?.hookStrategies || ["成分科普", "测评清单"];
 
@@ -95,7 +95,7 @@ function buildXiaohongshuCard(content, barriers, demands, evidence, tactics) {
     copywriting: buildXiaohongshuCopy(content, primaryBarrier, keywords, evidence),
     asset_specs: { type: "图文笔记", imageCount: "6-9张", images: ["成分表截图", "使用前后对比", "竞品参数对比表", "用户反馈精选"] },
     supporting_evidence: evidence.slice(0, 3).map(e => e.text),
-    selling_points: demands.slice(0, 3).map(d => ({ point: d.demandLabel || d.label || d.demandCode, evidence: "详见正文维度拆解" })),
+    selling_points: demands.slice(0, 3).map(d => enrichSellingPoint(d, evidence, categoryKnowledge)),
     objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.barrierLabel || b.label, response: `已在'人群清单'部分标明适合/不适合情况` })),
     expected_outcome: `收藏率提升50%，评论区追问减少30%`,
     ab_test_variables: [
@@ -190,4 +190,29 @@ ${JSON.stringify(attribution?.attributionMatrix?.slice(0, 3) || [])}
   "copywriting": "优化后的核心口播/正文（80-150字）",
   "hook_variants": ["钩子变体1", "钩子变体2"]
 }`;
+}
+
+// 优化卖点：从品类知识库提取完整描述，确保≥10字 + 匹配最佳证据
+function enrichSellingPoint(demand, evidence, categoryKnowledge) {
+  const label = demand.demandLabel || demand.label || demand.demandCode || "未知需求";
+  const needTaxonomy = categoryKnowledge?.needTaxonomy || [];
+  const needInfo = needTaxonomy.find(n => n.code === demand.demandCode || n.label === label);
+
+  // 从品类知识库提取完整描述
+  const fullPoint = needInfo 
+    ? `${needInfo.label}：${needInfo.description.slice(0, 30)}`
+    : `${label}相关需求`;
+
+  // 从证据中找到最匹配的评论
+  let bestEvidence = "评论区反馈";
+  if (evidence && evidence.length > 0) {
+    const match = evidence.find(e => {
+      const t = (e.text || '').toLowerCase();
+      return t.includes(label.slice(0, 2).toLowerCase()) ||
+        (needInfo?.description || '').split('').some(c => t.includes(c));
+    });
+    bestEvidence = match ? match.text.slice(0, 20) : evidence[0]?.text?.slice(0, 20) || "评论区反馈";
+  }
+
+  return { point: fullPoint, evidence: bestEvidence };
 }
