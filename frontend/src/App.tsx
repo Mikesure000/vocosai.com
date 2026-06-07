@@ -10,7 +10,7 @@ import {
   Description as ReportsIcon, WarningAmber as ObstaclesIcon,
   CompareArrows as CompetitorIcon, AutoAwesome as ContentLabIcon,
   Psychology as AiCenterIcon, Replay as AttributionIcon,
-  Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon,
+  Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon, Category as CategoryIcon,
 } from "@mui/icons-material";
 import AuthGuard from "./shared/auth/AuthGuard";
 import ErrorBoundary from "./shared/auth/ErrorBoundary";
@@ -62,7 +62,7 @@ const menuItems = [
   { text: "品牌中心",     icon: <BrandIcon />,        path: "/brand",       permission: null },
   { text: "对标中心",     icon: <BenchmarkIcon />,    path: "/benchmark",   permission: null },
   { text: "平台方法论",   icon: <DemandsIcon />,       path: "/methodology", permission: "task.read" },
-  { text: "品类知识库",   icon: <LightbulbIcon />,     path: "/category",    permission: "task.read" },
+  { text: "品类知识库",   icon: <CategoryIcon />,       path: "/category",    permission: "task.read" },
   { text: "团队协作",     icon: <PeopleIcon />,        path: "/team",         permission: "task.read" },
   { text: "报告中心",     icon: <ReportsIcon />,      path: "/reports",     permission: "report.read" },
 ];

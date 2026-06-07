@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Box, Card, CardContent, Typography, CircularProgress, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, SelectChangeEvent, Alert, List, ListItem, Divider,
+  Paper, Button, Alert, List, ListItem, Divider,
 } from "@mui/material";
 import { People, Assignment, CheckCircle, Cancel, Pending } from "@mui/icons-material";
 import { api } from "../../shared/services/api";
@@ -13,7 +13,6 @@ export default function TeamCollaborationPage() {
   const [myTasks, setMyTasks] = useState<any[]>([]);
   const [pendingReviews, setPendingReviews] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
-  const [selectedTask, setSelectedTask] = useState("");
 
   const load = () => {
     setLoading(true);
