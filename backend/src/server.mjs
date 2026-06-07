@@ -20,6 +20,9 @@ import { contentDispositionAttachment } from "./text-utils.mjs";
 // BL-003: 归因引擎
 import { runAttribution } from "./attribution-engine.mjs";
 
+// BL-008: 内容生产卡引擎
+import { generateProductionCard } from "./production-card-engine.mjs";
+
 // ============================================================
 // CORS 配置
 // ============================================================
@@ -196,6 +199,10 @@ function matchRoute(method, pathname) {
     // BL-003/004: 归因分析 API
     ["POST", /^\/api\/tasks\/([^/]+)\/attribution\/run$/, runTaskAttribution, 202],
     ["GET", /^\/api\/tasks\/([^/]+)\/attribution$/, getTaskAttribution],
+    // BL-008: 内容生产卡 API
+    ["POST", /^\/api\/tasks\/([^/]+)\/production-cards\/generate$/, generateTaskProductionCard, 201],
+    ["GET", /^\/api\/tasks\/([^/]+)\/production-cards$/, listTaskProductionCards],
+    ["GET", /^\/api\/production-cards\/([^/]+)$/, getProductionCard],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2111,7 +2118,7 @@ async function getTaskAttribution({ store, params, context }) {
   return { data: attr };
 }
 
-// Mock LLM call for attribution (will be replaced by real model-gateway calls)
+// Mock LLM call for attribution/production (will be replaced by real model-gateway calls)
 function mockLlmCall(model, messages) {
   const userMsg = messages.find(m => m.role === "user")?.content || "";
   const insightCount = (userMsg.match(/"text"/g) || []).length || 5;
@@ -2123,4 +2130,68 @@ function mockLlmCall(model, messages) {
   }));
 
   return JSON.stringify({ insights: mockInsights });
+}
+
+// BL-008: 内容生产卡 handlers
+async function generateTaskProductionCard({ store, params, context, body }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_WRITE);
+  const taskId = params[0];
+  const task = store.get("tasks", taskId);
+  if (!task) {
+    const error = new Error("Task not found");
+    error.statusCode = 404; error.code = "not_found"; throw error;
+  }
+
+  const platform = body.platform || "douyin";
+  const categoryKnowledge = store.list("categoryKnowledge");
+  const category = categoryKnowledge[0] || null;
+
+  // 获取归因结果
+  const attrs = store.list("attributionResults");
+  const attr = attrs.find(a => a.taskId === taskId);
+  const attribution = attr || {};
+
+  // 生成生产卡
+  const card = await generateProductionCard({
+    attribution,
+    categoryKnowledge: category,
+    content: {
+      title: task.contentTitle || task.taskName || "",
+      body: task.contentBody || "",
+      brandInfo: task.brandInfo || ""
+    },
+    platform,
+    llmCall: mockLlmCall
+  });
+
+  // 保存
+  const cardId = createId("card");
+  await store.insert("productionCards", {
+    id: cardId,
+    taskId,
+    ...card,
+    status: "draft",
+    agent_run_id: null,
+    created_at: now(),
+    updated_at: now()
+  });
+
+  return { data: { id: cardId, ...card } };
+}
+
+async function listTaskProductionCards({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.TASK_READ);
+  const taskId = params[0];
+  const cards = store.list("productionCards").filter(c => c.taskId === taskId);
+  return { data: cards };
+}
+
+async function getProductionCard({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.TASK_READ);
+  const card = store.get("productionCards", params[0]);
+  if (!card) {
+    const error = new Error("Production card not found");
+    error.statusCode = 404; error.code = "not_found"; throw error;
+  }
+  return { data: card };
 }
