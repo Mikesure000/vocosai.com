@@ -103,10 +103,23 @@ function ProductionCardDetail({ card }: { card: any }) {
             <Typography variant="h6">{card.title}</Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Chip label={card.status || "draft"} size="small" variant="outlined" />
+            <StatusBadge status={card.status} qcResult={card.quality_check_result} />
             <Typography variant="caption" color="text.secondary">{numFields} 字段</Typography>
           </Box>
         </Box>
+
+        {/* QC Score + Approval Actions */}
+        {card.quality_check_result && (
+          <Box sx={{ display: "flex", gap: 2, mb: 2, p: 1.5, bgcolor: "#f8f9fa", borderRadius: 1, alignItems: "center", flexWrap: "wrap" }}>
+            <Chip label={`质检 ${card.quality_check_result.totalScore}/100`} size="small"
+              color={card.quality_check_result.totalScore >= 80 ? "success" : card.quality_check_result.totalScore >= 60 ? "warning" : "error"} />
+            <Chip label={card.quality_check_result.verdict === "approve" ? "可发布" : card.quality_check_result.verdict === "revise" ? "需修改" : "不可发布"}
+              size="small" color={card.quality_check_result.verdict === "approve" ? "success" : "warning"} />
+            {card.quality_check_result.checks?.filter((c:any) => c.result !== "pass").slice(0, 2).map((c:any) => (
+              <Chip key={c.check_type} label={`⚠ ${c.check_type}: ${c.score}分`} size="small" variant="outlined" color="warning" />
+            ))}
+          </Box>
+        )}
 
         {/* Core fields summary */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -188,4 +201,13 @@ function ProductionCardDetail({ card }: { card: any }) {
       </CardContent>
     </Card>
   );
+}
+
+function StatusBadge({ status, qcResult }: { status: string; qcResult?: any }) {
+  const score = qcResult?.totalScore;
+  if (status === "approved") return <Chip label="已批准" size="small" color="success" />;
+  if (status === "pending_review") return <Chip label="待审批" size="small" color="warning" />;
+  if (status === "rejected") return <Chip label="已驳回" size="small" color="error" />;
+  if (score >= 80) return <Chip label="可发布" size="small" color="success" variant="outlined" />;
+  return <Chip label={status || "draft"} size="small" variant="outlined" />;
 }
