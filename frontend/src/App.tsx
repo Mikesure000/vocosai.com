@@ -10,7 +10,7 @@ import {
   Description as ReportsIcon, WarningAmber as ObstaclesIcon,
   CompareArrows as CompetitorIcon, AutoAwesome as ContentLabIcon,
   Psychology as AiCenterIcon, Replay as AttributionIcon,
-  Business as BrandIcon, Assessment as BenchmarkIcon,
+  Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon,
 } from "@mui/icons-material";
 import AuthGuard from "./shared/auth/AuthGuard";
 import ErrorBoundary from "./shared/auth/ErrorBoundary";
