@@ -60,8 +60,8 @@ function buildDouyinCard(content, barriers, demands, evidence, tactics) {
     copywriting: buildDouyinScript(content, primaryBarrier, evidence),
     asset_specs: { type: "短视频口播", duration: "30-90s", format: "9:16竖屏", visuals: ["评论截图", "产品特写", "用户反馈截图"] },
     supporting_evidence: evidence.slice(0, 3).map(e => e.text),
-    selling_points: demands.slice(0, 3).map(d => ({ point: d.label, evidence: evidence[0]?.text?.slice(0, 20) || "评论区反馈" })),
-    objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.label, response: `${b.label}是品类常见问题，下条内容重点拆解` })),
+    selling_points: demands.slice(0, 3).map(d => ({ point: d.demandLabel || d.label || d.demandCode, evidence: evidence[0]?.text?.slice(0, 20) || "评论区反馈" })),
+    objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.barrierLabel || b.label, response: `${b.barrierLabel || b.label}是品类常见问题，下条内容重点拆解` })),
     expected_outcome: `降低${primaryBarrier}相关疑问50%，提升购买意图信号30%`,
     ab_test_variables: [
       { variable: "开头钩子", variantA: "评论质疑型", variantB: "效果证明型" }
@@ -95,8 +95,8 @@ function buildXiaohongshuCard(content, barriers, demands, evidence, tactics) {
     copywriting: buildXiaohongshuCopy(content, primaryBarrier, keywords, evidence),
     asset_specs: { type: "图文笔记", imageCount: "6-9张", images: ["成分表截图", "使用前后对比", "竞品参数对比表", "用户反馈精选"] },
     supporting_evidence: evidence.slice(0, 3).map(e => e.text),
-    selling_points: demands.slice(0, 3).map(d => ({ point: d.label, evidence: "详见正文维度拆解" })),
-    objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.label, response: `已在'人群清单'部分标明适合/不适合情况` })),
+    selling_points: demands.slice(0, 3).map(d => ({ point: d.demandLabel || d.label || d.demandCode, evidence: "详见正文维度拆解" })),
+    objection_handling: barriers.slice(0, 3).map(b => ({ objection: b.barrierLabel || b.label, response: `已在'人群清单'部分标明适合/不适合情况` })),
     expected_outcome: `收藏率提升50%，评论区追问减少30%`,
     ab_test_variables: [
       { variable: "标题风格", variantA: "疑问式", variantB: "结论式" },

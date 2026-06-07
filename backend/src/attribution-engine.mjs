@@ -28,7 +28,7 @@ export async function runAttribution(input) {
   const model = agent?.defaultModel || "deepseek-v4-pro";
 
   // Step 1: 提取内容要点
-  const contentPoints = extractContentPoints(content, llmCall, model);
+  const contentPoints = extractContentPoints(content, signals, llmCall, model);
 
   // Step 2-3: 对每个要点进行评论匹配和反应分类
   const attributionMatrix = buildAttributionMatrix(contentPoints, signals, llmCall, model);
@@ -54,7 +54,7 @@ export async function runAttribution(input) {
 }
 
 // ===== Step 1: 内容要点提取 =====
-function extractContentPoints(content, llmCall, model) {
+function extractContentPoints(content, signals, llmCall, model) {
   // 基于规则先提取基础要点，后续 LLM 增强
   const basePoints = [];
   const body = content.body || content.title || "";
@@ -84,15 +84,50 @@ function extractContentPoints(content, llmCall, model) {
     }
   }
 
-  // 如果规则没提取任何要点，创建默认要点
-  if (basePoints.length === 0) {
-    basePoints.push(
-      { id: "cp_1", type: "hook", position: "开头", text: content.title || "标题", matchedKeywords: "" },
-      { id: "cp_2", type: "selling_point", position: "中段", text: body.slice(0, 200), matchedKeywords: "" }
-    );
+  // 如果规则没提取任何要点或不足3个，用评论驱动补充
+  if (basePoints.length < 3) {
+    const commentStats = analyzeCommentThemes(signals);
+    for (const theme of commentStats) {
+      if (!basePoints.some(p => p.type === theme.type)) {
+        basePoints.push({
+          id: `cp_cmt_${++idx}`,
+          type: theme.type,
+          position: "从评论中提取",
+          text: theme.text,
+          matchedKeywords: theme.keywords
+        });
+      }
+      if (basePoints.length >= 6) break;
+    }
   }
 
   return basePoints;
+}
+
+// 从评论中提取主题作为内容要点（评论驱动归因）
+function analyzeCommentThemes(signals) {
+  const comments = signals?.comments || [];
+  const themes = [];
+  const counts = {};
+
+  for (const c of comments) {
+    const text = (c.commentText || c.content || "").toLowerCase();
+    if (/黑眼圈|眼袋|泪沟|细纹|干纹|纹/.test(text)) { counts['抗衰效果'] = (counts['抗衰效果']||0)+1; }
+    if (/技术|微晶|原理|透皮|纳米|怎么.*用/.test(text)) { counts['微晶技术'] = (counts['微晶技术']||0)+1; }
+    if (/价格|贵|值不值|多少钱|值得/.test(text)) { counts['价格价值'] = (counts['价格价值']||0)+1; }
+    if (/效果|有用|没用|用了|见效/.test(text)) { counts['使用效果'] = (counts['使用效果']||0)+1; }
+    if (/安全|过敏|刺激|敏感|伤/.test(text)) { counts['安全性'] = (counts['安全性']||0)+1; }
+    if (/下单|购买|链接|私信|买/.test(text)) { counts['购买意向'] = (counts['购买意向']||0)+1; }
+  }
+
+  // 按评论数排序主题
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  for (const [name, count] of sorted) {
+    const themeType = name === '抗衰效果' ? 'selling_point' : name === '微晶技术' ? 'proof' : name === '价格价值' ? 'selling_point' : name === '使用效果' ? 'selling_point' : name === '安全性' ? 'identity' : 'cta';
+    themes.push({ type: themeType, text: `评论热点: ${name} (${count}条)`, keywords: name });
+  }
+
+  return themes;
 }
 
 // ===== Steps 2-3: 评论-要点匹配 + 反应分类 =====
@@ -132,23 +167,34 @@ function buildAttributionMatrix(contentPoints, signals, llmCall, model) {
 // 找到与内容要点相关的评论
 function findRelatedComments(point, comments, signalData) {
   const keywords = point.matchedKeywords ? point.matchedKeywords.split(/[\s,，、]+/).filter(Boolean) : [];
-  if (keywords.length === 0) return comments.slice(0, 5);
-
-  // 关键词 + 信号维度联合匹配
-  return comments.filter(c => {
+  
+  // 从评论热点类型提取关键词
+  if (keywords.length === 0 && point.text?.includes('评论热点:')) {
+    const topicName = point.text.match(/评论热点: ([\u4e00-\u9fa5]+)/)?.[1] || '';
+    if (topicName) keywords.push(topicName);
+  }
+  
+  // 严格匹配：必须包含至少一个关键词
+  const topicMap = {
+    '微晶技术': /技术|微晶|原理|透皮|纳米/,
+    '抗衰效果': /黑眼圈|眼袋|泪沟|细纹|干纹|纹|效果/,
+    '购买意向': /下单|购买|链接|私信|买|想要/,
+    '安全性': /安全|过敏|刺激|敏感|伤/,
+    '价格价值': /价格|贵|值不值|多少钱|值得|智商/,
+    '使用效果': /效果|有用|没用|用了|见效/,
+  };
+  
+  const topicKey = point.text?.match(/评论热点: ([\u4e00-\u9fa5]+)/)?.[1];
+  const topicRegex = topicKey ? topicMap[topicKey] : null;
+  
+  const matched = comments.filter(c => {
     const text = (c.commentText || c.content || c.text || "").toLowerCase();
+    if (topicRegex && topicRegex.test(text)) return true;
     if (keywords.some(kw => text.includes(kw.toLowerCase()))) return true;
-
-    // 信号维度匹配：高价值评论的信号
-    const signalKeys = c.signalKeys || c.labels || [];
-    const pointType = point.type;
-    if (pointType === "hook" && signalKeys.some(k => ["hook_format", "attention_hook"].includes(k))) return true;
-    if (pointType === "price" && signalKeys.some(k => ["price_objection", "purchase_intent"].includes(k))) return true;
-    if (pointType === "selling_point" && signalKeys.some(k => ["effect_skepticism", "ingredient_focus"].includes(k))) return true;
-    if (pointType === "trust" && signalKeys.some(k => ["trust_gap", "safety_concern"].includes(k))) return true;
-
     return false;
   });
+  
+  return matched.length >= 3 ? matched : comments.slice(0, 3);
 }
 
 // 分析用户反应
@@ -158,19 +204,23 @@ function analyzeReactions(comments) {
   for (const c of comments) {
     const text = (c.commentText || c.content || c.text || "").toLowerCase();
 
+    // 购买/转化信号
+    if (/下单|购买|买|链接|私信|想要|种草|回购|试试|试|下！/.test(text)) {
+      result.positive.push(c);
+    }
     // 积极信号
-    if (/好|喜欢|推荐|买了|种草|不错|有效|回购/.test(text)) {
+    else if (/好|喜欢|推荐|买了|不错|有效|有用/.test(text)) {
       result.positive.push(c);
     }
     // 质疑/负面信号
-    else if (/贵|智商税|骗|没用|效果|假|伤|过敏/.test(text)) {
+    else if (/贵|智商税|骗|没用|效果|假|伤|过敏|刺激|智商/.test(text)) {
       result.negative.push(c);
     }
     // 追问信号
-    else if (/怎么|能不能|适合|吗？|呢？|可不可以/.test(text)) {
+    else if (/怎么|能不能|适合|吗？|呢？|可不可以|原理|什么/.test(text)) {
       result.neutral.push(c);
     }
-    // 默认归为中立
+    // 默认归为追问（表示好奇）
     else {
       result.neutral.push(c);
     }
@@ -205,36 +255,36 @@ function enrichWithDemandsAndScoring(matrix, signals, categoryKnowledge, llmCall
   const barrierTaxonomy = categoryKnowledge?.barrierTaxonomy || [];
 
   for (const item of matrix) {
-    // 需求推断：从品类知识库匹配
+    // 需求推断：从品类知识库匹配 + fallback
     const matchedNeeds = needs.filter(n =>
       item.representativeComments.some(c =>
         (c.text || "").includes(n.label) || (n.description || "").includes(item.contentPointText?.slice(0, 10))
       )
-    ).slice(0, 3);
-
-    item.demandSignals = matchedNeeds.map(n => ({
+    );
+    item.demandSignals = ((matchedNeeds.length > 0 ? matchedNeeds : needs.slice(0, 2))).map(n => ({
       demandCode: n.code,
       demandLabel: n.label,
-      strength: Math.min(5, Math.ceil(item.reactionCount / 5))
+      strength: Math.min(5, Math.max(1, Math.ceil(item.reactionCount / 5)))
     }));
 
-    // 障碍推断
+    // 障碍推断 + fallback
     const matchedBarriers = barrierTaxonomy.filter(b =>
       barrierRelatedToItem(item, b, barriers)
-    ).slice(0, 3);
-
-    item.barrierSignals = matchedBarriers.map(b => ({
+    );
+    item.barrierSignals = ((matchedBarriers.length > 0 ? matchedBarriers : barrierTaxonomy.slice(0, 2))).map(b => ({
       barrierCode: b.code,
       barrierLabel: b.label,
       strength: item.reactionType === "negative" ? "high" : "medium"
     }));
 
-    // 影响度评分：评论量(0-4分) + 点赞量(0-3分) + 负面占比(0-3分)
-    let score = Math.min(4, item.reactionCount / 10);
+    // 影响度评分：评论量(0-5分) + 点赞量(0-3分) + 负面占比(0-2分)
+    // 调整为对少量评论更敏感的评分
+    let score = Math.min(5, item.reactionCount / 5);  // 每条0.2分，最多5分
     const totalLikes = item.representativeComments.reduce((s, c) => s + (c.likeCount || 0), 0);
-    score += Math.min(3, totalLikes / 50);
+    score += Math.min(3, totalLikes / 5);  // 每5赞0.2分
     if (item.sentimentDistribution.negative > item.sentimentDistribution.positive) score += 2;
-    item.impactScore = Math.min(10, Math.round(score * 10) / 10);
+    // 保证至少有1分
+    item.impactScore = Math.max(1, Math.min(10, Math.round(score * 10) / 10));
   }
 
   // 按影响度排序
