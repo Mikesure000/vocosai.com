@@ -197,6 +197,31 @@ function ProductionCardDetail({ card }: { card: any }) {
               <Typography variant="caption" sx={{ display: "block" }}>{card.expected_outcome}</Typography>
             </Alert>
           )}
+
+          {/* Workflow Actions */}
+          <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end", borderTop: "1px solid #eee", pt: 2 }}>
+            {card.status === "draft" && (
+              <Button size="small" variant="contained" color="primary" onClick={() => submitForReview(card.id)}>
+                提交审批
+              </Button>
+            )}
+            {card.status === "pending_review" && (
+              <>
+                <Button size="small" variant="contained" color="success" onClick={() => approveCard(card.id)}>
+                  通过审批
+                </Button>
+                <Button size="small" variant="outlined" color="error" onClick={() => {
+                  const reason = prompt("驳回原因:");
+                  if (reason) rejectCard(card.id, reason);
+                }}>
+                  驳回
+                </Button>
+              </>
+            )}
+            {card.status === "approved" && (
+              <Chip label="✅ 已批准发布" color="success" />
+            )}
+          </Box>
         </Box>
       </CardContent>
     </Card>
@@ -210,4 +235,17 @@ function StatusBadge({ status, qcResult }: { status: string; qcResult?: any }) {
   if (status === "rejected") return <Chip label="已驳回" size="small" color="error" />;
   if (score >= 80) return <Chip label="可发布" size="small" color="success" variant="outlined" />;
   return <Chip label={status || "draft"} size="small" variant="outlined" />;
+}
+
+function submitForReview(cardId: string) {
+  fetch(`/api/production-cards/${cardId}/submit-review`, { method: "POST" })
+    .then(() => window.location.reload());
+}
+function approveCard(cardId: string) {
+  fetch(`/api/production-cards/${cardId}/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ comment: "Approved" }) })
+    .then(() => window.location.reload());
+}
+function rejectCard(cardId: string, reason: string) {
+  fetch(`/api/production-cards/${cardId}/reject`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ comment: reason }) })
+    .then(() => window.location.reload());
 }
