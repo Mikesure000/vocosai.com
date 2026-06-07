@@ -173,6 +173,8 @@ function matchRoute(method, pathname) {
     ["GET", /^\/health$/, health],
     ["GET", /^\/api\/schema$/, schema],
     ["GET", /^\/api\/audit-logs$/, listAuditLogs],
+    ["GET", /^\/api\/categories$/, listCategories],
+    ["GET", /^\/api\/categories\/([^/]+)$/, getCategory],
     ["GET", /^\/api\/admin\/storage\/diagnostics$/, getStorageDiagnostics],
     ["GET", /^\/api\/governance\/cost-summary$/, getCostSummary],
     ["GET", /^\/api\/governance\/quality-summary$/, getQualitySummary],
@@ -237,6 +239,22 @@ async function health({ store }) {
     tasks: store.list("tasks").length,
     aiRuns: store.list("aiRuns").length
   };
+}
+
+async function listCategories({ store }) {
+  const categories = store.list("categoryKnowledge");
+  return categories.map(({ platformTactics, needTaxonomy, barrierTaxonomy, audienceSegments, competitorBenchmarks, ...rest }) => rest);
+}
+
+async function getCategory({ store, params }) {
+  const category = store.get("categoryKnowledge", params[0]);
+  if (!category) {
+    const error = new Error("Category not found");
+    error.statusCode = 404;
+    error.code = "not_found";
+    throw error;
+  }
+  return category;
 }
 
 // ============================================================

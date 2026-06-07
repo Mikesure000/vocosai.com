@@ -68,6 +68,58 @@
       "createdAt": "2026-06-04T00:00:00.000Z"
     }
   ],
+  "categoryKnowledge": [
+    {
+      "id": "cat_beauty_skincare",
+      "industry": "beauty",
+      "categoryName": "美妆护肤",
+      "needTaxonomy": [
+        { "code": "need_hydration", "label": "补水保湿", "description": "用户关注产品是否具备补水保湿能力，尤其在干燥季节和空调环境下", "severity": 5 },
+        { "code": "need_anti_aging", "label": "抗老紧致", "description": "用户关注淡纹、紧致、提升等抗衰老效果", "severity": 4 },
+        { "code": "need_brightening", "label": "美白提亮", "description": "肤色不均、暗沉、痘印等美白需求", "severity": 4 },
+        { "code": "need_sensitive_safe", "label": "敏感肌安全", "description": "敏感肌/痘痘肌/屏障受损用户担心产品刺激", "severity": 5 },
+        { "code": "need_natural", "label": "成分温和天然", "description": "追求天然成分、无添加、温和配方", "severity": 3 },
+        { "code": "need_easy_use", "label": "使用方便", "description": "操作简单、不粘腻、吸收快、不搓泥", "severity": 3 },
+        { "code": "need_quick_effect", "label": "见效快", "description": "用户期望短期内看到明显变化", "severity": 4 },
+        { "code": "need_cost_value", "label": "价格价值匹配", "description": "贵有贵的道理，用户需要理解产品价值来源", "severity": 4 }
+      ],
+      "barrierTaxonomy": [
+        { "code": "barrier_price_high", "label": "价格偏高", "description": "用户认为价格超出预算或性价比不足", "frequency": "HIGH" },
+        { "code": "barrier_effect_doubt", "label": "效果怀疑", "description": "不确定是否真的有效，担心智商税", "frequency": "HIGH" },
+        { "code": "barrier_safety_concern", "label": "安全担忧", "description": "担心过敏、刺激、依赖、副作用", "frequency": "HIGH" },
+        { "code": "barrier_suitability", "label": "不适合我", "description": "担心肤质不匹配、年龄不合适、肤感不适", "frequency": "MEDIUM" },
+        { "code": "barrier_competitor", "label": "有更好选择", "description": "已在用竞品或看到更优替代方案", "frequency": "MEDIUM" },
+        { "code": "barrier_trust_gap", "label": "品牌信任不足", "description": "新品牌/小品牌缺乏信任基础", "frequency": "LOW" }
+      ],
+      "audienceSegments": [
+        { "segment": "25-35岁都市白领", "traits": ["职场压力型肌肤问题", "预算中等偏上", "关注成分和科技感", "信息获取渠道为小红书>抖音"], "painPoints": ["熬夜暗沉", "初老细纹", "妆后卡粉"] },
+        { "segment": "大学生/初入职场", "traits": ["预算有限", "追求性价比", "受KOL影响大", "关注平替和测评"], "painPoints": ["痘印痘坑", "出油粗毛孔", "想尝试大牌但价格太高"] },
+        { "segment": "35+熟龄肌人群", "traits": ["抗老刚需", "预算充足", "重视安全", "信赖专业推荐"], "painPoints": ["松弛下垂", "色斑沉着", "担心产品效果不明显"] },
+        { "segment": "敏感肌/问题肌群体", "traits": ["极度谨慎", "成分导向", "信任成分党博主", "复购率高"], "painPoints": ["多数产品不敢用", "修复角质层困难", "泛红刺痛反复发作"] }
+      ],
+      "competitorBenchmarks": [
+        { "brand": "欧莱雅集团", "strength": "研发实力、品牌矩阵、渠道覆盖", "weakness": "大众化形象、高端线辨识度弱" },
+        { "brand": "雅诗兰黛集团", "strength": "高端定位、明星单品、免税渠道", "weakness": "价格门槛高、本土化程度不足" },
+        { "brand": "珀莱雅", "strength": "成分党口碑、性价比高、社交媒体营销强", "weakness": "品牌高端感不足、抗老线产品力待验证" },
+        { "brand": "华熙生物", "strength": "原料研发壁垒、透明质酸全产业链", "weakness": "C端品牌力弱、消费者认知停留于玻尿酸" }
+      ],
+      "platformTactics": {
+        "douyin": {
+          "hookStrategies": ["评论质疑开头", "成分对比拆解", "实测验效过程"],
+          "contentTypes": ["短视频口播", "使用教程", "before/after对比"],
+          "recommendedDuration": "30-90秒"
+        },
+        "xiaohongshu": {
+          "hookStrategies": ["成分科普", "测评清单", "使用心得"],
+          "contentTypes": ["图文笔记", "成分解析", "合集推荐"],
+          "recommendedFormat": "标题含关键词+正文三段式+标签3-5个"
+        }
+      },
+      "version": "1.0.0",
+      "createdAt": "2026-06-07T00:00:00.000Z",
+      "updatedAt": "2026-06-07T00:00:00.000Z"
+    }
+  ],
   "projects": [
     {
       "id": "project_demo",

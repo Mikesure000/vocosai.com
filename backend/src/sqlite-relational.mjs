@@ -765,6 +765,24 @@ function ensurePipelineJobTable(db) {
     error: "TEXT",
     updated_at: "TEXT NOT NULL"
   });
+
+  // ======== 品类知识库 (category_knowledge) ========
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS category_knowledge (
+      id TEXT PRIMARY KEY,
+      industry TEXT NOT NULL,
+      category_name TEXT NOT NULL,
+      need_taxonomy TEXT,
+      barrier_taxonomy TEXT,
+      audience_segments TEXT,
+      competitor_benchmarks TEXT,
+      platform_tactics TEXT,
+      version TEXT DEFAULT '1.0.0',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_category_knowledge_industry ON category_knowledge(industry);
+  `);
 }
 
 function ensureColumns(db, table, columns) {
