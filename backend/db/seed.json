@@ -137,6 +137,53 @@
       "updatedAt": "2026-06-07T00:00:00.000Z"
     }
   ],
+  "platformMethodologies": [
+    {
+      "id": "method_douyin_beauty",
+      "platform": "douyin",
+      "contentType": "美妆全品类",
+      "bestPractice": [
+        { "rule": "前3秒必须抛出冲突", "explanation": "抖音用户滑动速度极快，前3秒没有冲突/悬念就会划走", "example": "\"评论区炸了——都在说这个精华到底有没有用？\"" },
+        { "rule": "评论截图作开头钩子", "explanation": "用真实评论截图做视频封面/开头，比纯口播点击率高40%", "example": "截图展示\"贵在哪里\"\"真的有效吗\"等高频评论" },
+        { "rule": "展示过程而非结论", "explanation": "抖音用户更相信\"看到的过程\"而非\"听到的结论\"", "example": "实拍使用前后对比+成分拆解过程" },
+        { "rule": "结尾引导互动而非直接转化", "explanation": "评论区互动数据直接影响算法推荐权重", "example": "\"评论区告诉我你的肤质，下条专为你拍\"" }
+      ],
+      "forbiddenPatterns": [
+        { "pattern": "绝对化表述", "reason": "广告法限制", "consequence": "内容被限流或下架" },
+        { "pattern": "医疗暗示", "reason": "美妆不能宣称治疗效果", "consequence": "平台处罚" },
+        { "pattern": "微信/加V引流", "reason": "平台不允许站外引流", "consequence": "账号降权" }
+      ],
+      "recommendedFormats": [
+        { "format": "口播+展示型", "whenToUse": "新品上线、成分科普", "spec": "30-60秒，9:16竖屏，单人出镜" },
+        { "format": "对比测评型", "whenToUse": "竞品分析、平替推荐", "spec": "45-90秒，多角度对比，数据可视化" }
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-06-07T00:00:00.000Z"
+    },
+    {
+      "id": "method_xhs_beauty",
+      "platform": "xiaohongshu",
+      "contentType": "美妆全品类",
+      "bestPractice": [
+        { "rule": "标题必含核心关键词", "explanation": "小红书是搜索+推荐混合场景，关键词决定搜索曝光", "example": "\"敏感肌精华怎么选？4个维度讲清楚（成分对比）\"" },
+        { "rule": "受众清单必须明确", "explanation": "小红书用户习惯直接找\"适合我吗\"的答案", "example": "✔ 适合：干皮/敏感肌 ✖ 不适合：油皮/追求奢侈品感" },
+        { "rule": "正文三段式结构", "explanation": "结论先行→维度拆解→互动引导，提高收藏率", "example": "先说结论→4维度分析→\"你用过了吗？评论区说说\"" },
+        { "rule": "图片信息密度要高", "explanation": "6-9张高质量图片，每张有信息价值", "example": "成分表+使用前后+竞品对比表+用户反馈截图" }
+      ],
+      "forbiddenPatterns": [
+        { "pattern": "引流私域", "reason": "平台严厉打击", "consequence": "限流" },
+        { "pattern": "过度承诺", "reason": "功效夸大", "consequence": "举报风险" },
+        { "pattern": "虚假测评", "reason": "真实体验要求", "consequence": "账号信任丧失" }
+      ],
+      "recommendedFormats": [
+        { "format": "成分科普型", "whenToUse": "新品教育、成分营销", "spec": "标题含成分名+功效关键词，正文800-1500字" },
+        { "format": "空瓶记录型", "whenToUse": "建立长期信任", "spec": "周期性更新，6-9张图片展示使用过程" },
+        { "format": "合集对比型", "whenToUse": "竞品分析、选购指南", "spec": "5-8款产品横向对比，结构化表格" }
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-06-07T00:00:00.000Z"
+    }
+  ],
   "projects": [
     {
       "id": "project_demo",

@@ -186,6 +186,8 @@ function matchRoute(method, pathname) {
     ["GET", /^\/api\/categories\/([^/]+)$/, getCategory],
     ["GET", /^\/api\/brands$/, listBrands],
     ["GET", /^\/api\/brands\/([^/]+)$/, getBrand],
+    ["GET", /^\/api\/platforms\/methodologies$/, listPlatformMethods],
+    ["GET", /^\/api\/platforms\/methodologies\/([^/]+)$/, getPlatformMethod],
     ["GET", /^\/api\/admin\/storage\/diagnostics$/, getStorageDiagnostics],
     ["GET", /^\/api\/governance\/cost-summary$/, getCostSummary],
     ["GET", /^\/api\/governance\/quality-summary$/, getQualitySummary],
@@ -288,6 +290,17 @@ async function getBrand({ store, params }) {
     error.statusCode = 404; error.code = "not_found"; throw error;
   }
   return brand;
+}
+
+async function listPlatformMethods({ store }) {
+  return store.list("platformMethodologies");
+}
+
+async function getPlatformMethod({ store, params }) {
+  const methods = store.list("platformMethodologies");
+  const result = methods.find(m => m.platform === params[0]);
+  if (!result) { const e = new Error("Not found"); e.statusCode = 404; e.code = "not_found"; throw e; }
+  return result;
 }
 
 // ============================================================
