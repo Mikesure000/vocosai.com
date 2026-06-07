@@ -18,7 +18,7 @@ export default function SignalsPage() {
 
   // Step flow state
   const [step, setStep] = useState(0);
-  const [newTask, setNewTask] = useState({ taskName: "", platform: "抖音", contentTitle: "", brandInfo: "克奥妮斯", productInfo: "" });
+  const [newTask, setNewTask] = useState({ taskName: "", platform: "douyin", contentTitle: "", brandInfo: "", productInfo: "", contentGoal: "education", contentUrl: "" });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const [mapping, setMapping] = useState<any>(null);
@@ -148,11 +148,29 @@ export default function SignalsPage() {
             <TextField label="任务名称" fullWidth margin="dense" value={newTask.taskName}
               onChange={e => setNewTask({ ...newTask, taskName: e.target.value })} />
             <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-              <TextField label="平台" value={newTask.platform} size="small"
-                onChange={e => setNewTask({ ...newTask, platform: e.target.value })} />
-              <TextField label="品牌" value={newTask.brandInfo} size="small"
-                onChange={e => setNewTask({ ...newTask, brandInfo: e.target.value })} />
+              <TextField select label="平台" size="small" sx={{ minWidth: 130 }} value={newTask.platform}
+                onChange={e => setNewTask({ ...newTask, platform: e.target.value })}
+                slotProps={{ select: { native: true } }}>
+                <option value="douyin">🎵 抖音</option>
+                <option value="xiaohongshu">📕 小红书</option>
+              </TextField>
+              <TextField select label="内容目标" size="small" sx={{ minWidth: 130 }} value={newTask.contentGoal}
+                onChange={e => setNewTask({ ...newTask, contentGoal: e.target.value })}
+                slotProps={{ select: { native: true } }}>
+                <option value="education">新品教育</option>
+                <option value="trust">种草信任</option>
+                <option value="conversion">转化成交</option>
+                <option value="exposure">拉新曝光</option>
+                <option value="competitor">竞品对比</option>
+                <option value="private_domain">私域引流</option>
+                <option value="interaction">评论互动</option>
+                <option value="brand_mind">品牌心智</option>
+              </TextField>
             </Box>
+            <TextField label="品牌" fullWidth margin="dense" value={newTask.brandInfo}
+              onChange={e => setNewTask({ ...newTask, brandInfo: e.target.value })} />
+            <TextField label="内容链接 (抖音/小红书链接)" fullWidth margin="dense" value={newTask.contentUrl}
+              onChange={e => setNewTask({ ...newTask, contentUrl: e.target.value })} placeholder="https://v.douyin.com/... 或小红书链接" />
             <TextField label="内容标题" fullWidth margin="dense" value={newTask.contentTitle}
               onChange={e => setNewTask({ ...newTask, contentTitle: e.target.value })} />
             <Button variant="contained" onClick={handleCreate} disabled={loading} sx={{ mt: 2 }} fullWidth>

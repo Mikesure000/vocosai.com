@@ -184,6 +184,8 @@ function matchRoute(method, pathname) {
     ["GET", /^\/api\/audit-logs$/, listAuditLogs],
     ["GET", /^\/api\/categories$/, listCategories],
     ["GET", /^\/api\/categories\/([^/]+)$/, getCategory],
+    ["GET", /^\/api\/brands$/, listBrands],
+    ["GET", /^\/api\/brands\/([^/]+)$/, getBrand],
     ["GET", /^\/api\/admin\/storage\/diagnostics$/, getStorageDiagnostics],
     ["GET", /^\/api\/governance\/cost-summary$/, getCostSummary],
     ["GET", /^\/api\/governance\/quality-summary$/, getQualitySummary],
@@ -273,6 +275,19 @@ async function getCategory({ store, params }) {
     throw error;
   }
   return category;
+}
+
+async function listBrands({ store }) {
+  return store.list("brandProfiles").map(({ products, targetAudience, keyMessages, ...rest }) => rest);
+}
+
+async function getBrand({ store, params }) {
+  const brand = store.get("brandProfiles", params[0]);
+  if (!brand) {
+    const error = new Error("Brand not found");
+    error.statusCode = 404; error.code = "not_found"; throw error;
+  }
+  return brand;
 }
 
 // ============================================================

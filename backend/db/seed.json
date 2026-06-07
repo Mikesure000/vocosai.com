@@ -68,6 +68,23 @@
       "createdAt": "2026-06-04T00:00:00.000Z"
     }
   ],
+  "brandProfiles": [
+    {
+      "id": "brand_demo",
+      "teamId": "team_demo",
+      "brandName": "AURA LAB",
+      "industry": "beauty",
+      "categoryId": "cat_beauty_skincare",
+      "brandBio": "专注修复与保湿的美妆品牌",
+      "products": [{ "name": "修护精华", "category": "精华液", "priceRange": "200-400" }],
+      "targetAudience": { "ageRange": "25-40", "skinTypes": ["干性", "敏感肌"], "concerns": ["修复", "抗老"] },
+      "keyMessages": ["科学修复", "温和安全", "真实效果"],
+      "competitiveAdvantage": "基于皮肤微生态技术，温和修复不刺激",
+      "status": "active",
+      "createdAt": "2026-06-07T00:00:00.000Z",
+      "updatedAt": "2026-06-07T00:00:00.000Z"
+    }
+  ],
   "categoryKnowledge": [
     {
       "id": "cat_beauty_skincare",
