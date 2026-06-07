@@ -27,6 +27,7 @@ import { generateProductionCard } from "./production-card-engine.mjs";
 import { runQualityCheck } from "./quality-check.mjs";
 import { generateCommentOps } from "./comment-ops-engine.mjs";
 import { scoreAdFit } from "./ad-fit-engine.mjs";
+import { listReportTemplates, buildWhiteLabelReport } from "./white-label-engine.mjs";
 
 // ============================================================
 // CORS 配置
@@ -216,6 +217,8 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/production-cards\/([^/]+)\/quality-check$/, runQualityCheckHandler, 201],
     ["POST", /^\/api\/tasks\/([^/]+)\/comment-ops$/, generateCommentOpsHandler, 201],
     ["POST", /^\/api\/production-cards\/([^/]+)\/ad-fit$/, scoreAdFitHandler, 200],
+    ["GET", /^\/api\/reports\/templates$/, listReportTemplatesHandler],
+    ["POST", /^\/api\/reports\/generate$/, generateWhiteLabelReport, 201],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2309,5 +2312,16 @@ async function scoreAdFitHandler({ store, params, context }) {
   const attrs = store.list("attributionResults");
   const attr = attrs.find(a => a.taskId === card.taskId) || {};
   const result = scoreAdFit(card, attr);
+  return { data: result };
+}
+
+async function listReportTemplatesHandler() {
+  return { data: listReportTemplates() };
+}
+
+async function generateWhiteLabelReport({ store, context, body }) {
+  requirePermission(context, PERMISSIONS.REPORT_WRITE);
+  const { template, whiteLabelConfig, reportData } = body || {};
+  const result = buildWhiteLabelReport({ reportData, template: template || "weekly", whiteLabelConfig });
   return { data: result };
 }
