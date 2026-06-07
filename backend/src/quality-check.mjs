@@ -111,9 +111,24 @@ export function runQualityCheck(productionCard) {
   };
 }
 
+// P2: "第一" 仅匹配广告夸张表述，不匹配日常用语
 function checkCompliance(text) {
   const words = text || "";
-  const hits = COMPLIANCE_BLACKLIST.filter(w => words.includes(w));
+  // 仅检查文案主体中的广告风险词，排除标题中的自然用法
+  const bodyText = extractBodyText(text, words);
+  
+  const hits = [];
+  for (const word of COMPLIANCE_BLACKLIST) {
+    if (word === "第一") {
+      // "第一" 仅匹配"第一X"格式的广告宣称 (全网第一/第一名/第一次) 
+      if (/第[一1][\u4e00-\u9fa5]{1,4}/.test(bodyText) || /全网第一|销量第一|行业第一|排名第一/.test(bodyText)) {
+        hits.push("第一(广告宣称)");
+      }
+    } else if (bodyText.includes(word)) {
+      hits.push(word);
+    }
+  }
+  
   if (hits.length >= 3) {
     return { check_type: "合规风险", result: "fail", score: 0,
       detail: `发现${hits.length}个风险词: ${hits.join(", ")}`,
@@ -125,6 +140,13 @@ function checkCompliance(text) {
       suggestion: hits.map(h => `将"${h}"替换为合规表述`).join("; ") };
   }
   return { check_type: "合规风险", result: "pass", score: 15, detail: "无合规风险", suggestion: null };
+}
+
+// 排除标题中的自然语言，只检查文案主体
+function extractBodyText(fullText, original) {
+  // 如果文本包含标题（以【】或「」开头段落），提取正文部分
+  const bodyOnly = original.replace(/【[^】]+】/g, "").replace(/「[^」]+」/g, "");
+  return bodyOnly.length > 10 ? bodyOnly : original;
 }
 
 function checkSellingPointClarity(sellingPoints) {

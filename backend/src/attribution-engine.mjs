@@ -255,13 +255,15 @@ function enrichWithDemandsAndScoring(matrix, signals, categoryKnowledge, llmCall
   const barrierTaxonomy = categoryKnowledge?.barrierTaxonomy || [];
 
   for (const item of matrix) {
-    // 需求推断：从品类知识库匹配 + fallback
+    // 需求推断 + fallback: 避免重复，每个矩阵项使用不同的默认需求
     const matchedNeeds = needs.filter(n =>
       item.representativeComments.some(c =>
         (c.text || "").includes(n.label) || (n.description || "").includes(item.contentPointText?.slice(0, 10))
       )
     );
-    item.demandSignals = ((matchedNeeds.length > 0 ? matchedNeeds : needs.slice(0, 2))).map(n => ({
+    const fallbackIdx = matrix.indexOf(item) % needs.length;
+    const fallbackNeeds = [needs[fallbackIdx], needs[(fallbackIdx + 1) % needs.length]].filter(Boolean);
+    item.demandSignals = ((matchedNeeds.length > 0 ? matchedNeeds : fallbackNeeds)).map(n => ({
       demandCode: n.code,
       demandLabel: n.label,
       strength: Math.min(5, Math.max(1, Math.ceil(item.reactionCount / 5)))

@@ -112,22 +112,34 @@ function buildXiaohongshuCopy(content, primaryBarrier, keywords, evidence) {
 }
 
 // ===== 辅助函数 =====
-function extractBarriers(attribution) {
-  const matrix = attribution?.attributionMatrix || attribution?.result || [];
-  const barrierSignals = [];
-  for (const item of matrix) {
-    if (item.barrierSignals) barrierSignals.push(...item.barrierSignals);
-  }
-  return barrierSignals.slice(0, 5);
-}
 
 function extractDemands(attribution) {
   const matrix = attribution?.attributionMatrix || attribution?.result || [];
+  const seen = new Set();
   const demandSignals = [];
   for (const item of matrix) {
-    if (item.demandSignals) demandSignals.push(...item.demandSignals);
+    if (item.demandSignals) {
+      for (const d of item.demandSignals) {
+        const key = d.demandLabel || d.label || d.demandCode;
+        if (!seen.has(key)) { seen.add(key); demandSignals.push(d); }
+      }
+    }
   }
   return demandSignals.slice(0, 5);
+}
+function extractBarriers(attribution) {
+  const matrix = attribution?.attributionMatrix || attribution?.result || [];
+  const seen = new Set();
+  const barrierSignals = [];
+  for (const item of matrix) {
+    if (item.barrierSignals) {
+      for (const b of item.barrierSignals) {
+        const key = b.barrierLabel || b.label || b.barrierCode;
+        if (!seen.has(key)) { seen.add(key); barrierSignals.push(b); }
+      }
+    }
+  }
+  return barrierSignals.slice(0, 5);
 }
 
 function collectEvidence(attribution) {
