@@ -23,6 +23,9 @@ import { runAttribution } from "./attribution-engine.mjs";
 // BL-008: 内容生产卡引擎
 import { generateProductionCard } from "./production-card-engine.mjs";
 
+// BL-009: 质检系统
+import { runQualityCheck } from "./quality-check.mjs";
+
 // ============================================================
 // CORS 配置
 // ============================================================
@@ -203,6 +206,8 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/tasks\/([^/]+)\/production-cards\/generate$/, generateTaskProductionCard, 201],
     ["GET", /^\/api\/tasks\/([^/]+)\/production-cards$/, listTaskProductionCards],
     ["GET", /^\/api\/production-cards\/([^/]+)$/, getProductionCard],
+    // BL-009: 质检 API
+    ["POST", /^\/api\/production-cards\/([^/]+)\/quality-check$/, runQualityCheckHandler, 201],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2200,18 +2205,20 @@ async function generateTaskProductionCard({ store, params, context, body }) {
   });
 
   // 保存
+  const qcResult = runQualityCheck(card);
   const cardId = createId("card");
   await store.insert("productionCards", {
     id: cardId,
     taskId,
     ...card,
-    status: "draft",
+    quality_check_result: qcResult,
+    status: qcResult.verdict === "approve" ? "approved" : "draft",
     agent_run_id: null,
     created_at: now(),
     updated_at: now()
   });
 
-  return { data: { id: cardId, ...card } };
+  return { data: { id: cardId, qualityCheck: qcResult, ...card } };
 }
 
 async function listTaskProductionCards({ store, params, context }) {
@@ -2229,4 +2236,22 @@ async function getProductionCard({ store, params, context }) {
     error.statusCode = 404; error.code = "not_found"; throw error;
   }
   return { data: card };
+}
+
+async function runQualityCheckHandler({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_WRITE);
+  const card = store.get("productionCards", params[0]);
+  if (!card) {
+    const error = new Error("Production card not found");
+    error.statusCode = 404; error.code = "not_found"; throw error;
+  }
+
+  const qcResult = runQualityCheck(card);
+  await store.update("productionCards", card.id, {
+    quality_check_result: qcResult,
+    status: qcResult.verdict === "approve" ? "approved" : "draft",
+    updated_at: now()
+  });
+
+  return { data: qcResult };
 }
