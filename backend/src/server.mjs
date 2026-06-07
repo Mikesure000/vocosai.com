@@ -1969,6 +1969,41 @@ async function runPipelineJob({ store, jobs, taskId }) {
       completedAt: now(),
       error: null
     } });
+
+    // BL-018: 归因管线集成 — Agent管线完成后自动触发归因分析
+    if (finalStatus === "completed" || finalStatus === "partially_failed") {
+      try {
+        const comments = store.list("comments").filter(c => c.taskId === taskId);
+        const categories = store.list("categoryKnowledge");
+        if (comments.length > 0 && categories.length > 0) {
+          const attributionInput = {
+            taskId,
+            content: {
+              title: task.contentTitle || task.taskName || "",
+              body: task.contentBody || "",
+              platform: task.platform || "douyin",
+              brandInfo: task.brandInfo || ""
+            },
+            signals: { signals: [], comments },
+            categoryKnowledge: categories[0],
+            llmCall: mockLlmCall
+          };
+          const result = await runAttribution(attributionInput);
+          const attrId = createId("attr");
+          await store.insert("attributionResults", {
+            id: attrId, taskId,
+            result: result.attributionMatrix,
+            contentGaps: result.contentGaps,
+            sellingPointRanking: result.sellingPointRanking,
+            contentPoints: result.contentPoints,
+            createdAt: now()
+          });
+        }
+      } catch (attrErr) {
+        // 归因失败不影响管线主流程
+        console.error("[pipeline] Attribution failed:", attrErr.message);
+      }
+    }
   } catch (error) {
     const runs = store.list("aiRuns").filter((run) => run.taskId === taskId);
     const failedStatus = runs.length > 0 ? "partially_failed" : "failed";
