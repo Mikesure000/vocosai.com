@@ -7,8 +7,6 @@ const dbPath = process.env.VOCOS_DB_PATH || "./data/vocos.sqlite";
 const server = await createApiServer({ dbPath });
 
 server.listen(port, () => {
-  console.log(`Vocos backend running on http://localhost:${port}`);
-  console.log(`  GET  http://localhost:${port}/health`);
-  console.log(`  GET  http://localhost:${port}/api/schema`);
-  console.log(`  GET  http://localhost:${port}/api/tasks`);
+  console.log(`\n  VOCOS 已启动 → http://localhost:${port}`);
+  console.log(`  账号: admin@vocos.local / admin123\n`);
 });

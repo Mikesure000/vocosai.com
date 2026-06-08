@@ -1,7 +1,27 @@
 import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { join, extname } from "node:path";
 import { assertTeamAccess, buildRequestContext, filterByTeam, hashPassword, JWT_SECRET, loginTracker, PERMISSIONS, refreshBlacklist, requirePermission, ROLE_PERMISSIONS, signToken, verifyPassword, verifyToken } from "./auth.mjs";
 import crypto from "node:crypto";
 import { createId, createStore, now } from "./store.mjs";
+
+const STATIC_ROOT = join(import.meta.dirname, "..", "frontend", "dist");
+const MIME_TYPES = { ".html":"text/html",".js":"text/javascript",".css":"text/css",".png":"image/png",".svg":"image/svg+xml",".ico":"image/x-icon",".json":"application/json",".woff2":"font/woff2" };
+
+function serveStaticFile(res, filePath) {
+  try {
+    const ext = extname(filePath).toLowerCase();
+    res.writeHead(200, { "Content-Type": MIME_TYPES[ext] || "application/octet-stream" });
+    res.end(readFileSync(filePath));
+    return true;
+  } catch { return false; }
+}
+function serveFrontendFallback(res, urlPath) {
+  const filePath = urlPath === "/" || urlPath === "" ? join(STATIC_ROOT, "index.html") : join(STATIC_ROOT, urlPath);
+  if (existsSync(filePath) && serveStaticFile(res, filePath)) return;
+  // SPA fallback: all non-api routes go to index.html
+  serveStaticFile(res, join(STATIC_ROOT, "index.html")) || res.end("VOCOS Backend - API only");
+}
 import { buildCostSummary } from "./cost-governance.mjs";
 import { buildCommentInsights, listCommentSignalMatches } from "./comment-insights.mjs";
 import { buildQualitySummary } from "./quality-governance.mjs";
@@ -142,6 +162,11 @@ export async function createApiServer({ dbPath = "backend/data/vocos.sqlite" } =
       }
 
       if (!route) {
+        // Non-API routes: serve frontend static files
+        if (!request.url.startsWith("/api")) {
+          serveFrontendFallback(response, url.pathname);
+          return;
+        }
         send(response, 404, { error: "not_found", message: "Route not found" }, request);
         return;
       }
