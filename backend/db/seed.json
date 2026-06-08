@@ -5,7 +5,7 @@
       "name": "Demo Admin",
       "email": "admin@vocos.local",
       "role": "super_admin",
-      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
+      "password_hash": "7b73013a8819b064d5034dbe2b4d95a7:18b7b7ee5c2358a341d6894db3b0e3172ec660e542439aa0366ef196bc0669b7b5f241109917ee729b5d8514c18ff6ec9016b7f31d4553568dd62cd9cb8d9e64",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
@@ -15,7 +15,7 @@
       "name": "Demo AI Engineer",
       "email": "ai@vocos.local",
       "role": "ai_engineer_admin",
-      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
+      "password_hash": "7b73013a8819b064d5034dbe2b4d95a7:18b7b7ee5c2358a341d6894db3b0e3172ec660e542439aa0366ef196bc0669b7b5f241109917ee729b5d8514c18ff6ec9016b7f31d4553568dd62cd9cb8d9e64",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
@@ -25,7 +25,7 @@
       "name": "Demo Member",
       "email": "member@vocos.local",
       "role": "member",
-      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
+      "password_hash": "7b73013a8819b064d5034dbe2b4d95a7:18b7b7ee5c2358a341d6894db3b0e3172ec660e542439aa0366ef196bc0669b7b5f241109917ee729b5d8514c18ff6ec9016b7f31d4553568dd62cd9cb8d9e64",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
