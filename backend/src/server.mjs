@@ -1787,9 +1787,13 @@ function send(response, status, payload, request) {
     "content-type": "application/json; charset=utf-8",
     ...baseHeaders,
   });
-  // 移除内部字段后序列化
-  const { __raw, __cookies, ...clean } = (payload ?? {});
-  response.end(Object.keys(clean).length === 0 ? "" : JSON.stringify(clean, null, 2));
+  // 移除内部字段后序列化，正确处理数组和对象两种 payload
+  if (Array.isArray(payload)) {
+    response.end(JSON.stringify(payload, null, 2));
+  } else {
+    const { __raw, __cookies, ...clean } = (payload ?? {});
+    response.end(Object.keys(clean).length === 0 ? "" : JSON.stringify(clean, null, 2));
+  }
 }
 
 function requireFields(body, fields) {
