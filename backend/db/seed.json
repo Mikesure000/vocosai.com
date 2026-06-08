@@ -5,7 +5,7 @@
       "name": "Demo Admin",
       "email": "admin@vocos.local",
       "role": "super_admin",
-      "password_hash": "eecd171c47ad7f520e2e94fa156593fd:84b064df26c18f83d2cbde651e39059e24b1bac080c921533220a288b7afd2f65d47dd406996c27a19dd268894fdc34dd769ec3af9e3865e1fc7236a85ed8d5b",
+      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
@@ -15,7 +15,7 @@
       "name": "Demo AI Engineer",
       "email": "ai@vocos.local",
       "role": "ai_engineer_admin",
-      "password_hash": "f923e9fc2fdeeaa1365da303e92cf903:ee57c9516a7df0c6d7dc9d993e93500132a4554c29c655871c3ac87079565f019cd8a66abc2e2a2828dcfad366bd2c1b7ae07b416466f501478503e68286c4e9",
+      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
@@ -25,7 +25,7 @@
       "name": "Demo Member",
       "email": "member@vocos.local",
       "role": "member",
-      "password_hash": "b77eb9333c73971db32bd1f994114140:0a21e27e79e908c8c131da38ff709f024e772548d186dbca10455870752b1d495d5bbbf549d3bb28c63e0ad9dc60d24725304b0c9246b1917106f23447d752c2",
+      "password_hash": "14055e0f444293c3fdfa6e7caf65a8cf:a5ae6bad2b1a54e4874463c70f7254b3fd912213f67792ed971409132a08992d022fe47d3a9255166d5cd39cccf3ec412c5fc7cd0001ac479f72cf82f45516b7",
       "defaultTeamId": "team_demo",
       "status": "active",
       "createdAt": "2026-06-04T00:00:00.000Z"
@@ -76,9 +76,29 @@
       "industry": "beauty",
       "categoryId": "cat_beauty_skincare",
       "brandBio": "专注修复与保湿的美妆品牌",
-      "products": [{ "name": "修护精华", "category": "精华液", "priceRange": "200-400" }],
-      "targetAudience": { "ageRange": "25-40", "skinTypes": ["干性", "敏感肌"], "concerns": ["修复", "抗老"] },
-      "keyMessages": ["科学修复", "温和安全", "真实效果"],
+      "products": [
+        {
+          "name": "修护精华",
+          "category": "精华液",
+          "priceRange": "200-400"
+        }
+      ],
+      "targetAudience": {
+        "ageRange": "25-40",
+        "skinTypes": [
+          "干性",
+          "敏感肌"
+        ],
+        "concerns": [
+          "修复",
+          "抗老"
+        ]
+      },
+      "keyMessages": [
+        "科学修复",
+        "温和安全",
+        "真实效果"
+      ],
       "competitiveAdvantage": "基于皮肤微生态技术，温和修复不刺激",
       "status": "active",
       "createdAt": "2026-06-07T00:00:00.000Z",
@@ -91,44 +111,198 @@
       "industry": "beauty",
       "categoryName": "美妆护肤",
       "needTaxonomy": [
-        { "code": "need_hydration", "label": "补水保湿", "description": "用户关注产品是否具备补水保湿能力，尤其在干燥季节和空调环境下", "severity": 5 },
-        { "code": "need_anti_aging", "label": "抗老紧致", "description": "用户关注淡纹、紧致、提升等抗衰老效果", "severity": 4 },
-        { "code": "need_brightening", "label": "美白提亮", "description": "肤色不均、暗沉、痘印等美白需求", "severity": 4 },
-        { "code": "need_sensitive_safe", "label": "敏感肌安全", "description": "敏感肌/痘痘肌/屏障受损用户担心产品刺激", "severity": 5 },
-        { "code": "need_natural", "label": "成分温和天然", "description": "追求天然成分、无添加、温和配方", "severity": 3 },
-        { "code": "need_easy_use", "label": "使用方便", "description": "操作简单、不粘腻、吸收快、不搓泥", "severity": 3 },
-        { "code": "need_quick_effect", "label": "见效快", "description": "用户期望短期内看到明显变化", "severity": 4 },
-        { "code": "need_cost_value", "label": "价格价值匹配", "description": "贵有贵的道理，用户需要理解产品价值来源", "severity": 4 }
+        {
+          "code": "need_hydration",
+          "label": "补水保湿",
+          "description": "用户关注产品是否具备补水保湿能力，尤其在干燥季节和空调环境下",
+          "severity": 5
+        },
+        {
+          "code": "need_anti_aging",
+          "label": "抗老紧致",
+          "description": "用户关注淡纹、紧致、提升等抗衰老效果",
+          "severity": 4
+        },
+        {
+          "code": "need_brightening",
+          "label": "美白提亮",
+          "description": "肤色不均、暗沉、痘印等美白需求",
+          "severity": 4
+        },
+        {
+          "code": "need_sensitive_safe",
+          "label": "敏感肌安全",
+          "description": "敏感肌/痘痘肌/屏障受损用户担心产品刺激",
+          "severity": 5
+        },
+        {
+          "code": "need_natural",
+          "label": "成分温和天然",
+          "description": "追求天然成分、无添加、温和配方",
+          "severity": 3
+        },
+        {
+          "code": "need_easy_use",
+          "label": "使用方便",
+          "description": "操作简单、不粘腻、吸收快、不搓泥",
+          "severity": 3
+        },
+        {
+          "code": "need_quick_effect",
+          "label": "见效快",
+          "description": "用户期望短期内看到明显变化",
+          "severity": 4
+        },
+        {
+          "code": "need_cost_value",
+          "label": "价格价值匹配",
+          "description": "贵有贵的道理，用户需要理解产品价值来源",
+          "severity": 4
+        }
       ],
       "barrierTaxonomy": [
-        { "code": "barrier_price_high", "label": "价格偏高", "description": "用户认为价格超出预算或性价比不足", "frequency": "HIGH" },
-        { "code": "barrier_effect_doubt", "label": "效果怀疑", "description": "不确定是否真的有效，担心智商税", "frequency": "HIGH" },
-        { "code": "barrier_safety_concern", "label": "安全担忧", "description": "担心过敏、刺激、依赖、副作用", "frequency": "HIGH" },
-        { "code": "barrier_suitability", "label": "不适合我", "description": "担心肤质不匹配、年龄不合适、肤感不适", "frequency": "MEDIUM" },
-        { "code": "barrier_competitor", "label": "有更好选择", "description": "已在用竞品或看到更优替代方案", "frequency": "MEDIUM" },
-        { "code": "barrier_trust_gap", "label": "品牌信任不足", "description": "新品牌/小品牌缺乏信任基础", "frequency": "LOW" }
+        {
+          "code": "barrier_price_high",
+          "label": "价格偏高",
+          "description": "用户认为价格超出预算或性价比不足",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "barrier_effect_doubt",
+          "label": "效果怀疑",
+          "description": "不确定是否真的有效，担心智商税",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "barrier_safety_concern",
+          "label": "安全担忧",
+          "description": "担心过敏、刺激、依赖、副作用",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "barrier_suitability",
+          "label": "不适合我",
+          "description": "担心肤质不匹配、年龄不合适、肤感不适",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "barrier_competitor",
+          "label": "有更好选择",
+          "description": "已在用竞品或看到更优替代方案",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "barrier_trust_gap",
+          "label": "品牌信任不足",
+          "description": "新品牌/小品牌缺乏信任基础",
+          "frequency": "LOW"
+        }
       ],
       "audienceSegments": [
-        { "segment": "25-35岁都市白领", "traits": ["职场压力型肌肤问题", "预算中等偏上", "关注成分和科技感", "信息获取渠道为小红书>抖音"], "painPoints": ["熬夜暗沉", "初老细纹", "妆后卡粉"] },
-        { "segment": "大学生/初入职场", "traits": ["预算有限", "追求性价比", "受KOL影响大", "关注平替和测评"], "painPoints": ["痘印痘坑", "出油粗毛孔", "想尝试大牌但价格太高"] },
-        { "segment": "35+熟龄肌人群", "traits": ["抗老刚需", "预算充足", "重视安全", "信赖专业推荐"], "painPoints": ["松弛下垂", "色斑沉着", "担心产品效果不明显"] },
-        { "segment": "敏感肌/问题肌群体", "traits": ["极度谨慎", "成分导向", "信任成分党博主", "复购率高"], "painPoints": ["多数产品不敢用", "修复角质层困难", "泛红刺痛反复发作"] }
+        {
+          "segment": "25-35岁都市白领",
+          "traits": [
+            "职场压力型肌肤问题",
+            "预算中等偏上",
+            "关注成分和科技感",
+            "信息获取渠道为小红书>抖音"
+          ],
+          "painPoints": [
+            "熬夜暗沉",
+            "初老细纹",
+            "妆后卡粉"
+          ]
+        },
+        {
+          "segment": "大学生/初入职场",
+          "traits": [
+            "预算有限",
+            "追求性价比",
+            "受KOL影响大",
+            "关注平替和测评"
+          ],
+          "painPoints": [
+            "痘印痘坑",
+            "出油粗毛孔",
+            "想尝试大牌但价格太高"
+          ]
+        },
+        {
+          "segment": "35+熟龄肌人群",
+          "traits": [
+            "抗老刚需",
+            "预算充足",
+            "重视安全",
+            "信赖专业推荐"
+          ],
+          "painPoints": [
+            "松弛下垂",
+            "色斑沉着",
+            "担心产品效果不明显"
+          ]
+        },
+        {
+          "segment": "敏感肌/问题肌群体",
+          "traits": [
+            "极度谨慎",
+            "成分导向",
+            "信任成分党博主",
+            "复购率高"
+          ],
+          "painPoints": [
+            "多数产品不敢用",
+            "修复角质层困难",
+            "泛红刺痛反复发作"
+          ]
+        }
       ],
       "competitorBenchmarks": [
-        { "brand": "欧莱雅集团", "strength": "研发实力、品牌矩阵、渠道覆盖", "weakness": "大众化形象、高端线辨识度弱" },
-        { "brand": "雅诗兰黛集团", "strength": "高端定位、明星单品、免税渠道", "weakness": "价格门槛高、本土化程度不足" },
-        { "brand": "珀莱雅", "strength": "成分党口碑、性价比高、社交媒体营销强", "weakness": "品牌高端感不足、抗老线产品力待验证" },
-        { "brand": "华熙生物", "strength": "原料研发壁垒、透明质酸全产业链", "weakness": "C端品牌力弱、消费者认知停留于玻尿酸" }
+        {
+          "brand": "欧莱雅集团",
+          "strength": "研发实力、品牌矩阵、渠道覆盖",
+          "weakness": "大众化形象、高端线辨识度弱"
+        },
+        {
+          "brand": "雅诗兰黛集团",
+          "strength": "高端定位、明星单品、免税渠道",
+          "weakness": "价格门槛高、本土化程度不足"
+        },
+        {
+          "brand": "珀莱雅",
+          "strength": "成分党口碑、性价比高、社交媒体营销强",
+          "weakness": "品牌高端感不足、抗老线产品力待验证"
+        },
+        {
+          "brand": "华熙生物",
+          "strength": "原料研发壁垒、透明质酸全产业链",
+          "weakness": "C端品牌力弱、消费者认知停留于玻尿酸"
+        }
       ],
       "platformTactics": {
         "douyin": {
-          "hookStrategies": ["评论质疑开头", "成分对比拆解", "实测验效过程"],
-          "contentTypes": ["短视频口播", "使用教程", "before/after对比"],
+          "hookStrategies": [
+            "评论质疑开头",
+            "成分对比拆解",
+            "实测验效过程"
+          ],
+          "contentTypes": [
+            "短视频口播",
+            "使用教程",
+            "before/after对比"
+          ],
           "recommendedDuration": "30-90秒"
         },
         "xiaohongshu": {
-          "hookStrategies": ["成分科普", "测评清单", "使用心得"],
-          "contentTypes": ["图文笔记", "成分解析", "合集推荐"],
+          "hookStrategies": [
+            "成分科普",
+            "测评清单",
+            "使用心得"
+          ],
+          "contentTypes": [
+            "图文笔记",
+            "成分解析",
+            "合集推荐"
+          ],
           "recommendedFormat": "标题含关键词+正文三段式+标签3-5个"
         }
       },
@@ -141,35 +315,175 @@
       "industry": "mom_baby",
       "categoryName": "母婴健康",
       "needTaxonomy": [
-        { "code": "mh_safety_first", "label": "安全第一位", "description": "母婴用户对产品安全的关注度远高于其他品类，任何成分/材质/工艺的风险信号都会触发强烈担忧", "severity": 5 },
-        { "code": "mh_pediatric_trust", "label": "儿科/专家背书", "description": "用户需要专业儿科医生、营养师或权威机构的推荐和认可", "severity": 5 },
-        { "code": "mh_ingredient_purity", "label": "成分纯净无添加", "description": "追求0添加、天然有机、无防腐剂等纯净配方", "severity": 4 },
-        { "code": "mh_efficacy_visible", "label": "效果可见", "description": "关注DHA/益生菌等的实际效果，需要数据和案例支撑", "severity": 4 },
-        { "code": "mh_easy_use", "label": "使用方便", "description": "婴幼儿产品要求操作简单、喂食方便、不抗拒", "severity": 3 },
-        { "code": "mh_stage_match", "label": "年龄段适配", "description": "新生儿/6m+/1岁+等不同阶段的精细化需求", "severity": 4 },
-        { "code": "mh_brand_origin", "label": "品牌产地信任", "description": "用户关注进口/国产/代工厂信息，产地直接影响购买决策", "severity": 3 }
+        {
+          "code": "mh_safety_first",
+          "label": "安全第一位",
+          "description": "母婴用户对产品安全的关注度远高于其他品类，任何成分/材质/工艺的风险信号都会触发强烈担忧",
+          "severity": 5
+        },
+        {
+          "code": "mh_pediatric_trust",
+          "label": "儿科/专家背书",
+          "description": "用户需要专业儿科医生、营养师或权威机构的推荐和认可",
+          "severity": 5
+        },
+        {
+          "code": "mh_ingredient_purity",
+          "label": "成分纯净无添加",
+          "description": "追求0添加、天然有机、无防腐剂等纯净配方",
+          "severity": 4
+        },
+        {
+          "code": "mh_efficacy_visible",
+          "label": "效果可见",
+          "description": "关注DHA/益生菌等的实际效果，需要数据和案例支撑",
+          "severity": 4
+        },
+        {
+          "code": "mh_easy_use",
+          "label": "使用方便",
+          "description": "婴幼儿产品要求操作简单、喂食方便、不抗拒",
+          "severity": 3
+        },
+        {
+          "code": "mh_stage_match",
+          "label": "年龄段适配",
+          "description": "新生儿/6m+/1岁+等不同阶段的精细化需求",
+          "severity": 4
+        },
+        {
+          "code": "mh_brand_origin",
+          "label": "品牌产地信任",
+          "description": "用户关注进口/国产/代工厂信息，产地直接影响购买决策",
+          "severity": 3
+        }
       ],
       "barrierTaxonomy": [
-        { "code": "mh_b_safety_anxiety", "label": "安全焦虑", "description": "怕对宝宝不好、担心副作用、不敢轻易尝试新品", "frequency": "HIGH" },
-        { "code": "mh_b_no_effect", "label": "没有明显效果", "description": "吃了/用了没感觉变化，觉得是智商税", "frequency": "HIGH" },
-        { "code": "mh_b_taste_rejection", "label": "宝宝不配合", "description": "宝宝不爱吃/抗拒/吐出来，无法坚持使用", "frequency": "MEDIUM" },
-        { "code": "mh_b_price_high", "label": "价格偏高", "description": "母婴品类长期消耗，用户对价格敏感", "frequency": "MEDIUM" },
-        { "code": "mh_b_info_overload", "label": "选择困难", "description": "同类产品太多，不知道选哪个更好", "frequency": "MEDIUM" },
-        { "code": "mh_b_no_recommend", "label": "缺乏权威推荐", "description": "没有儿科医生/博主推荐，不敢买", "frequency": "LOW" }
+        {
+          "code": "mh_b_safety_anxiety",
+          "label": "安全焦虑",
+          "description": "怕对宝宝不好、担心副作用、不敢轻易尝试新品",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "mh_b_no_effect",
+          "label": "没有明显效果",
+          "description": "吃了/用了没感觉变化，觉得是智商税",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "mh_b_taste_rejection",
+          "label": "宝宝不配合",
+          "description": "宝宝不爱吃/抗拒/吐出来，无法坚持使用",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "mh_b_price_high",
+          "label": "价格偏高",
+          "description": "母婴品类长期消耗，用户对价格敏感",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "mh_b_info_overload",
+          "label": "选择困难",
+          "description": "同类产品太多，不知道选哪个更好",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "mh_b_no_recommend",
+          "label": "缺乏权威推荐",
+          "description": "没有儿科医生/博主推荐，不敢买",
+          "frequency": "LOW"
+        }
       ],
       "audienceSegments": [
-        { "segment": "90/95后新手妈妈", "traits": ["高知高消费", "信息获取渠道小红书>抖音", "信任成分党+KOL", "愿意为品质付费"], "painPoints": ["选品焦虑", "缺乏专业判断", "被各种成分绕晕"] },
-        { "segment": "二胎/多胎妈妈", "traits": ["经验丰富", "决策快", "价格敏感", "关注复购性价比"], "painPoints": ["产品效果下降", "二胎体质变化", "预算有限但要两娃用"] },
-        { "segment": "孕期妈妈", "traits": ["极度谨慎", "医生指导优先", "看文献看成分表", "社群讨论活跃"], "painPoints": ["怕影响胎儿", "找不到孕期专用产品", "信息过载"] }
+        {
+          "segment": "90/95后新手妈妈",
+          "traits": [
+            "高知高消费",
+            "信息获取渠道小红书>抖音",
+            "信任成分党+KOL",
+            "愿意为品质付费"
+          ],
+          "painPoints": [
+            "选品焦虑",
+            "缺乏专业判断",
+            "被各种成分绕晕"
+          ]
+        },
+        {
+          "segment": "二胎/多胎妈妈",
+          "traits": [
+            "经验丰富",
+            "决策快",
+            "价格敏感",
+            "关注复购性价比"
+          ],
+          "painPoints": [
+            "产品效果下降",
+            "二胎体质变化",
+            "预算有限但要两娃用"
+          ]
+        },
+        {
+          "segment": "孕期妈妈",
+          "traits": [
+            "极度谨慎",
+            "医生指导优先",
+            "看文献看成分表",
+            "社群讨论活跃"
+          ],
+          "painPoints": [
+            "怕影响胎儿",
+            "找不到孕期专用产品",
+            "信息过载"
+          ]
+        }
       ],
       "competitorBenchmarks": [
-        { "brand": "合生元/飞鹤", "strength": "国货信任、儿科背书、渠道覆盖", "weakness": "品类相对单一、创新节奏慢" },
-        { "brand": "Bioisland/Swisse", "strength": "澳洲/海外信任、纯净形象", "weakness": "价格高、用户教育成本高" },
-        { "brand": "拜耳/惠氏", "strength": "百年药企信任、临床数据", "weakness": "品牌老化、社交媒体弱" }
+        {
+          "brand": "合生元/飞鹤",
+          "strength": "国货信任、儿科背书、渠道覆盖",
+          "weakness": "品类相对单一、创新节奏慢"
+        },
+        {
+          "brand": "Bioisland/Swisse",
+          "strength": "澳洲/海外信任、纯净形象",
+          "weakness": "价格高、用户教育成本高"
+        },
+        {
+          "brand": "拜耳/惠氏",
+          "strength": "百年药企信任、临床数据",
+          "weakness": "品牌老化、社交媒体弱"
+        }
       ],
       "platformTactics": {
-        "douyin": { "hookStrategies": ["安全焦虑开头", "成分对比拆解", "真人实测"], "contentTypes": ["短视频口播", "直播间讲解", "使用教程"], "recommendedDuration": "30-90秒" },
-        "xiaohongshu": { "hookStrategies": ["成分科普", "选购攻略", "使用心得"], "contentTypes": ["图文笔记", "对比表格", "好物清单"], "recommendedFormat": "标题含阶段词+正文分段+标签5-8个" }
+        "douyin": {
+          "hookStrategies": [
+            "安全焦虑开头",
+            "成分对比拆解",
+            "真人实测"
+          ],
+          "contentTypes": [
+            "短视频口播",
+            "直播间讲解",
+            "使用教程"
+          ],
+          "recommendedDuration": "30-90秒"
+        },
+        "xiaohongshu": {
+          "hookStrategies": [
+            "成分科普",
+            "选购攻略",
+            "使用心得"
+          ],
+          "contentTypes": [
+            "图文笔记",
+            "对比表格",
+            "好物清单"
+          ],
+          "recommendedFormat": "标题含阶段词+正文分段+标签5-8个"
+        }
       },
       "version": "1.0.0",
       "createdAt": "2026-06-08T00:00:00.000Z",
@@ -180,34 +494,169 @@
       "industry": "food_supplement",
       "categoryName": "功效食品",
       "needTaxonomy": [
-        { "code": "fs_efficacy_proof", "label": "功效可验证", "description": "用户期望看到科学数据、临床报告或可感知的身体变化", "severity": 5 },
-        { "code": "fs_safety_longterm", "label": "长期安全", "description": "担心长期服用的肝损伤/依赖性/副作用问题", "severity": 4 },
-        { "code": "fs_taste", "label": "口感/服用体验", "description": "好吃/好喝才能坚持，口感直接影响复购", "severity": 4 },
-        { "code": "fs_absorption", "label": "吸收率/生物利用度", "description": "用户关注成分是否能被有效吸收，而非穿肠过", "severity": 4 },
-        { "code": "fs_result_speed", "label": "见效速度", "description": "多久能看到效果？用户期待明确的时间预期", "severity": 3 },
-        { "code": "fs_compliance", "label": "坚持率", "description": "剂量频率/便捷性影响长期坚持", "severity": 3 },
-        { "code": "fs_cost_value", "label": "性价比", "description": "长期消费对价格敏感，需要量化每日成本", "severity": 4 }
+        {
+          "code": "fs_efficacy_proof",
+          "label": "功效可验证",
+          "description": "用户期望看到科学数据、临床报告或可感知的身体变化",
+          "severity": 5
+        },
+        {
+          "code": "fs_safety_longterm",
+          "label": "长期安全",
+          "description": "担心长期服用的肝损伤/依赖性/副作用问题",
+          "severity": 4
+        },
+        {
+          "code": "fs_taste",
+          "label": "口感/服用体验",
+          "description": "好吃/好喝才能坚持，口感直接影响复购",
+          "severity": 4
+        },
+        {
+          "code": "fs_absorption",
+          "label": "吸收率/生物利用度",
+          "description": "用户关注成分是否能被有效吸收，而非穿肠过",
+          "severity": 4
+        },
+        {
+          "code": "fs_result_speed",
+          "label": "见效速度",
+          "description": "多久能看到效果？用户期待明确的时间预期",
+          "severity": 3
+        },
+        {
+          "code": "fs_compliance",
+          "label": "坚持率",
+          "description": "剂量频率/便捷性影响长期坚持",
+          "severity": 3
+        },
+        {
+          "code": "fs_cost_value",
+          "label": "性价比",
+          "description": "长期消费对价格敏感，需要量化每日成本",
+          "severity": 4
+        }
       ],
       "barrierTaxonomy": [
-        { "code": "fs_b_not_working", "label": "没感觉到效果", "description": "服用一段时间无明显变化，产生怀疑", "frequency": "HIGH" },
-        { "code": "fs_b_safety_scare", "label": "安全担忧", "description": "肝损伤/肾负担/激素/依赖性等恐惧", "frequency": "HIGH" },
-        { "code": "fs_b_hard_to_stick", "label": "坚持不下去", "description": "颗粒太大/味道难吃/记不住吃/外出不方便", "frequency": "MEDIUM" },
-        { "code": "fs_b_better_alternatives", "label": "替代品太多", "description": "同类产品太多，差异不明显", "frequency": "MEDIUM" },
-        { "code": "fs_b_no_prescription", "label": "非OTC信任不足", "description": "没有医生推荐，觉得是保健品骗局", "frequency": "LOW" }
+        {
+          "code": "fs_b_not_working",
+          "label": "没感觉到效果",
+          "description": "服用一段时间无明显变化，产生怀疑",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "fs_b_safety_scare",
+          "label": "安全担忧",
+          "description": "肝损伤/肾负担/激素/依赖性等恐惧",
+          "frequency": "HIGH"
+        },
+        {
+          "code": "fs_b_hard_to_stick",
+          "label": "坚持不下去",
+          "description": "颗粒太大/味道难吃/记不住吃/外出不方便",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "fs_b_better_alternatives",
+          "label": "替代品太多",
+          "description": "同类产品太多，差异不明显",
+          "frequency": "MEDIUM"
+        },
+        {
+          "code": "fs_b_no_prescription",
+          "label": "非OTC信任不足",
+          "description": "没有医生推荐，觉得是保健品骗局",
+          "frequency": "LOW"
+        }
       ],
       "audienceSegments": [
-        { "segment": "25-40岁职场白领", "traits": ["亚健康焦虑", "熬夜补觉", "预算中等", "信息源:知乎/小红书/抖音"], "painPoints": ["精力不足", "肠胃不适", "免疫力下降"] },
-        { "segment": "运动健身人群", "traits": ["数据导向", "成分党", "接受高单价", "教练/KOL推荐影响大"], "painPoints": ["恢复慢", "关节不适", "蛋白摄入不足"] },
-        { "segment": "40+养生人群", "traits": ["慢性病担忧", "医生建议优先", "关注心血管/骨骼", "传统渠道购买"], "painPoints": ["血压/血脂/血糖", "关节退化", "记忆力下降"] }
+        {
+          "segment": "25-40岁职场白领",
+          "traits": [
+            "亚健康焦虑",
+            "熬夜补觉",
+            "预算中等",
+            "信息源:知乎/小红书/抖音"
+          ],
+          "painPoints": [
+            "精力不足",
+            "肠胃不适",
+            "免疫力下降"
+          ]
+        },
+        {
+          "segment": "运动健身人群",
+          "traits": [
+            "数据导向",
+            "成分党",
+            "接受高单价",
+            "教练/KOL推荐影响大"
+          ],
+          "painPoints": [
+            "恢复慢",
+            "关节不适",
+            "蛋白摄入不足"
+          ]
+        },
+        {
+          "segment": "40+养生人群",
+          "traits": [
+            "慢性病担忧",
+            "医生建议优先",
+            "关注心血管/骨骼",
+            "传统渠道购买"
+          ],
+          "painPoints": [
+            "血压/血脂/血糖",
+            "关节退化",
+            "记忆力下降"
+          ]
+        }
       ],
       "competitorBenchmarks": [
-        { "brand": "Swisse/Blackmores", "strength": "澳洲品牌信任、全品类覆盖、电商成熟", "weakness": "品类过多导致专业感稀释" },
-        { "brand": "汤臣倍健/同仁堂", "strength": "线下渠道强、品牌认知度高", "weakness": "品牌老化、年轻化不足" },
-        { "brand": "WonderLab/薄荷健康", "strength": "年轻化营销、包装创新、社交媒体强", "weakness": "品牌力待验证、复购率待观察" }
+        {
+          "brand": "Swisse/Blackmores",
+          "strength": "澳洲品牌信任、全品类覆盖、电商成熟",
+          "weakness": "品类过多导致专业感稀释"
+        },
+        {
+          "brand": "汤臣倍健/同仁堂",
+          "strength": "线下渠道强、品牌认知度高",
+          "weakness": "品牌老化、年轻化不足"
+        },
+        {
+          "brand": "WonderLab/薄荷健康",
+          "strength": "年轻化营销、包装创新、社交媒体强",
+          "weakness": "品牌力待验证、复购率待观察"
+        }
       ],
       "platformTactics": {
-        "douyin": { "hookStrategies": ["体检报告挂钩", "成分科普开头", "真人28天挑战"], "contentTypes": ["短视频口播", "直播间科普", "打卡系列"], "recommendedDuration": "45-90秒" },
-        "xiaohongshu": { "hookStrategies": ["成分解析", "选购指南", "空瓶记录"], "contentTypes": ["图文笔记", "成分对比", "自用分享"], "recommendedFormat": "标题含品类词+正文分段+标签5-8个" }
+        "douyin": {
+          "hookStrategies": [
+            "体检报告挂钩",
+            "成分科普开头",
+            "真人28天挑战"
+          ],
+          "contentTypes": [
+            "短视频口播",
+            "直播间科普",
+            "打卡系列"
+          ],
+          "recommendedDuration": "45-90秒"
+        },
+        "xiaohongshu": {
+          "hookStrategies": [
+            "成分解析",
+            "选购指南",
+            "空瓶记录"
+          ],
+          "contentTypes": [
+            "图文笔记",
+            "成分对比",
+            "自用分享"
+          ],
+          "recommendedFormat": "标题含品类词+正文分段+标签5-8个"
+        }
       },
       "version": "1.0.0",
       "createdAt": "2026-06-08T00:00:00.000Z",
@@ -220,19 +669,55 @@
       "platform": "douyin",
       "contentType": "美妆全品类",
       "bestPractice": [
-        { "rule": "前3秒必须抛出冲突", "explanation": "抖音用户滑动速度极快，前3秒没有冲突/悬念就会划走", "example": "\"评论区炸了——都在说这个精华到底有没有用？\"" },
-        { "rule": "评论截图作开头钩子", "explanation": "用真实评论截图做视频封面/开头，比纯口播点击率高40%", "example": "截图展示\"贵在哪里\"\"真的有效吗\"等高频评论" },
-        { "rule": "展示过程而非结论", "explanation": "抖音用户更相信\"看到的过程\"而非\"听到的结论\"", "example": "实拍使用前后对比+成分拆解过程" },
-        { "rule": "结尾引导互动而非直接转化", "explanation": "评论区互动数据直接影响算法推荐权重", "example": "\"评论区告诉我你的肤质，下条专为你拍\"" }
+        {
+          "rule": "前3秒必须抛出冲突",
+          "explanation": "抖音用户滑动速度极快，前3秒没有冲突/悬念就会划走",
+          "example": "\"评论区炸了——都在说这个精华到底有没有用？\""
+        },
+        {
+          "rule": "评论截图作开头钩子",
+          "explanation": "用真实评论截图做视频封面/开头，比纯口播点击率高40%",
+          "example": "截图展示\"贵在哪里\"\"真的有效吗\"等高频评论"
+        },
+        {
+          "rule": "展示过程而非结论",
+          "explanation": "抖音用户更相信\"看到的过程\"而非\"听到的结论\"",
+          "example": "实拍使用前后对比+成分拆解过程"
+        },
+        {
+          "rule": "结尾引导互动而非直接转化",
+          "explanation": "评论区互动数据直接影响算法推荐权重",
+          "example": "\"评论区告诉我你的肤质，下条专为你拍\""
+        }
       ],
       "forbiddenPatterns": [
-        { "pattern": "绝对化表述", "reason": "广告法限制", "consequence": "内容被限流或下架" },
-        { "pattern": "医疗暗示", "reason": "美妆不能宣称治疗效果", "consequence": "平台处罚" },
-        { "pattern": "微信/加V引流", "reason": "平台不允许站外引流", "consequence": "账号降权" }
+        {
+          "pattern": "绝对化表述",
+          "reason": "广告法限制",
+          "consequence": "内容被限流或下架"
+        },
+        {
+          "pattern": "医疗暗示",
+          "reason": "美妆不能宣称治疗效果",
+          "consequence": "平台处罚"
+        },
+        {
+          "pattern": "微信/加V引流",
+          "reason": "平台不允许站外引流",
+          "consequence": "账号降权"
+        }
       ],
       "recommendedFormats": [
-        { "format": "口播+展示型", "whenToUse": "新品上线、成分科普", "spec": "30-60秒，9:16竖屏，单人出镜" },
-        { "format": "对比测评型", "whenToUse": "竞品分析、平替推荐", "spec": "45-90秒，多角度对比，数据可视化" }
+        {
+          "format": "口播+展示型",
+          "whenToUse": "新品上线、成分科普",
+          "spec": "30-60秒，9:16竖屏，单人出镜"
+        },
+        {
+          "format": "对比测评型",
+          "whenToUse": "竞品分析、平替推荐",
+          "spec": "45-90秒，多角度对比，数据可视化"
+        }
       ],
       "version": "1.0.0",
       "updatedAt": "2026-06-07T00:00:00.000Z"
@@ -242,20 +727,60 @@
       "platform": "xiaohongshu",
       "contentType": "美妆全品类",
       "bestPractice": [
-        { "rule": "标题必含核心关键词", "explanation": "小红书是搜索+推荐混合场景，关键词决定搜索曝光", "example": "\"敏感肌精华怎么选？4个维度讲清楚（成分对比）\"" },
-        { "rule": "受众清单必须明确", "explanation": "小红书用户习惯直接找\"适合我吗\"的答案", "example": "✔ 适合：干皮/敏感肌 ✖ 不适合：油皮/追求奢侈品感" },
-        { "rule": "正文三段式结构", "explanation": "结论先行→维度拆解→互动引导，提高收藏率", "example": "先说结论→4维度分析→\"你用过了吗？评论区说说\"" },
-        { "rule": "图片信息密度要高", "explanation": "6-9张高质量图片，每张有信息价值", "example": "成分表+使用前后+竞品对比表+用户反馈截图" }
+        {
+          "rule": "标题必含核心关键词",
+          "explanation": "小红书是搜索+推荐混合场景，关键词决定搜索曝光",
+          "example": "\"敏感肌精华怎么选？4个维度讲清楚（成分对比）\""
+        },
+        {
+          "rule": "受众清单必须明确",
+          "explanation": "小红书用户习惯直接找\"适合我吗\"的答案",
+          "example": "✔ 适合：干皮/敏感肌 ✖ 不适合：油皮/追求奢侈品感"
+        },
+        {
+          "rule": "正文三段式结构",
+          "explanation": "结论先行→维度拆解→互动引导，提高收藏率",
+          "example": "先说结论→4维度分析→\"你用过了吗？评论区说说\""
+        },
+        {
+          "rule": "图片信息密度要高",
+          "explanation": "6-9张高质量图片，每张有信息价值",
+          "example": "成分表+使用前后+竞品对比表+用户反馈截图"
+        }
       ],
       "forbiddenPatterns": [
-        { "pattern": "引流私域", "reason": "平台严厉打击", "consequence": "限流" },
-        { "pattern": "过度承诺", "reason": "功效夸大", "consequence": "举报风险" },
-        { "pattern": "虚假测评", "reason": "真实体验要求", "consequence": "账号信任丧失" }
+        {
+          "pattern": "引流私域",
+          "reason": "平台严厉打击",
+          "consequence": "限流"
+        },
+        {
+          "pattern": "过度承诺",
+          "reason": "功效夸大",
+          "consequence": "举报风险"
+        },
+        {
+          "pattern": "虚假测评",
+          "reason": "真实体验要求",
+          "consequence": "账号信任丧失"
+        }
       ],
       "recommendedFormats": [
-        { "format": "成分科普型", "whenToUse": "新品教育、成分营销", "spec": "标题含成分名+功效关键词，正文800-1500字" },
-        { "format": "空瓶记录型", "whenToUse": "建立长期信任", "spec": "周期性更新，6-9张图片展示使用过程" },
-        { "format": "合集对比型", "whenToUse": "竞品分析、选购指南", "spec": "5-8款产品横向对比，结构化表格" }
+        {
+          "format": "成分科普型",
+          "whenToUse": "新品教育、成分营销",
+          "spec": "标题含成分名+功效关键词，正文800-1500字"
+        },
+        {
+          "format": "空瓶记录型",
+          "whenToUse": "建立长期信任",
+          "spec": "周期性更新，6-9张图片展示使用过程"
+        },
+        {
+          "format": "合集对比型",
+          "whenToUse": "竞品分析、选购指南",
+          "spec": "5-8款产品横向对比，结构化表格"
+        }
       ],
       "version": "1.0.0",
       "updatedAt": "2026-06-07T00:00:00.000Z"
@@ -303,8 +828,8 @@
       "modelName": "gpt-4.1",
       "modelType": "reasoning_generation",
       "contextWindow": 128000,
-      "inputTokenPrice": 0.00002,
-      "outputTokenPrice": 0.00008,
+      "inputTokenPrice": 2e-05,
+      "outputTokenPrice": 8e-05,
       "isActive": true
     },
     {
@@ -313,8 +838,8 @@
       "modelName": "deepseek-v4-flash",
       "modelType": "batch_semantic",
       "contextWindow": 64000,
-      "inputTokenPrice": 0.000002,
-      "outputTokenPrice": 0.000004,
+      "inputTokenPrice": 2e-06,
+      "outputTokenPrice": 4e-06,
       "isActive": true
     },
     {
@@ -323,8 +848,8 @@
       "modelName": "deepseek-v4-pro",
       "modelType": "reasoning_generation",
       "contextWindow": 128000,
-      "inputTokenPrice": 0.000004,
-      "outputTokenPrice": 0.000012,
+      "inputTokenPrice": 4e-06,
+      "outputTokenPrice": 1.2e-05,
       "isActive": true
     }
   ],
