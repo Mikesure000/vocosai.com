@@ -155,6 +155,7 @@ export default function App() {
             <Route path="methodology" element={<PlatformMethodologyPage />} />
             <Route path="category" element={<CategoryKnowledgePage />} />
             <Route path="team" element={<TeamCollaborationPage />} />
+            <Route path="projects" element={<ProjectsDashboard />} />
             <Route path="brand" element={<BrandPage />} />
             <Route path="benchmark" element={<BenchmarkPage />} />
             <Route path="strategy" element={
