@@ -230,6 +230,10 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/production-cards\/([^/]+)\/reject$/, rejectCardHandler, 200],
     ["GET", /^\/api\/production-cards\/([^/]+)\/reviews$/, getCardReviewsHandler],
     ["GET", /^\/api\/pending-reviews$/, getPendingReviewsHandler],
+    // 管理后台 API
+    ["GET", /^\/api\/admin\/users$/, listAdminUsers],
+    ["POST", /^\/api\/admin\/users$/, createAdminUser, 201],
+    ["PUT", /^\/api\/admin\/users\/([^/]+)$/, updateAdminUser],
     ["GET", /^\/api\/reports\/([^/]+)\/download$/, downloadReport],
     ["GET", /^\/api\/reports\/([^/]+)$/, getReport],
     ["GET", /^\/api\/ai\/runs$/, listAiRuns],
@@ -2365,4 +2369,52 @@ async function getCardReviewsHandler({ store, params }) {
 }
 async function getPendingReviewsHandler({ store, context }) {
   return { data: getPendingReviews(store, context.userId }) };
+}
+
+// ============ 管理后台: 用户 CRUD ============
+function sanitizeUser(user) {
+  const { password_hash, ...safe } = user;
+  return safe;
+}
+
+async function listAdminUsers({ store, context }) {
+  requirePermission(context, PERMISSIONS.USER_MANAGE);
+  return store.list("users").map(sanitizeUser);
+}
+
+async function createAdminUser({ store, context, body }) {
+  requirePermission(context, PERMISSIONS.USER_MANAGE);
+  if (!body.email || !body.password) throw badRequest("email and password are required");
+  const existing = store.find("users", u => u.email === body.email);
+  if (existing) throw badRequest("User with this email already exists");
+
+  const id = createId("user");
+  const user = {
+    id, name: body.name || body.email.split("@")[0],
+    email: body.email, role: body.role || "member",
+    status: "active",
+    password_hash: hashPassword(body.password),
+    createdAt: now()
+  };
+  await store.insert("users", user);
+  return { data: sanitizeUser(user) };
+}
+
+async function updateAdminUser({ store, context, params, body }) {
+  requirePermission(context, PERMISSIONS.USER_MANAGE);
+  const user = store.get("users", params[0]);
+  if (!user) { const e = new Error("User not found"); e.statusCode = 404; e.code = "not_found"; throw e; }
+
+  const patch = {};
+  if (body.role && ["super_admin", "team_admin", "ai_engineer_admin", "member"].includes(body.role)) {
+    patch.role = body.role;
+  }
+  if (body.status && ["active", "disabled"].includes(body.status)) {
+    patch.status = body.status;
+  }
+  if (body.name) patch.name = body.name;
+  if (Object.keys(patch).length === 0) throw badRequest("No valid fields to update");
+
+  const updated = await store.update("users", user.id, { ...patch, updatedAt: now() });
+  return { data: sanitizeUser(updated) };
 }

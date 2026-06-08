@@ -10,7 +10,7 @@ import {
   Description as ReportsIcon, WarningAmber as ObstaclesIcon,
   CompareArrows as CompetitorIcon, AutoAwesome as ContentLabIcon,
   Psychology as AiCenterIcon, Replay as AttributionIcon,
-  Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon, Category as CategoryIcon,
+  Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon, Category as CategoryIcon, AdminPanelSettings as AdminPanelSettingsIcon,
 } from "@mui/icons-material";
 import AuthGuard from "./shared/auth/AuthGuard";
 import ErrorBoundary from "./shared/auth/ErrorBoundary";
@@ -31,6 +31,7 @@ import ProjectsDashboard from "./features/projects/ProjectsDashboard";
 import TeamCollaborationPage from "./features/team/TeamCollaborationPage";
 import PlatformMethodologyPage from "./features/methodology/PlatformMethodologyPage";
 import CategoryKnowledgePage from "./features/category/CategoryKnowledgePage";
+import AdminPage from "./features/admin/AdminPage";
 import BrandPage from "./features/brand/BrandPage";
 import BenchmarkPage from "./features/benchmark/BenchmarkPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -65,6 +66,7 @@ const menuItems = [
   { text: "品类知识库",   icon: <CategoryIcon />,       path: "/category",    permission: "task.read" },
   { text: "团队协作",     icon: <PeopleIcon />,        path: "/team",         permission: "task.read" },
   { text: "报告中心",     icon: <ReportsIcon />,      path: "/reports",     permission: "report.read" },
+  { text: "系统管理",     icon: <AdminPanelSettingsIcon />, path: "/admin",  permission: "user.manage" },
 ];
 
 function SidebarNav() {
@@ -154,6 +156,7 @@ export default function App() {
             <Route path="production-cards/:taskId" element={<ProductionCardsPage />} />
             <Route path="methodology" element={<PlatformMethodologyPage />} />
             <Route path="category" element={<CategoryKnowledgePage />} />
+            <Route path="admin" element={<AdminPage />} />
             <Route path="team" element={<TeamCollaborationPage />} />
             <Route path="projects" element={<ProjectsDashboard />} />
             <Route path="brand" element={<BrandPage />} />
