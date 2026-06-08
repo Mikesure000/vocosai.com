@@ -33,7 +33,7 @@ export default function AiCenterPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = d.data ?? d.tasks ?? d ?? [];
+      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
       setTasks(Array.isArray(list) ? list : []);
     }).catch(() => {});
     loadAllRuns();
@@ -43,7 +43,7 @@ export default function AiCenterPage() {
     setLoading(true); setError("");
     api.listAiRuns()
       .then((d: any) => {
-        const list = d.data ?? d.runs ?? d ?? [];
+        const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
         setRuns(Array.isArray(list) ? list : []);
         setTotalRuns(list.length ?? 0);
       })

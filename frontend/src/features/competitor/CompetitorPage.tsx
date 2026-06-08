@@ -23,7 +23,7 @@ export default function CompetitorPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = d.data ?? d.tasks ?? d ?? [];
+      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
       setTasks(Array.isArray(list) ? list : []);
       if (list.length > 0) setTaskId(list[0].id);
     }).catch(() => {});
