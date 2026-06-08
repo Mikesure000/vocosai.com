@@ -1,46 +1,37 @@
-# VOCOS 后端一键启动脚本
-# 用法: 在 PowerShell 中右键此文件 → "使用 PowerShell 运行"
-#       或在终端中: .\start.ps1
+# VOCOS 后端一键启动/状态检查
+# 用法: 右键 → "使用 PowerShell 运行"，或在终端: .\start.ps1
 
-$ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-Write-Host "=== VOCOS Backend Starter ===" -ForegroundColor Cyan
+Write-Host "=== VOCOS ===" -ForegroundColor Cyan
 
-# 1. 杀掉旧进程
-Write-Host "[1/4] 清理旧进程..." -ForegroundColor Yellow
-Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*run-server*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
+# 检查是否已经在运行
+try {
+    $health = Invoke-RestMethod -Uri "http://localhost:3000/health" -TimeoutSec 2 -ErrorAction Stop
+    Write-Host "✅ 服务已在运行: v$($health.version)" -ForegroundColor Green
+    Write-Host "   http://localhost:3000" -ForegroundColor White
+    Write-Host "   账号: admin@vocos.local / admin123" -ForegroundColor White
+    return
+} catch {}
 
-# 2. 清理旧数据库（密码已和JWT_SECRET同步，旧DB必须删）
-Write-Host "[2/4] 清理旧数据库..." -ForegroundColor Yellow
-Remove-Item -Path "data\vocos.sqlite*" -Force -ErrorAction SilentlyContinue
+# 设置环境变量（一次性，之后存在 .env 中 dotenv 会自动加载）
+Write-Host "启动中..."
 
-# 3. 设置环境变量
-Write-Host "[3/4] 加载配置..." -ForegroundColor Yellow
-$env:PORT = "3000"
-$env:VOCOS_JWT_SECRET = "f8c3b2a1d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4"
-$env:DEEPSEEK_API_KEY = "sk-2eebae347f0e446cbf76a5e9aa585e7d"
-$env:VOCOS_MODEL_MODE = "live"
-
-# 4. 启动服务器（新窗口，关闭终端不影响）
-Write-Host "[4/4] 启动服务..." -ForegroundColor Yellow
-$nodePath = "C:\Users\daxia\.workbuddy\binaries\node\versions\22.12.0\node.exe"
-
-Start-Process -FilePath $nodePath -ArgumentList "src/run-server.mjs" -NoNewWindow -PassThru
+# 后台启动（独立进程，关闭终端不受影响）
+$node = "C:\Users\daxia\.workbuddy\binaries\node\versions\22.12.0\node.exe"
+$job = Start-Job -Name "vocos-server" -ScriptBlock {
+    param($nodePath, $workDir)
+    Set-Location $workDir
+    & $nodePath src/run-server.mjs 2>&1 | Out-Null
+} -ArgumentList $node, $PSScriptRoot
 
 Start-Sleep -Seconds 3
 
 # 验证
 try {
-    $health = Invoke-RestMethod -Uri "http://localhost:3000/health" -TimeoutSec 5
-    Write-Host "`n✅ 服务启动成功！" -ForegroundColor Green
-    Write-Host "   地址: http://localhost:3000" -ForegroundColor White
-    Write-Host "   账号: admin@vocos.local / admin123" -ForegroundColor White
-    Write-Host "   管理: http://localhost:3000 (登录后左侧\"系统管理\")" -ForegroundColor White
+    $h = Invoke-RestMethod -Uri "http://localhost:3000/health" -TimeoutSec 5
+    Write-Host "✅ 启动成功 v$($h.version) | http://localhost:3000" -ForegroundColor Green
+    Write-Host "   管理员: admin@vocos.local / admin123" -ForegroundColor White
 } catch {
-    Write-Host "`n❌ 服务启动失败，请检查错误日志" -ForegroundColor Red
+    Write-Host "❌ 启动失败，请检查 E:\workbuddy\vocos\backend\.env 配置" -ForegroundColor Red
 }
-
-Write-Host "`n按任意键关闭此窗口（服务仍在后台运行）" -ForegroundColor Gray
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
