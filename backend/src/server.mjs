@@ -5,7 +5,7 @@ import { assertTeamAccess, buildRequestContext, filterByTeam, hashPassword, JWT_
 import crypto from "node:crypto";
 import { createId, createStore, now } from "./store.mjs";
 
-const STATIC_ROOT = join(import.meta.dirname, "..", "frontend", "dist");
+const STATIC_ROOT = join(import.meta.dirname, "..", "..", "frontend", "dist");
 const MIME_TYPES = { ".html":"text/html",".js":"text/javascript",".css":"text/css",".png":"image/png",".svg":"image/svg+xml",".ico":"image/x-icon",".json":"application/json",".woff2":"font/woff2" };
 
 function serveStaticFile(res, filePath) {
@@ -2405,7 +2405,8 @@ function sanitizeUser(user) {
 
 async function listAdminUsers({ store, context }) {
   requirePermission(context, PERMISSIONS.USER_MANAGE);
-  return store.list("users").map(sanitizeUser);
+  const users = store.list("users") || [];
+  return users.map(sanitizeUser);
 }
 
 async function createAdminUser({ store, context, body }) {

@@ -17,7 +17,8 @@ export default function AdminPage() {
   const load = () => {
     setLoading(true);
     fetch("/api/admin/users").then(r => r.json()).then(d => {
-      setUsers(d.data || d || []);
+      const list = Array.isArray(d.data) ? d.data : Array.isArray(d) ? d : [];
+      setUsers(list);
     }).catch(e => setError(e.message)).finally(() => setLoading(false));
   };
 
