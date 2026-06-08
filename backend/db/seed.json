@@ -135,6 +135,83 @@
       "version": "1.0.0",
       "createdAt": "2026-06-07T00:00:00.000Z",
       "updatedAt": "2026-06-07T00:00:00.000Z"
+    },
+    {
+      "id": "cat_mom_baby",
+      "industry": "mom_baby",
+      "categoryName": "母婴健康",
+      "needTaxonomy": [
+        { "code": "mh_safety_first", "label": "安全第一位", "description": "母婴用户对产品安全的关注度远高于其他品类，任何成分/材质/工艺的风险信号都会触发强烈担忧", "severity": 5 },
+        { "code": "mh_pediatric_trust", "label": "儿科/专家背书", "description": "用户需要专业儿科医生、营养师或权威机构的推荐和认可", "severity": 5 },
+        { "code": "mh_ingredient_purity", "label": "成分纯净无添加", "description": "追求0添加、天然有机、无防腐剂等纯净配方", "severity": 4 },
+        { "code": "mh_efficacy_visible", "label": "效果可见", "description": "关注DHA/益生菌等的实际效果，需要数据和案例支撑", "severity": 4 },
+        { "code": "mh_easy_use", "label": "使用方便", "description": "婴幼儿产品要求操作简单、喂食方便、不抗拒", "severity": 3 },
+        { "code": "mh_stage_match", "label": "年龄段适配", "description": "新生儿/6m+/1岁+等不同阶段的精细化需求", "severity": 4 },
+        { "code": "mh_brand_origin", "label": "品牌产地信任", "description": "用户关注进口/国产/代工厂信息，产地直接影响购买决策", "severity": 3 }
+      ],
+      "barrierTaxonomy": [
+        { "code": "mh_b_safety_anxiety", "label": "安全焦虑", "description": "怕对宝宝不好、担心副作用、不敢轻易尝试新品", "frequency": "HIGH" },
+        { "code": "mh_b_no_effect", "label": "没有明显效果", "description": "吃了/用了没感觉变化，觉得是智商税", "frequency": "HIGH" },
+        { "code": "mh_b_taste_rejection", "label": "宝宝不配合", "description": "宝宝不爱吃/抗拒/吐出来，无法坚持使用", "frequency": "MEDIUM" },
+        { "code": "mh_b_price_high", "label": "价格偏高", "description": "母婴品类长期消耗，用户对价格敏感", "frequency": "MEDIUM" },
+        { "code": "mh_b_info_overload", "label": "选择困难", "description": "同类产品太多，不知道选哪个更好", "frequency": "MEDIUM" },
+        { "code": "mh_b_no_recommend", "label": "缺乏权威推荐", "description": "没有儿科医生/博主推荐，不敢买", "frequency": "LOW" }
+      ],
+      "audienceSegments": [
+        { "segment": "90/95后新手妈妈", "traits": ["高知高消费", "信息获取渠道小红书>抖音", "信任成分党+KOL", "愿意为品质付费"], "painPoints": ["选品焦虑", "缺乏专业判断", "被各种成分绕晕"] },
+        { "segment": "二胎/多胎妈妈", "traits": ["经验丰富", "决策快", "价格敏感", "关注复购性价比"], "painPoints": ["产品效果下降", "二胎体质变化", "预算有限但要两娃用"] },
+        { "segment": "孕期妈妈", "traits": ["极度谨慎", "医生指导优先", "看文献看成分表", "社群讨论活跃"], "painPoints": ["怕影响胎儿", "找不到孕期专用产品", "信息过载"] }
+      ],
+      "competitorBenchmarks": [
+        { "brand": "合生元/飞鹤", "strength": "国货信任、儿科背书、渠道覆盖", "weakness": "品类相对单一、创新节奏慢" },
+        { "brand": "Bioisland/Swisse", "strength": "澳洲/海外信任、纯净形象", "weakness": "价格高、用户教育成本高" },
+        { "brand": "拜耳/惠氏", "strength": "百年药企信任、临床数据", "weakness": "品牌老化、社交媒体弱" }
+      ],
+      "platformTactics": {
+        "douyin": { "hookStrategies": ["安全焦虑开头", "成分对比拆解", "真人实测"], "contentTypes": ["短视频口播", "直播间讲解", "使用教程"], "recommendedDuration": "30-90秒" },
+        "xiaohongshu": { "hookStrategies": ["成分科普", "选购攻略", "使用心得"], "contentTypes": ["图文笔记", "对比表格", "好物清单"], "recommendedFormat": "标题含阶段词+正文分段+标签5-8个" }
+      },
+      "version": "1.0.0",
+      "createdAt": "2026-06-08T00:00:00.000Z",
+      "updatedAt": "2026-06-08T00:00:00.000Z"
+    },
+    {
+      "id": "cat_food_supplement",
+      "industry": "food_supplement",
+      "categoryName": "功效食品",
+      "needTaxonomy": [
+        { "code": "fs_efficacy_proof", "label": "功效可验证", "description": "用户期望看到科学数据、临床报告或可感知的身体变化", "severity": 5 },
+        { "code": "fs_safety_longterm", "label": "长期安全", "description": "担心长期服用的肝损伤/依赖性/副作用问题", "severity": 4 },
+        { "code": "fs_taste", "label": "口感/服用体验", "description": "好吃/好喝才能坚持，口感直接影响复购", "severity": 4 },
+        { "code": "fs_absorption", "label": "吸收率/生物利用度", "description": "用户关注成分是否能被有效吸收，而非穿肠过", "severity": 4 },
+        { "code": "fs_result_speed", "label": "见效速度", "description": "多久能看到效果？用户期待明确的时间预期", "severity": 3 },
+        { "code": "fs_compliance", "label": "坚持率", "description": "剂量频率/便捷性影响长期坚持", "severity": 3 },
+        { "code": "fs_cost_value", "label": "性价比", "description": "长期消费对价格敏感，需要量化每日成本", "severity": 4 }
+      ],
+      "barrierTaxonomy": [
+        { "code": "fs_b_not_working", "label": "没感觉到效果", "description": "服用一段时间无明显变化，产生怀疑", "frequency": "HIGH" },
+        { "code": "fs_b_safety_scare", "label": "安全担忧", "description": "肝损伤/肾负担/激素/依赖性等恐惧", "frequency": "HIGH" },
+        { "code": "fs_b_hard_to_stick", "label": "坚持不下去", "description": "颗粒太大/味道难吃/记不住吃/外出不方便", "frequency": "MEDIUM" },
+        { "code": "fs_b_better_alternatives", "label": "替代品太多", "description": "同类产品太多，差异不明显", "frequency": "MEDIUM" },
+        { "code": "fs_b_no_prescription", "label": "非OTC信任不足", "description": "没有医生推荐，觉得是保健品骗局", "frequency": "LOW" }
+      ],
+      "audienceSegments": [
+        { "segment": "25-40岁职场白领", "traits": ["亚健康焦虑", "熬夜补觉", "预算中等", "信息源:知乎/小红书/抖音"], "painPoints": ["精力不足", "肠胃不适", "免疫力下降"] },
+        { "segment": "运动健身人群", "traits": ["数据导向", "成分党", "接受高单价", "教练/KOL推荐影响大"], "painPoints": ["恢复慢", "关节不适", "蛋白摄入不足"] },
+        { "segment": "40+养生人群", "traits": ["慢性病担忧", "医生建议优先", "关注心血管/骨骼", "传统渠道购买"], "painPoints": ["血压/血脂/血糖", "关节退化", "记忆力下降"] }
+      ],
+      "competitorBenchmarks": [
+        { "brand": "Swisse/Blackmores", "strength": "澳洲品牌信任、全品类覆盖、电商成熟", "weakness": "品类过多导致专业感稀释" },
+        { "brand": "汤臣倍健/同仁堂", "strength": "线下渠道强、品牌认知度高", "weakness": "品牌老化、年轻化不足" },
+        { "brand": "WonderLab/薄荷健康", "strength": "年轻化营销、包装创新、社交媒体强", "weakness": "品牌力待验证、复购率待观察" }
+      ],
+      "platformTactics": {
+        "douyin": { "hookStrategies": ["体检报告挂钩", "成分科普开头", "真人28天挑战"], "contentTypes": ["短视频口播", "直播间科普", "打卡系列"], "recommendedDuration": "45-90秒" },
+        "xiaohongshu": { "hookStrategies": ["成分解析", "选购指南", "空瓶记录"], "contentTypes": ["图文笔记", "成分对比", "自用分享"], "recommendedFormat": "标题含品类词+正文分段+标签5-8个" }
+      },
+      "version": "1.0.0",
+      "createdAt": "2026-06-08T00:00:00.000Z",
+      "updatedAt": "2026-06-08T00:00:00.000Z"
     }
   ],
   "platformMethodologies": [

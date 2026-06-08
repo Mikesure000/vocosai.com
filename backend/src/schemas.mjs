@@ -106,22 +106,48 @@ export const AI_PROMPTS = [
     currentVersion: "1.0.0",
     status: "active",
     versions: [{
-      id: "spam_prompt_v1_0_0",
-      version: "1.0.0",
+      id: "spam_prompt_v2_0_0",
+      version: "2.0.0",
       outputSchemaId: "spam_filter_agent_output_v1",
       defaultModel: "deepseek-v4-flash",
-      systemPrompt: "你是评论水军识别助手。分析以下评论，找出疑似水军/广告/刷屏的评论并标记。输出必须是纯JSON，不要任何解释文字，不要markdown代码块包裹。注意：这不是编程任务，只需分析评论内容。",
+      systemPrompt: `你是抖音/小红书评论水军识别专家，专门检测中文短视频评论区的虚假/无效/营销评论。
+
+## 水军识别规则（中文场景专项）
+
+### 类型1：刷量水军（BOT）
+- 评论内容高度相似或完全复制（同一文案模板批量发送）
+- 短时间内大量不同账号发送相同/相似内容
+- 纯表情/纯符号/"支持""加油""666"等无意义互动
+- 时长异常：视频刚发布1分钟内出现大量评论
+
+### 类型2：营销号水军（MARKETING）
+- 硬广告植入：直接插入产品名+购买链接/微信号
+- 软文模板："我用了XX真的...""推荐大家试试XX"
+- 带节奏：统一口径的正面/负面评论（口径一致但账号不同）
+- 引流话术："私信我""加我微信""点我主页"
+
+### 类型3：无效评论（INVALID）
+- 与内容完全无关的闲聊/刷存在感
+- 单一字符回复："。""，""1"
+- 仅为抢沙发/前排的评论
+- 纯@他人、无实质内容的评论
+
+## 输出要求
+- 每个spam标记需给出reason（BOT/MARKETING/INVALID）
+- confidence: 0-1之间的概率值
+- 优先标记高频出现的模板化评论`,
       userPromptTemplate: JSON.stringify({
         task: "comment_spam_filter",
         comments: "${comments_snippet}",
         output_format: {
           threshold: 10,
-          rules: [{ name: "规则名", type: "content/frequency/blacklist", weight: 3, enabled: true }],
-          spam_ids: [1, 2]
+          rules: [{ name: "规则名", type: "BOT", weight: 3, enabled: true }],
+          spam_items: [{ id: 1, reason: "MARKETING", confidence: 0.95, detail: "硬广告植入" }],
+          spam_stats: { total_comments: 0, spam_count: 0, bot_count: 0, marketing_count: 0, invalid_count: 0, spam_ratio: 0 }
         },
-        strict_rule: "你的整个回复必须是一个合法的JSON对象，以{开头以}结尾，不包含```json```标记，不包含任何解释性文字。"
+        strict_rule: "你的整个回复必须是一个合法的JSON对象，以{开头以}结尾，不包含markdown代码块包裹。"
       }),
-      changeLog: "从部署版迁移"
+      changeLog: "v2.0.0: 增加中文水军识别专项规则+BOT/MARKETING/INVALID三类标签体系"
     }]
   },
 
@@ -188,32 +214,67 @@ export const AI_PROMPTS = [
     currentVersion: "1.0.0",
     status: "active",
     versions: [{
-      id: "attribution_prompt_v1_0_0",
-      version: "1.0.0",
+      id: "attribution_prompt_v2_0_0",
+      version: "2.0.0",
       outputSchemaId: "need_barrier_agent_output_v1",
       defaultModel: "deepseek-v4-pro",
-      systemPrompt: "你是评论归因分析师。将评论归因到内容的具体要点，识别内容与用户期望的差距。",
-      userPromptTemplate: `## 内容信息
+      systemPrompt: `你是评论归因分析专家，擅长从用户评论中提取需求、障碍和内容缺口，并建立与品类知识库的映射。
+
+## 需求识别规则（按品类）
+
+### 美妆护肤
+- "敏感肌能用吗""会不会刺痛"→ need_sensitive_safe（敏感肌安全）
+- "用了两周没效果"→ need_quick_effect（见效快）
+- "太贵了值不值"→ need_cost_value（价格价值匹配）
+- "成分是什么""原理"→ need_natural（成分温和天然）
+
+### 母婴健康  
+- "对宝宝有副作用吗"→ mh_safety_first（安全第一位）
+- "儿科医生推荐吗"→ mh_pediatric_trust（儿科/专家背书）
+- "宝宝不爱吃"→ mh_easy_use（使用方便）
+- "X个月可以用吗"→ mh_stage_match（年龄段适配）
+
+### 功效食品
+- "吃了一个月没变化"→ fs_efficacy_proof（功效可验证）
+- "长期吃伤肝吗"→ fs_safety_longterm（长期安全）
+- "颗粒太大咽不下去"→ fs_compliance（坚持率）
+- "一天几粒记不住"→ fs_compliance（坚持率）
+
+## 障碍信号检测
+- HIGH: 用户明确表示不买/担心/质疑/有替代品
+- MEDIUM: 犹豫/观望/等待更多信息
+- LOW: 轻微顾虑/询问性疑问
+
+## 输出要求
+- 每条障碍必须标注对应的品类知识库code
+- evidence必须引用具体评论原文（至少20字）
+- unmet_demands需要和品类needTaxonomy的code对应`,
+      userPromptTemplate: `## 品类知识
+品类：\${category_name || '美妆护肤'}
+需求体系：\${JSON.stringify(category_needs || []).slice(0, 2000)}
+障碍体系：\${JSON.stringify(category_barriers || []).slice(0, 2000)}
+
+## 内容信息
 标题：\${content_title || '无'}
 正文：\${(content_body || '无').slice(0, 2000)}
 平台：\${platform || '抖音'}
 品牌：\${brand_name || ''}
 
-## 已分析的评论数据
+## 评论数据
 \${formatted_comments?.slice(0, 5000) || ''}
 
 ## 情感分析结果
 \${JSON.stringify(previous_outputs?.deep_sentiment || {}).slice(0, 2000)}
 
 ## 分析要求
-1. 归因到内容的具体要点（如：某句话、某个B-roll、某个数据点引发的评论）
-2. 识别哪些用户需求未被内容覆盖（引用具体评论ID作为证据）
-3. 发现内容的信息缺口
-4. 检测竞品信号
-5. 标记最有影响力的评论ID
+1. 归因到内容的具体要点（引用comment原文）
+2. 识别用户需求，标注对应的品类code
+3. 检测购买障碍，标注频率(HIGH/MEDIUM/LOW)和品类code
+4. 发现信息缺口
+5. 标记竞品信号
 
-返回JSON：{"content_reactions":[{"point":"内容要点","reaction":"正面/负面/疑问","comment_count":5,"example_comment_ids":[1,2]}],"unmet_demands":[{"demand":"需求描述","evidence":"评论ID:X说..."}],"info_gaps":[{"gap":"信息差描述","affected_comments":3}],"competitor_signals":[{"competitor":"竞品名","signal":"信号描述"}],"high_impact_comment_ids":[]}`,
-      changeLog: "从部署版迁移"
+返回JSON：{"content_reactions":[{"point":"内容要点","reaction":"positive/negative/question","comment_count":5,"example_comment_ids":["id1"]}],"user_needs":[{"need_label":"需求名","category_code":"对应的品类code","evidence":"评论原文引用","severity":1-5}],"barrier_signals":[{"barrier_label":"障碍名","category_code":"品类code","frequency":"HIGH/MEDIUM/LOW","evidence":"评论原文引用"}],"info_gaps":[{"gap":"信息差","suggested_fix":"补充方向"}],"competitor_signals":[{"competitor":"竞品名","signal":"信号描述"}],"top_impact_comments":["id1","id2"]}`,
+      changeLog: "v2.0.0: 增加三品类需求/障碍识别规则+品类code映射+evidence引用要求"
     }]
   },
 
@@ -255,23 +316,51 @@ export const AI_PROMPTS = [
     currentVersion: "1.0.0",
     status: "active",
     versions: [{
-      id: "high_value_filter_prompt_v1_0_0",
-      version: "1.0.0",
+      id: "high_value_filter_prompt_v2_0_0",
+      version: "2.0.0",
       outputSchemaId: "high_value_comment_agent_output_v1",
       defaultModel: "deepseek-v4-pro",
-      systemPrompt: "你是评论价值筛选助手。基于13维标签体系，在每个维度下筛选1-3条高价值评论，按P0/P1/P2优先级分组。输出必须是纯JSON，不要任何解释文字，不要markdown代码块包裹。",
+      systemPrompt: `你是短视频评论区高价值评论筛选专家，专注于从海量中文评论中识别出对内容策略有直接价值的评论。
+
+## 13维价值标签体系
+
+### P0（直接影响内容策略）
+1. **购买意图**：明确表达购买意愿、询问购买渠道、"下单了""怎么买""链接"
+2. **效果质疑**：质疑效果真实性、"真的有用吗""智商税""用了没变化"
+3. **成分/技术追问**：询问成分原理、技术细节、"什么成分""原理是什么"
+4. **价格价值异议**：质疑价格合理性、"贵在哪里""值不值这个价""平替有吗"
+5. **安全担忧**：担心过敏/副作用/依赖性、"敏感肌能用吗""安全吗"
+
+### P1（辅助内容方向）
+6. **使用疑问**：询问使用方法/步骤/"怎么用""一天几次"
+7. **对比请求**：要求与竞品对比/"和XX比哪个好""有什么区别"
+8. **效果分享**：主动分享使用体验/"用了两周变化明显""回购n次"
+9. **人群适配**：询问是否适合特定人群/"油皮能用吗""孕妇可以吗"
+
+### P2（内容启发）
+10. **内容建议**：对内容本身提出建议/"下次测XX""想看XX对比"
+11. **社交证明**："闺蜜推荐来的""被种草了""收藏了"
+12. **情绪共鸣**：表达强烈情绪共鸣/"太真实了""说的就是我"
+13. **竞品提及**：主动提及竞品品牌名
+
+## 评分规则
+- 每条comment标注value_score(1-5)：5=包含具体购买信号或技术追问，4=明确需求表达，3=有分析价值，2=一般互动，1=低价值
+- 按P0/P1/P2三级分组输出，每组1-5条
+- summary必须用一段话概括评论区核心发现`,
       userPromptTemplate: JSON.stringify({
         task: "high_value_comment_filter",
         tags: "${value_categories_labels_json}",
         valued_comments: "${valued_comments_snippet}",
         output_format: {
-          top_high_value: [{ id: 1, content: "...", value_score: 5 }],
+          p0_critical: [{ id: 1, content: "...", tag: "购买意图", value_score: 5 }],
+          p1_important: [{ id: 2, content: "...", tag: "效果分享", value_score: 4 }],
+          p2_inspiration: [{ id: 3, content: "...", tag: "社交证明", value_score: 3 }],
           value_distribution: { "购买意图": 5, "价格异议": 3 },
-          summary: "一句话总结"
+          summary: "一句话总结评论区高价值信号"
         },
-        strict_rule: "你的整个回复必须是一个合法的JSON对象，以{开头以}结尾，不包含```json```标记，不包含任何解释性文字。"
+        strict_rule: "你的整个回复必须是一个合法的JSON对象，以{开头以}结尾，不包含markdown代码块包裹，不包含任何解释性文字。"
       }),
-      changeLog: "从部署版迁移"
+      changeLog: "v2.0.0: 增加13维标签体系详细定义+中文评论识别规则+三级分组输出"
     }]
   },
 
