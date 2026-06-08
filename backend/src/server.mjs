@@ -311,8 +311,7 @@ async function health({ store }) {
 }
 
 async function listCategories({ store }) {
-  const categories = store.list("categoryKnowledge");
-  return categories.map(({ platformTactics, needTaxonomy, barrierTaxonomy, audienceSegments, competitorBenchmarks, ...rest }) => rest);
+  return (store.list("categoryKnowledge") || []).map((c) => ({ id: c.id, categoryName: c.categoryName, industry: c.industry }));
 }
 
 async function getCategory({ store, params }) {

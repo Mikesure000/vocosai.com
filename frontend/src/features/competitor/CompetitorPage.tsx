@@ -34,7 +34,8 @@ export default function CompetitorPage() {
     setLoading(true); setError("");
     api.getCommentSignals(taskId)
       .then((d: any) => {
-        const all = d.data?.signals ?? d.signals ?? [];
+        const raw = d.data?.signals ?? d.signals ?? d?.data ?? d;
+        const all = Array.isArray(raw) ? raw : [];
         setSignals(all.filter((s: any) =>
           ["competitor_comparison","purchase_intent","scenario_need","ingredient_focus"].includes(s.key)
         ).map((s: any) => ({

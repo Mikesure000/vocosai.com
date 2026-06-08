@@ -14,13 +14,14 @@ export default function CategoryKnowledgePage() {
 
   useEffect(() => {
     api.listCategories().then((d: any) => {
-      setCategories(d.data ?? d ?? []);
+      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+      setCategories(list);
+      if (list.length > 0) api.getCategory(list[0].id).then((fd:any) => setActive(fd?.data ?? fd));
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}><CircularProgress /></Box>;
-
-  const active = categories[tab];
+  if (!active) return <Box sx={{ p: 4 }}><Alert severity="warning">暂无品类数据</Alert></Box>;
 
   return (
     <Box sx={{ p: 3 }}>
