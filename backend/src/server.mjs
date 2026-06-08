@@ -2368,7 +2368,8 @@ async function getCardReviewsHandler({ store, params }) {
   return { data: getCardReviews(store, params[0]) };
 }
 async function getPendingReviewsHandler({ store, context }) {
-  return { data: getPendingReviews(store, context.userId }) };
+  const result = getPendingReviews(store, context.userId);
+  return { data: result };
 }
 
 // ============ 管理后台: 用户 CRUD ============

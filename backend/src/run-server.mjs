@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createApiServer } from "./server.mjs";
 
 const port = Number(process.env.PORT || 3000);
