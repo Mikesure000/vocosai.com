@@ -29,6 +29,7 @@ import { assertTransition, nextStatusForParsedFile } from "./state-machine.mjs";
 import { parseCommentFileContent, parseCommentFileBuffer } from "./file-parser.mjs";
 import { testProviderConnection } from "./model-adapters.mjs";
 import { getModelProviderStatuses, getModelRoutes, getPipelineStages, runAgent } from "./model-gateway.mjs";
+import { sendMessage as chatSendMessage, listSessions as chatListSessions, listMessages as chatListMessages, deleteSession as chatDeleteSession } from "./chat-service.mjs";
 import { buildSkillMetrics, buildSkillIterationHistory } from "./skill-learn.mjs";
 import { parseMultipartFormData } from "./multipart.mjs";
 import { deleteProviderKey, getStoredProviderSecrets, saveProviderKey } from "./provider-keys.mjs";
@@ -289,7 +290,12 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/model-gateway\/providers\/([^/]+)\/key\/delete$/, removeModelProviderKey],
     ["POST", /^\/api\/model-gateway\/providers\/([^/]+)\/test$/, testModelProvider],
     ["GET", /^\/api\/ai\/skills\/metrics$/, getSkillMetrics],
-    ["GET", /^\/api\/ai\/skills\/history\/([^/]+)$/, getSkillIterationHistory]
+    ["GET", /^\/api\/ai\/skills\/history\/([^/]+)$/, getSkillIterationHistory],
+    // AI 聊天路由
+    ["POST", /^\/api\/ai\/chat$/, handleChatMessage],
+    ["GET", /^\/api\/ai\/chat\/sessions$/, listChatSessions],
+    ["GET", /^\/api\/ai\/chat\/sessions\/([^/]+)\/messages$/, listChatMessages],
+    ["DELETE", /^\/api\/ai\/chat\/sessions\/([^/]+)$/, deleteChatSession]
   ];
 
   for (const [routeMethod, pattern, handler, status] of routes) {
@@ -1859,7 +1865,7 @@ async function writeAuditLog({ store, context, action, resourceType, resourceId 
 
 function normalizeProviderName(value) {
   const providerName = String(value ?? "").toLowerCase();
-  if (!["deepseek", "openai"].includes(providerName)) {
+  if (!["deepseek", "openai", "qwen"].includes(providerName)) {
     throw badRequest(`Unsupported model provider: ${value}`);
   }
   return providerName;
@@ -2473,4 +2479,57 @@ async function updateAdminUser({ store, context, params, body }) {
 
   const updated = await store.update("users", user.id, { ...patch, updatedAt: now() });
   return { data: sanitizeUser(updated) };
+}
+
+// ============ AI 聊天 Handlers ============
+
+async function handleChatMessage({ store, body, context }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_READ);
+  if (!body?.content) {
+    throw badRequest("Missing required field: content");
+  }
+  const result = await chatSendMessage(store, {
+    userId: context.userId,
+    teamId: context.teamId,
+    sessionId: body.sessionId || null,
+    content: body.content,
+    providerName: body.providerName || null
+  });
+  return { data: result };
+}
+
+async function listChatSessions({ store, context, query }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_READ);
+  const limit = clampNumber(Number(query.get("limit") ?? 50), 1, 200);
+  const offset = clampNumber(Number(query.get("offset") ?? 0), 0, 10000);
+  const result = chatListSessions(store, {
+    userId: context.userId,
+    limit,
+    offset
+  });
+  return { data: result };
+}
+
+async function listChatMessages({ store, params, context, query }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_READ);
+  const sessionId = params[0];
+  const limit = clampNumber(Number(query.get("limit") ?? 100), 1, 500);
+  const offset = clampNumber(Number(query.get("offset") ?? 0), 0, 10000);
+  const result = chatListMessages(store, {
+    sessionId,
+    userId: context.userId,
+    limit,
+    offset
+  });
+  return { data: result };
+}
+
+async function deleteChatSession({ store, params, context }) {
+  requirePermission(context, PERMISSIONS.AI_RUN_READ);
+  const sessionId = params[0];
+  const removed = await chatDeleteSession(store, {
+    sessionId,
+    userId: context.userId
+  });
+  return { data: { ok: true, removed } };
 }

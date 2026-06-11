@@ -31,6 +31,7 @@ function loadSeedData() {
       tasks: [], commentFiles: [], comments: [], aiRuns: [],
       aiQualityFeedback: [], auditLogs: [], reports: [],
       modelProviders: [], modelConfigs: [],
+      chatSessions: [], chatMessages: [],
       agents: [], aiSchemas: [], aiPrompts: []
     };
   }
@@ -284,7 +285,9 @@ export function createStore(opts = {}) {
           aiRuns: "ai_runs",
           comments: "comments",
           commentFiles: "comment_files",
-          reports: "reports"
+          reports: "reports",
+          chatSessions: "chat_sessions",
+          chatMessages: "chat_messages"
         };
         const tableName = tableMap[collection];
         if (tableName) {

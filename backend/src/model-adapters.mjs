@@ -8,6 +8,11 @@ const DEFAULTS = {
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4.1",
     reasoningModel: "gpt-4.1"
+  },
+  qwen: {
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    model: "qwen-plus",
+    reasoningModel: "qwen-max"
   }
 };
 
@@ -22,7 +27,7 @@ export function getProviderStatuses(env = process.env, providerRuntime = {}) {
       keyUpdatedAt: providerRuntime.keyMeta?.deepseek?.updatedAt ?? null,
       defaultModel: env.DEEPSEEK_MODEL || DEFAULTS.deepseek.model,
       reasoningModel: env.DEEPSEEK_REASONING_MODEL || DEFAULTS.deepseek.reasoningModel,
-      priority: Number(env.VOCOS_PRIMARY_PROVIDER !== "openai")
+      priority: Number(env.VOCOS_PRIMARY_PROVIDER !== "openai" && env.VOCOS_PRIMARY_PROVIDER !== "qwen")
     },
     {
       providerName: "openai",
@@ -34,6 +39,17 @@ export function getProviderStatuses(env = process.env, providerRuntime = {}) {
       defaultModel: env.OPENAI_MODEL || DEFAULTS.openai.model,
       reasoningModel: env.OPENAI_REASONING_MODEL || DEFAULTS.openai.reasoningModel,
       priority: Number(env.VOCOS_PRIMARY_PROVIDER === "openai")
+    },
+    {
+      providerName: "qwen",
+      baseUrl: getProviderBaseUrl("qwen", env),
+      configured: Boolean(env.QWEN_API_KEY || providerRuntime.secrets?.qwen),
+      source: env.QWEN_API_KEY ? "env" : providerRuntime.keyMeta?.qwen?.source ?? "none",
+      keyMasked: env.QWEN_API_KEY ? "env:QWEN_API_KEY" : providerRuntime.keyMeta?.qwen?.keyMasked ?? null,
+      keyUpdatedAt: providerRuntime.keyMeta?.qwen?.updatedAt ?? null,
+      defaultModel: env.QWEN_MODEL || DEFAULTS.qwen.model,
+      reasoningModel: env.QWEN_REASONING_MODEL || DEFAULTS.qwen.reasoningModel,
+      priority: Number(env.VOCOS_PRIMARY_PROVIDER === "qwen")
     }
   ].sort((a, b) => b.priority - a.priority);
 }
@@ -41,6 +57,15 @@ export function getProviderStatuses(env = process.env, providerRuntime = {}) {
 export function resolveProviderRoute(agent, modelPreference = "auto", env = process.env) {
   if (modelPreference && modelPreference !== "auto") {
     return routeFromModelName(modelPreference, agent);
+  }
+
+  if (env.VOCOS_PRIMARY_PROVIDER === "qwen") {
+    return {
+      providerName: "qwen",
+      modelName: pickQwenModel(agent, env),
+      fallbackProviderName: "deepseek",
+      fallbackModelName: pickDeepSeekModel(agent, env)
+    };
   }
 
   if (env.VOCOS_PRIMARY_PROVIDER === "openai") {
@@ -154,6 +179,7 @@ export function isLiveModelEnabled(env = process.env) {
 export function getProviderBaseUrl(providerName, env = process.env) {
   if (providerName === "deepseek") return env.DEEPSEEK_BASE_URL || DEFAULTS.deepseek.baseUrl;
   if (providerName === "openai") return env.OPENAI_BASE_URL || DEFAULTS.openai.baseUrl;
+  if (providerName === "qwen") return env.QWEN_BASE_URL || DEFAULTS.qwen.baseUrl;
   return "";
 }
 
@@ -166,6 +192,14 @@ function getCredentials(providerName, env, providerRuntime) {
     };
   }
 
+  if (providerName === "qwen") {
+    return {
+      providerName,
+      baseUrl: getProviderBaseUrl(providerName, env),
+      apiKey: env.QWEN_API_KEY || providerRuntime.secrets?.qwen
+    };
+  }
+
   return {
     providerName,
     baseUrl: getProviderBaseUrl(providerName, env),
@@ -173,7 +207,7 @@ function getCredentials(providerName, env, providerRuntime) {
   };
 }
 
-async function fetchChatCompletion({ credentials, modelName, messages, timeoutMs }) {
+export async function fetchChatCompletion({ credentials, modelName, messages, timeoutMs, responseFormat = { type: "json_object" } }) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -188,7 +222,7 @@ async function fetchChatCompletion({ credentials, modelName, messages, timeoutMs
         model: modelName,
         messages,
         temperature: 0.2,
-        response_format: { type: "json_object" }
+        ...(responseFormat ? { response_format: responseFormat } : {})
       })
     });
 
@@ -249,11 +283,21 @@ function stripJsonFence(content) {
 }
 
 function routeFromModelName(modelName, agent) {
+  const isQwen = modelName.includes("qwen");
+  const isDeepSeek = modelName.includes("deepseek");
+  const providerName = isQwen ? "qwen" : isDeepSeek ? "deepseek" : "openai";
+  const fallbackProviderName = isQwen ? "deepseek" : isDeepSeek ? "openai" : "deepseek";
+  const fallbackModelName = isQwen
+    ? pickDeepSeekModel(agent, process.env)
+    : isDeepSeek
+      ? pickOpenAiModel(agent, process.env)
+      : pickDeepSeekModel(agent, process.env);
+
   return {
-    providerName: modelName.includes("deepseek") ? "deepseek" : "openai",
+    providerName,
     modelName,
-    fallbackProviderName: modelName.includes("deepseek") ? "openai" : "deepseek",
-    fallbackModelName: modelName.includes("deepseek") ? pickOpenAiModel(agent, process.env) : pickDeepSeekModel(agent, process.env)
+    fallbackProviderName,
+    fallbackModelName
   };
 }
 
@@ -271,8 +315,16 @@ function pickOpenAiModel(agent, env) {
   return env.OPENAI_MODEL || DEFAULTS.openai.model;
 }
 
+function pickQwenModel(agent, env) {
+  if (requiresReasoningModel(agent.code)) {
+    return env.QWEN_REASONING_MODEL || env.QWEN_MODEL || DEFAULTS.qwen.reasoningModel;
+  }
+  return env.QWEN_MODEL || DEFAULTS.qwen.model;
+}
+
 function pickDefaultProviderModel(providerName, env) {
   if (providerName === "deepseek") return env.DEEPSEEK_MODEL || DEFAULTS.deepseek.model;
+  if (providerName === "qwen") return env.QWEN_MODEL || DEFAULTS.qwen.model;
   return env.OPENAI_MODEL || DEFAULTS.openai.model;
 }
 

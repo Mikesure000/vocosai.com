@@ -538,6 +538,58 @@ const COLLECTION_TABLES = [
       metadata: toJson(record.metadata),
       created_at: record.createdAt
     })
+  },
+  {
+    collection: "chatSessions",
+    table: "chat_sessions",
+    columns: {
+      id: "TEXT PRIMARY KEY",
+      user_id: "TEXT NOT NULL",
+      team_id: "TEXT",
+      provider_name: "TEXT",
+      model_name: "TEXT",
+      title: "TEXT",
+      message_count: "INTEGER NOT NULL DEFAULT 0",
+      last_message_at: "TEXT",
+      created_at: "TEXT NOT NULL",
+      updated_at: "TEXT NOT NULL"
+    },
+    map: (record) => ({
+      id: record.id,
+      user_id: record.userId,
+      team_id: record.teamId,
+      provider_name: record.providerName,
+      model_name: record.modelName,
+      title: record.title,
+      message_count: record.messageCount ?? 0,
+      last_message_at: record.lastMessageAt,
+      created_at: record.createdAt,
+      updated_at: record.updatedAt ?? record.createdAt
+    })
+  },
+  {
+    collection: "chatMessages",
+    table: "chat_messages",
+    columns: {
+      id: "TEXT PRIMARY KEY",
+      session_id: "TEXT NOT NULL",
+      role: "TEXT NOT NULL",
+      content: "TEXT NOT NULL",
+      provider_name: "TEXT",
+      model_name: "TEXT",
+      token_count: "INTEGER DEFAULT 0",
+      created_at: "TEXT NOT NULL"
+    },
+    map: (record) => ({
+      id: record.id,
+      session_id: record.sessionId,
+      role: record.role,
+      content: record.content,
+      provider_name: record.providerName,
+      model_name: record.modelName,
+      token_count: record.tokenCount ?? 0,
+      created_at: record.createdAt
+    })
   }
 ];
 
@@ -560,7 +612,10 @@ const INDEXES = [
   "CREATE INDEX IF NOT EXISTS idx_audit_logs_team ON audit_logs(team_id)",
   "CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id)",
   "CREATE INDEX IF NOT EXISTS idx_ai_prompt_versions_prompt ON ai_prompt_versions(prompt_id)",
-  "CREATE INDEX IF NOT EXISTS idx_task_pipeline_jobs_status ON task_pipeline_jobs(status)"
+  "CREATE INDEX IF NOT EXISTS idx_task_pipeline_jobs_status ON task_pipeline_jobs(status)",
+  "CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id)",
+  "CREATE INDEX IF NOT EXISTS idx_chat_sessions_updated ON chat_sessions(updated_at)",
+  "CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)"
 ];
 
 export function migrateSqliteRelational(db) {

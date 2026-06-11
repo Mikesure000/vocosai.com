@@ -819,6 +819,12 @@
       "providerName": "deepseek",
       "baseUrl": "https://api.deepseek.com",
       "status": "configured"
+    },
+    {
+      "id": "provider_qwen",
+      "providerName": "qwen",
+      "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "status": "needs_key"
     }
   ],
   "modelConfigs": [

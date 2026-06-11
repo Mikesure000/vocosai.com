@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { AdminPanelSettings, PersonAdd, Edit, Block } from "@mui/icons-material";
 import { api, extractList } from "../../shared/services/api";
+import ProviderConfigSection from "./ProviderConfigSection";
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -131,6 +132,9 @@ export default function AdminPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* AI 提供商配置 */}
+      <ProviderConfigSection />
     </Box>
   );
 }

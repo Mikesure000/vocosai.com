@@ -1,0 +1,48 @@
+sequenceDiagram
+    participant U as 用户(浏览器)
+    participant FE as AiChatPage
+    participant API as api.ts
+    participant S as server.mjs
+    participant CS as chat-service.mjs
+    participant MA as model-adapters.mjs
+    participant PK as provider-keys.mjs
+    participant DB as store.mjs(SQLite)
+
+    U->>FE: 输入消息并发送
+    FE->>API: sendChatMessage(content, providerName, sessionId?)
+    API->>S: POST /api/ai/chat
+    
+    S->>S: buildRequestContext() 认证
+    S->>S: requirePermission(ai_run.read)
+    
+    S->>CS: sendMessage(store, {userId, teamId, content, providerName, sessionId})
+    
+    alt 无 sessionId（新会话）
+        CS->>DB: insert("chatSessions", newSession)
+        CS->>CS: sessionId = newSession.id
+    else 有 sessionId（续聊）
+        CS->>DB: get("chatSessions", sessionId)
+    end
+    
+    CS->>DB: insert("chatMessages", userMessage)
+    
+    CS->>DB: list("chatMessages") → 获取历史消息
+    CS->>PK: getStoredProviderSecrets(store)
+    PK-->>CS: {secrets, keyMeta}
+    
+    CS->>MA: resolveProviderRoute(agent, providerName || "auto")
+    MA-->>CS: {providerName, modelName, fallbackProviderName, fallbackModelName}
+    
+    CS->>MA: invokeModel({route, messages, ...})
+    MA->>MA: getCredentials(providerName, env, providerRuntime)
+    MA->>MA: fetchChatCompletion(credentials, modelName, messages)
+    MA-->>CS: {ok, content, latencyMs, ...}
+    
+    CS->>DB: insert("chatMessages", assistantMessage)
+    CS->>DB: update("chatSessions", sessionId, {messageCount, lastMessageAt, title})
+    
+    CS-->>S: {session, userMessage, assistantMessage}
+    S-->>API: {code: 200, data: {...}}
+    API-->>FE: response
+    FE->>FE: 追加消息到列表，更新会话状态
+    FE->>U: 显示 AI 回复

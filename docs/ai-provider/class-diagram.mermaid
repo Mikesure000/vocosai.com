@@ -1,0 +1,100 @@
+classDiagram
+    class ChatSession {
+        +string id
+        +string userId
+        +string teamId
+        +string title
+        +string providerName
+        +string modelName
+        +number messageCount
+        +string lastMessageAt
+        +string createdAt
+        +string updatedAt
+    }
+
+    class ChatMessage {
+        +string id
+        +string sessionId
+        +string userId
+        +string role
+        +string content
+        +string providerName
+        +string modelName
+        +number inputTokenCount
+        +number outputTokenCount
+        +number totalTokenCount
+        +number estimatedCost
+        +number latencyMs
+        +string createdAt
+    }
+
+    class ChatService {
+        +createSession(store, userId, teamId, options) ChatSession
+        +sendMessage(store, sessionId, userMessage, context) ChatMessage
+        +listSessions(store, userId, options) ChatSession[]
+        +listMessages(store, sessionId, options) ChatMessage[]
+        +deleteSession(store, sessionId) void
+    }
+
+    class ModelAdapters {
+        +getProviderStatuses(env, providerRuntime) ProviderStatus[]
+        +resolveProviderRoute(agent, modelPreference, env) Route
+        +invokeModel(params) InvokeResult
+        +testProviderConnection(params) TestResult
+        +getProviderBaseUrl(providerName, env) string
+    }
+
+    class ProviderKeys {
+        +saveProviderKey(params) ProviderRecord
+        +deleteProviderKey(params) ProviderRecord
+        +getStoredProviderSecrets(store) Secrets
+        +encryptProviderKey(plainText, env) string
+        +decryptProviderKey(encryptedValue, env) string
+    }
+
+    class ServerHandlers {
+        +handleChatMessage(params) Response
+        +listChatSessions(params) Response
+        +listChatMessages(params) Response
+        +listModelProviders(params) Response
+        +upsertModelProviderKey(params) Response
+        +removeModelProviderKey(params) Response
+        +testModelProvider(params) Response
+    }
+
+    class ApiClient {
+        +sendChatMessage(sessionId, content, provider) Promise
+        +listChatSessions() Promise
+        +getChatMessages(sessionId) Promise
+        +listModelProviders() Promise
+        +upsertProviderKey(provider, apiKey) Promise
+        +deleteProviderKey(provider) Promise
+        +testProvider(provider) Promise
+    }
+
+    class AiChatPage {
+        -messages ChatMessage[]
+        -inputText string
+        -loading boolean
+        -selectedProvider string
+        -sessions ChatSession[]
+        +render() JSX
+    }
+
+    class ProviderConfigSection {
+        -providers ProviderStatus[]
+        -loading boolean
+        -testResults Map
+        +render() JSX
+    }
+
+    ChatService --> ModelAdapters : 使用 resolveProviderRoute / invokeModel
+    ChatService --> ProviderKeys : 使用 getStoredProviderSecrets
+    ChatService --> Store : 持久化 ChatSession / ChatMessage
+    ServerHandlers --> ChatService : 调用
+    ServerHandlers --> ModelAdapters : 调用
+    ServerHandlers --> ProviderKeys : 调用
+    ApiClient --> ServerHandlers : HTTP 请求
+    AiChatPage --> ApiClient : 调用
+    ProviderConfigSection --> ApiClient : 调用
+    ChatSession "1" --> "*" ChatMessage : 包含

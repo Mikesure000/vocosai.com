@@ -181,4 +181,11 @@ export const api = {
 
   // Storage
   getStorageDiagnostics: () => request("/admin/storage/diagnostics"),
+
+  // AI Chat
+  sendChatMessage: (content: string, providerName?: string, sessionId?: string) =>
+    request("/ai/chat", { method: "POST", body: JSON.stringify({ content, providerName: providerName || undefined, sessionId: sessionId || undefined }) }),
+  listChatSessions: () => request("/ai/chat/sessions"),
+  getChatMessages: (sessionId: string) => request(`/ai/chat/sessions/${sessionId}/messages`),
+  deleteChatSession: (sessionId: string) => request(`/ai/chat/sessions/${sessionId}`, { method: "DELETE" }),
 };

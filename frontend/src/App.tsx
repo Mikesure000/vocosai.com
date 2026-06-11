@@ -11,6 +11,7 @@ import {
   CompareArrows as CompetitorIcon, AutoAwesome as ContentLabIcon,
   Psychology as AiCenterIcon, Replay as AttributionIcon,
   Business as BrandIcon, Assessment as BenchmarkIcon, People as PeopleIcon, Category as CategoryIcon, AdminPanelSettings as AdminPanelSettingsIcon,
+  Chat as ChatIcon,
 } from "@mui/icons-material";
 import AuthGuard from "./shared/auth/AuthGuard";
 import ErrorBoundary from "./shared/auth/ErrorBoundary";
@@ -32,6 +33,7 @@ import TeamCollaborationPage from "./features/team/TeamCollaborationPage";
 import PlatformMethodologyPage from "./features/methodology/PlatformMethodologyPage";
 import CategoryKnowledgePage from "./features/category/CategoryKnowledgePage";
 import AdminPage from "./features/admin/AdminPage";
+import AiChatPage from "./features/ai-chat/AiChatPage";
 import BrandPage from "./features/brand/BrandPage";
 import BenchmarkPage from "./features/benchmark/BenchmarkPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -58,6 +60,7 @@ const menuItems = [
   { text: "内容实验室",   icon: <ContentLabIcon />,   path: "/content-lab", permission: "task.read" },
   { text: "策略 & Agent", icon: <StrategyIcon />,     path: "/strategy",    permission: "schema.read" },
   { text: "AI 分析中心",  icon: <AiCenterIcon />,     path: "/ai-center",   permission: "ai_run.read" },
+  { text: "AI 聊天",      icon: <ChatIcon />,          path: "/ai-chat",     permission: "ai_run.read" },
   { text: "复盘归因",     icon: <AttributionIcon />,  path: "/attribution", permission: "task.read" },
   { text: "内容生产卡",   icon: <ContentLabIcon />,   path: "/production-cards", permission: "task.read" },
   { text: "品牌中心",     icon: <BrandIcon />,        path: "/brand",       permission: null },
@@ -150,6 +153,7 @@ export default function App() {
             <Route path="competitor" element={<CompetitorPage />} />
             <Route path="content-lab" element={<ContentLabPage />} />
             <Route path="ai-center" element={<AiCenterPage />} />
+            <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="attribution" element={<AttributionPage />} />
             <Route path="attribution/:taskId" element={<AttributionWorkbench />} />
             <Route path="production-cards" element={<ProductionCardsPage />} />
