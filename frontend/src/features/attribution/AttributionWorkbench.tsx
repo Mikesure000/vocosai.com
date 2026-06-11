@@ -4,7 +4,7 @@ import { api } from "../../shared/services/api";
 import {
   Box, Typography, CircularProgress, Paper, Card, CardContent,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, Alert, Button, LinearProgress, Tabs, Tab, Grid,
+  Chip, Alert, Button, LinearProgress, Tabs, Tab,
 } from "@mui/material";
 
 interface MatrixItem {
@@ -199,21 +199,21 @@ function AttributionMatrix({ matrix }: { matrix: MatrixItem[] }) {
 
 function ContentGaps({ gaps }: { gaps: { gapTopic: string; gapDescription: string; recommendedAction: string }[] }) {
   return (
-    <Grid container spacing={2}>
+    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
       {gaps.map((g, i) => (
-        <Grid item xs={12} md={6} key={i}>
+        <Box key={i} sx={{ flex: "1 1 300px", minWidth: 280 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>{g.gapTopic}</Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>{g.gapDescription}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{g.gapDescription}</Typography>
               <Alert severity="info" variant="outlined">
                 <Typography variant="caption">{g.recommendedAction}</Typography>
               </Alert>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 }
 

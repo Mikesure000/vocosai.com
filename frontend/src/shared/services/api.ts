@@ -74,6 +74,21 @@ async function request<T = any>(path: string, opts?: RequestInit, _retried = fal
   return res.json();
 }
 
+/**
+ * Bug #6 修复：通用数据提取工具函数
+ * 从后端返回的多种响应格式中提取数组数据
+ * 支持格式：{ data: [] }, { tasks: [] }, { runs: [] }, { brands: [] }, 直接数组
+ */
+export function extractList(d: any): any[] {
+  if (!d) return [];
+  if (Array.isArray(d?.data)) return d.data;
+  if (Array.isArray(d?.tasks)) return d.tasks;
+  if (Array.isArray(d?.runs)) return d.runs;
+  if (Array.isArray(d?.brands)) return d.brands;
+  if (Array.isArray(d)) return d;
+  return [];
+}
+
 export const api = {
   // Health endpoint is at /health (not under /api), needs separate fetch
   health: () => fetch("/health").then(r => r.json()),
@@ -94,6 +109,19 @@ export const api = {
   listAiSchemas: () => request("/ai/schemas"),
   listModelRoutes: () => request("/model-gateway/routes"),
 
+  // Bug #5 补充：AI 相关缺失方法
+  getAiRun: (id: string) => request(`/ai/runs/${id}`),
+  retryAiRun: (id: string) => request(`/ai/runs/${id}/retry`, { method: "POST" }),
+  runSingleAgent: (data: any) => request("/ai/run-agent", { method: "POST", body: JSON.stringify(data) }),
+  listAiPrompts: () => request("/ai/prompts"),
+  getAiPrompt: (id: string) => request(`/ai/prompts/${id}`),
+  createPromptVersion: (id: string, data: any) => request(`/ai/prompts/${id}/versions`, { method: "POST", body: JSON.stringify(data) }),
+  activatePromptVersion: (id: string, data: any) => request(`/ai/prompts/${id}/activate`, { method: "POST", body: JSON.stringify(data) }),
+  getSkillMetrics: () => request("/ai/skills/metrics"),
+  getSkillHistory: (agentCode: string) => request(`/ai/skills/history/${agentCode}`),
+  listAiRunFeedback: (runId: string) => request(`/ai/runs/${runId}/feedback`),
+  createAiRunFeedback: (runId: string, data: any) => request(`/ai/runs/${runId}/feedback`, { method: "POST", body: JSON.stringify(data) }),
+
   // Governance
   getCostSummary: (params?: string) => request(`/governance/cost-summary${params || ""}`),
   getQualitySummary: (params?: string) => request(`/governance/quality-summary${params || ""}`),
@@ -103,6 +131,7 @@ export const api = {
 
   // Categories (BL-001)
   listCategories: () => request("/categories"),
+  getCategory: (id: string) => request(`/categories/${id}`),
 
   // Attribution (BL-003/004)
   runAttribution: (id: string) => request(`/tasks/${id}/attribution/run`, { method: "POST" }),
@@ -119,6 +148,7 @@ export const api = {
 
   // Platform Methodologies
   listPlatformMethods: () => request("/platforms/methodologies"),
+  getPlatformMethod: (id: string) => request(`/platforms/methodologies/${id}`),
 
   // Admin
   listAdminUsers: () => request("/admin/users"),
@@ -132,11 +162,13 @@ export const api = {
   listModelProviders: () => request("/model-gateway/providers"),
   upsertProviderKey: (provider: string, apiKey: string) => request(`/model-gateway/providers/${provider}/key`, { method: "POST", body: JSON.stringify({ apiKey }) }),
 
-  // AI Runs
-  getAiRun: (id: string) => request(`/ai/runs/${id}`),
-  retryAiRun: (id: string) => request(`/ai/runs/${id}/retry`, { method: "POST" }),
+  // Bug #5 补充：Model Gateway 缺失方法
+  deleteProviderKey: (provider: string) => request(`/model-gateway/providers/${provider}/key/delete`, { method: "POST" }),
+  testProvider: (provider: string) => request(`/model-gateway/providers/${provider}/test`, { method: "POST" }),
 
   // Reports
+  // Bug #3 修复：添加 listReports 方法
+  listReports: () => request("/reports"),
   listTaskReports: (taskId: string) => request(`/tasks/${taskId}/reports`),
   createTaskReport: (taskId: string) => request(`/tasks/${taskId}/reports`, { method: "POST" }),
   getReport: (id: string) => request(`/reports/${id}`),

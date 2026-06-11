@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 import {
-  Box, Card, CardContent, Typography, CircularProgress, Grid,
+  Box, Card, CardContent, Typography, CircularProgress,
   Chip, LinearProgress, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow,
 } from "@mui/material";
@@ -12,19 +12,16 @@ export default function ProjectsDashboard() {
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
-  const [health, setHealth] = useState<any>(null);
 
   useEffect(() => {
     Promise.all([
       api.listCategories(),
       api.listBrands(),
       api.listTasks(),
-      api.health(),
-    ]).then(([cats, brandsResp, tasksResp, h]) => {
-      setCategories(cats?.data ?? cats ?? []);
-      setBrands(brandsResp?.data ?? brandsResp ?? []);
-      setJobs(tasksResp?.data || []);
-      setHealth(h);
+    ]).then(([cats, brandsResp, tasksResp]) => {
+      setCategories(extractList(cats));
+      setBrands(extractList(brandsResp));
+      setJobs(extractList(tasksResp));
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -71,9 +68,9 @@ export default function ProjectsDashboard() {
         ))}
       </Box>
 
-      <Grid container spacing={2}>
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         {/* Brands overview */}
-        <Grid item xs={12} md={6}>
+        <Box sx={{ flex: "1 1 400px", minWidth: 300 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>品牌概览</Typography>
@@ -96,10 +93,10 @@ export default function ProjectsDashboard() {
               )}
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Category overview */}
-        <Grid item xs={12} md={6}>
+        <Box sx={{ flex: "1 1 400px", minWidth: 300 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>品类概览</Typography>
@@ -120,8 +117,8 @@ export default function ProjectsDashboard() {
               )}
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Task timeline */}
       <Card sx={{ mt: 2 }}>

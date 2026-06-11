@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Card, CardContent, Typography, CircularProgress, Chip, LinearProgress, Alert, TextField, Button } from "@mui/material";
 import { WarningAmber, PriceChange, HealthAndSafety, PersonOff, GppBad } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 
 interface Barrier {
   key: string;
@@ -43,7 +43,7 @@ export default function ObstaclesPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setTasks(Array.isArray(list) ? list : []);
       if (list.length > 0) setTaskId(list[0].id);
     }).catch(() => {});

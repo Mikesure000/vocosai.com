@@ -5,8 +5,7 @@ import {
   Paper, Button, TextField, Alert,
 } from "@mui/material";
 import { AdminPanelSettings, PersonAdd, Edit, Block } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
-import { getAccessToken } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -18,7 +17,7 @@ export default function AdminPage() {
   const load = () => {
     setLoading(true);
     api.listAdminUsers().then(d => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setUsers(list);
     }).catch(e => setError(e.message)).finally(() => setLoading(false));
   };

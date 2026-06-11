@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Card, CardContent, Typography, CircularProgress, Chip, TextField, Button, Alert } from "@mui/material";
 import { CompareArrows, Lightbulb, TrendingUp } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 
 interface TaskInfo { id: string; taskName: string; status: string }
 interface OppSignal { key: string; label: string; count: number; sample: string }
@@ -23,7 +23,7 @@ export default function CompetitorPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setTasks(Array.isArray(list) ? list : []);
       if (list.length > 0) setTaskId(list[0].id);
     }).catch(() => {});
@@ -49,6 +49,7 @@ export default function CompetitorPage() {
         }
       })
       .then((d: any) => {
+        // Bug #4 修复：当 compSig 不存在时，第一个 .then() 没有 return，导致 d 为 undefined
         if (d) setSampleComments((d.data?.comments ?? d.comments ?? []).slice(0, 5));
       })
       .catch((e: Error) => setError(e.message))

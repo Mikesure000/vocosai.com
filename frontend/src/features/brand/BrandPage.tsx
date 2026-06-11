@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Card, CardContent, Typography, CircularProgress, TextField, Chip, Divider } from "@mui/material";
 import { Business, TrendingUp, Campaign, Store } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 
 interface BrandProfile { name: string; industry: string; products: string[]; platforms: string[]; keyMessages: string[] }
 
@@ -21,7 +21,7 @@ export default function BrandPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setTasks(Array.isArray(list) ? list : []);
       if (list.length > 0) setTaskId(list[0].id);
     }).catch(() => {});

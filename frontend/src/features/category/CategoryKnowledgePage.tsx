@@ -1,24 +1,37 @@
 import { useEffect, useState } from "react";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 import {
   Box, Card, CardContent, Typography, CircularProgress, Tabs, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Alert,
+  Chip, Alert,
 } from "@mui/material";
 import { Category, Lightbulb, Warning, People } from "@mui/icons-material";
 
 export default function CategoryKnowledgePage() {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
+  const [active, setActive] = useState<any>(null);
   const [tab, setTab] = useState(0);
 
   useEffect(() => {
     api.listCategories().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setCategories(list);
-      if (list.length > 0) api.getCategory(list[0].id).then((fd:any) => setActive(fd?.data ?? fd));
+      if (list.length > 0) {
+        // 加载第一个品类的详情
+        api.getCategory(list[0].id).then((fd: any) => setActive(fd?.data ?? fd)).catch(() => {});
+      }
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  // 切换 Tab 时加载对应品类详情
+  const handleTabChange = (_: any, newIndex: number) => {
+    setTab(newIndex);
+    const cat = categories[newIndex];
+    if (cat) {
+      api.getCategory(cat.id).then((fd: any) => setActive(fd?.data ?? fd)).catch(() => {});
+    }
+  };
 
   if (loading) return <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}><CircularProgress /></Box>;
   if (!active) return <Box sx={{ p: 4 }}><Alert severity="warning">暂无品类数据</Alert></Box>;
@@ -37,7 +50,7 @@ export default function CategoryKnowledgePage() {
         <Alert severity="info">暂无品类数据 — 请先初始化种子数据</Alert>
       ) : (
         <>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
+          <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 3 }}>
             {categories.map((c: any) => (
               <Tab key={c.id} label={c.categoryName || c.id} />
             ))}

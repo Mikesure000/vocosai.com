@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 import {
   Box, Card, CardContent, Typography, CircularProgress, Tabs, Tab,
   Alert, List, ListItem, Divider, Chip,
@@ -17,7 +17,7 @@ export default function PlatformMethodologyPage() {
 
   useEffect(() => {
     api.listPlatformMethods().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setMethods(list);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);

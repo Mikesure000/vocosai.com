@@ -248,6 +248,8 @@ function matchRoute(method, pathname) {
     ["POST", /^\/api\/production-cards\/([^/]+)\/quality-check$/, runQualityCheckHandler, 201],
     ["POST", /^\/api\/tasks\/([^/]+)\/comment-ops$/, generateCommentOpsHandler, 201],
     ["POST", /^\/api\/production-cards\/([^/]+)\/ad-fit$/, scoreAdFitHandler, 200],
+    // Bug #1 修复：/api/reports 列表路由必须在 /api/reports/:id 之前，否则会被 :id 匹配
+    ["GET", /^\/api\/reports$/, listReports],
     ["GET", /^\/api\/reports\/templates$/, listReportTemplatesHandler],
     ["POST", /^\/api\/reports\/generate$/, generateWhiteLabelReport, 201],
     // BL-026: 团队协作 API
@@ -2363,14 +2365,33 @@ async function scoreAdFitHandler({ store, params, context }) {
   return { data: result };
 }
 
+// Bug #1 修复：实现 listReports 处理函数，查询当前用户团队的所有报告
+async function listReports({ store, context }) {
+  requirePermission(context, PERMISSIONS.REPORT_READ);
+  // 获取当前团队的所有任务 ID
+  const teamTasks = filterByTeam(context, store.list("tasks"));
+  const teamTaskIds = new Set(teamTasks.map((t) => t.id));
+  // 过滤出属于当前团队任务的报告，并按创建时间倒序排列
+  const reports = store.list("reports")
+    .filter((report) => teamTaskIds.has(report.taskId))
+    .sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
+  return { data: reports.map(summarizeReport) };
+}
+
 async function listReportTemplatesHandler() {
   return { data: listReportTemplates() };
 }
 
 async function generateWhiteLabelReport({ store, context, body }) {
   requirePermission(context, PERMISSIONS.REPORT_WRITE);
-  const { template, whiteLabelConfig, reportData } = body || {};
-  const result = buildWhiteLabelReport({ reportData, template: template || "weekly", whiteLabelConfig });
+  // Bug #2 修复：添加请求体默认值，防止 body 或其字段为 undefined 时崩溃
+  const safeBody = body || {};
+  const { template, whiteLabelConfig, reportData } = safeBody;
+  const result = buildWhiteLabelReport({
+    reportData: reportData || {},
+    template: template || "weekly",
+    whiteLabelConfig: whiteLabelConfig || {}
+  });
   return { data: result };
 }
 

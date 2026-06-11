@@ -18,7 +18,6 @@ export default function ReportsPage() {
   const [cost, setCost] = useState<any>(null);
   const [quality, setQuality] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
-  const [reports, setReports] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [tab, setTab] = useState(0);
 

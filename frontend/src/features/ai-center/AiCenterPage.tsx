@@ -5,7 +5,7 @@ import {
   Paper, TextField, Alert, LinearProgress, Accordion, AccordionSummary, AccordionDetails,
 } from "@mui/material";
 import { ExpandMore, CheckCircle, Error as ErrorIcon, Schedule, Psychology } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
+import { api, extractList } from "../../shared/services/api";
 
 interface AgentRun {
   id: string; agentName: string; status: string;
@@ -33,7 +33,7 @@ export default function AiCenterPage() {
 
   useEffect(() => {
     api.listTasks().then((d: any) => {
-      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
+      const list = extractList(d);
       setTasks(Array.isArray(list) ? list : []);
     }).catch(() => {});
     loadAllRuns();
@@ -43,7 +43,7 @@ export default function AiCenterPage() {
     setLoading(true); setError("");
     api.listAiRuns()
       .then((d: any) => {
-        const list = Array.isArray(d?.data) ? d.data : Array.isArray(d?.tasks) ? d.tasks : Array.isArray(d?.runs) ? d.runs : Array.isArray(d?.brands) ? d.brands : Array.isArray(d) ? d : [];
+        const list = extractList(d);
         setRuns(Array.isArray(list) ? list : []);
         setTotalRuns(list.length ?? 0);
       })
