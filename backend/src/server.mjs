@@ -123,9 +123,14 @@ function authError(code, message, statusCode = 401) {
   return err;
 }
 
-export async function createApiServer({ dbPath = "backend/data/vocos.sqlite" } = {}) {
+export async function createApiServer({ dbPath = "backend/data/vocos.sqlite", skipJwtCheck = false } = {}) {
   // P0-1: JWT_SECRET 安全启动检查，禁止使用默认弱密钥
-  if (!process.env.VOCOS_JWT_SECRET || process.env.VOCOS_JWT_SECRET === "vocos-dev-secret-change-in-production") {
+  // 同时检测 .env.example 中的弱默认值和代码中的硬编码默认值
+  const WEAK_JWT_SECRETS = [
+    "vocos-dev-secret-change-in-production",
+    "change-me-to-a-random-secret",
+  ];
+  if (!skipJwtCheck && (!process.env.VOCOS_JWT_SECRET || WEAK_JWT_SECRETS.includes(process.env.VOCOS_JWT_SECRET))) {
     console.error("[vocos] FATAL: VOCOS_JWT_SECRET 环境变量未设置或仍为默认值。");
     console.error("[vocos] 默认 JWT Secret 是不安全的，任何人都可以伪造 JWT Token。");
     console.error("[vocos] 请在环境变量中设置安全的 VOCOS_JWT_SECRET 后重新启动。");
@@ -756,8 +761,8 @@ async function handleUpdateMe({ store, body, context }) {
 // ============================================================
 
 async function handleChangePassword({ store, body, context, req }) {
-  // P1-6: 权限检查
-  requirePermission(context, PERMISSIONS.USER_MANAGE);
+  // 修改自己的密码只需登录认证，不需要 USER_MANAGE 权限
+  // requirePermission 已在路由层通过 context.authenticated 保证已登录
 
   const { oldPassword, newPassword } = body ?? {};
 

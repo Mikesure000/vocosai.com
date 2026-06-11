@@ -5,7 +5,7 @@ import {
   Paper, Button, Alert, List, ListItem, Divider,
 } from "@mui/material";
 import { People, Assignment, CheckCircle, Cancel, Pending } from "@mui/icons-material";
-import { api } from "../../shared/services/api";
+import { api, getAccessToken } from "../../shared/services/api";
 
 export default function TeamCollaborationPage() {
   const [loading, setLoading] = useState(true);
@@ -17,14 +17,12 @@ export default function TeamCollaborationPage() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      fetch("/api/team/stats").then(r => r.json()),
-      fetch("/api/team/my-tasks").then(r => r.json()),
-      fetch("/api/pending-reviews").then(r => r.json()),
+      api.getTeamStats(),
+      api.listMyTasks(),
       api.listTasks(),
-    ]).then(([s, mt, pr, t]) => {
+    ]).then(([s, mt, t]) => {
       setStats(s?.data || []);
       setMyTasks(mt?.data || []);
-      setPendingReviews(pr?.data || []);
       setTasks(t?.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   };
@@ -32,15 +30,23 @@ export default function TeamCollaborationPage() {
   useEffect(() => { load(); }, []);
 
   const handleApprove = (cardId: string) => {
-    fetch(`/api/production-cards/${cardId}/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ comment: "Approved" }) })
-      .then(() => load());
+    fetch(`/api/production-cards/${cardId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) },
+      credentials: "include",
+      body: JSON.stringify({ comment: "Approved" })
+    }).then(() => load());
   };
 
   const handleReject = (cardId: string) => {
     const reason = prompt("请填写驳回原因:");
     if (!reason) return;
-    fetch(`/api/production-cards/${cardId}/reject`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ comment: reason }) })
-      .then(() => load());
+    fetch(`/api/production-cards/${cardId}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) },
+      credentials: "include",
+      body: JSON.stringify({ comment: reason })
+    }).then(() => load());
   };
 
   if (loading) return <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}><CircularProgress /></Box>;

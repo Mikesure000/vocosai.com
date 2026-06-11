@@ -267,6 +267,33 @@ export function createStore(opts = {}) {
       setSqliteCollection(db, collection, records);
       replaceRelationalCollection(db, collection, records);
       return records;
+    },
+
+    async delete(collection, id) {
+      const records = getSqliteCollection(db, collection);
+      const index = records.findIndex((record) => record.id === id);
+      if (index === -1) return null;
+      const removed = records.splice(index, 1)[0];
+      setSqliteCollection(db, collection, records);
+      // 从关系表中也删除
+      try {
+        const tableMap = {
+          users: "users",
+          teams: "teams",
+          tasks: "analysis_tasks",
+          aiRuns: "ai_runs",
+          comments: "comments",
+          commentFiles: "comment_files",
+          reports: "reports"
+        };
+        const tableName = tableMap[collection];
+        if (tableName) {
+          db.prepare(`DELETE FROM ${tableName} WHERE id = ?`).run(id);
+        }
+      } catch {
+        // 关系表删除失败不影响 JSON 存储层
+      }
+      return removed;
     }
   };
 }

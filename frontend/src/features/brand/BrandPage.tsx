@@ -25,8 +25,8 @@ export default function BrandPage() {
       setTasks(Array.isArray(list) ? list : []);
       if (list.length > 0) setTaskId(list[0].id);
     }).catch(() => {});
-    fetch("/api/brands").then(r => r.json()).then((d: any) => {
-      const brands = d.data ?? d.brands ?? d ?? [];
+    api.listBrands().then((d: any) => {
+      const brands = d?.data ?? d?.brands ?? d ?? [];
       if (brands.length > 0) {
         const b = brands[0];
         setBrand({ name: b.name ?? b.brandName ?? "默认品牌", industry: b.industry ?? "-", products: b.products ?? [], platforms: b.platforms ?? ["抖音"], keyMessages: b.keyMessages ?? [] });

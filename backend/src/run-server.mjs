@@ -22,4 +22,11 @@ for (const u of users) {
 server.listen(port, () => {
   console.log(`\n  VOCOS 已启动 → http://localhost:${port}`);
   console.log(`  账号: admin@vocos.local / admin123\n`);
+}).on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n  ✗ 端口 ${port} 已被占用，请修改 PORT 环境变量或关闭占用进程。\n`);
+  } else {
+    console.error(`\n  ✗ 启动失败: ${err.message}\n`);
+  }
+  process.exit(1);
 });

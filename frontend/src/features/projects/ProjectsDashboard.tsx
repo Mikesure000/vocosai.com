@@ -17,7 +17,7 @@ export default function ProjectsDashboard() {
   useEffect(() => {
     Promise.all([
       api.listCategories(),
-      fetch("/api/brands").then(r => r.json()),
+      api.listBrands(),
       api.listTasks(),
       api.health(),
     ]).then(([cats, brandsResp, tasksResp, h]) => {

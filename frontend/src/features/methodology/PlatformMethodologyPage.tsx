@@ -16,7 +16,7 @@ export default function PlatformMethodologyPage() {
   const [tab, setTab] = useState(0);
 
   useEffect(() => {
-    fetch("/api/platforms/methodologies").then(r => r.json()).then((d: any) => {
+    api.listPlatformMethods().then((d: any) => {
       const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
       setMethods(list);
     }).catch(() => {}).finally(() => setLoading(false));

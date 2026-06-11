@@ -208,9 +208,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<UserInfo>) => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const token = getAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch("/api/auth/me", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers,
       credentials: "include",
       body: JSON.stringify(data),
     });
@@ -223,9 +226,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const token = getAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch("/api/auth/me/password", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers,
       credentials: "include",
       body: JSON.stringify({ oldPassword, newPassword }),
     });

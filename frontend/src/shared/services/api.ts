@@ -57,7 +57,7 @@ async function request<T = any>(path: string, opts?: RequestInit, _retried = fal
     credentials: "include",
   });
 
-  if (res.status === 401 && !path.includes("/auth/refresh") && !_retried) {
+  if (res.status === 401 && !path.includes("/auth/refresh") && !path.includes("/auth/login") && !path.includes("/auth/register") && !_retried) {
     const newToken = await refreshAccessToken();
     if (newToken) {
       return request<T>(path, opts, true);
@@ -75,6 +75,7 @@ async function request<T = any>(path: string, opts?: RequestInit, _retried = fal
 }
 
 export const api = {
+  // Health endpoint is at /health (not under /api), needs separate fetch
   health: () => fetch("/health").then(r => r.json()),
 
   // Tasks
@@ -111,4 +112,41 @@ export const api = {
   generateProductionCard: (id: string, platform: string) => request(`/tasks/${id}/production-cards/generate`, { method: "POST", body: JSON.stringify({ platform }) }),
   listProductionCards: (id: string) => request(`/tasks/${id}/production-cards`),
   getProductionCard: (id: string) => request(`/production-cards/${id}`),
+
+  // Brands
+  listBrands: () => request("/brands"),
+  getBrand: (id: string) => request(`/brands/${id}`),
+
+  // Platform Methodologies
+  listPlatformMethods: () => request("/platforms/methodologies"),
+
+  // Admin
+  listAdminUsers: () => request("/admin/users"),
+  createAdminUser: (data: any) => request("/admin/users", { method: "POST", body: JSON.stringify(data) }),
+  updateAdminUser: (id: string, data: any) => request(`/admin/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  // Audit Logs
+  listAuditLogs: (params?: string) => request(`/audit-logs${params || ""}`),
+
+  // Model Gateway
+  listModelProviders: () => request("/model-gateway/providers"),
+  upsertProviderKey: (provider: string, apiKey: string) => request(`/model-gateway/providers/${provider}/key`, { method: "POST", body: JSON.stringify({ apiKey }) }),
+
+  // AI Runs
+  getAiRun: (id: string) => request(`/ai/runs/${id}`),
+  retryAiRun: (id: string) => request(`/ai/runs/${id}/retry`, { method: "POST" }),
+
+  // Reports
+  listTaskReports: (taskId: string) => request(`/tasks/${taskId}/reports`),
+  createTaskReport: (taskId: string) => request(`/tasks/${taskId}/reports`, { method: "POST" }),
+  getReport: (id: string) => request(`/reports/${id}`),
+  downloadReport: (id: string, format?: string) => request(`/reports/${id}/download${format ? `?format=${format}` : ""}`),
+
+  // Team
+  getTeamStats: () => request("/team/stats"),
+  listMyTasks: () => request("/team/my-tasks"),
+  assignTask: (taskId: string, assigneeId: string) => request(`/tasks/${taskId}/assign`, { method: "POST", body: JSON.stringify({ assigneeId }) }),
+
+  // Storage
+  getStorageDiagnostics: () => request("/admin/storage/diagnostics"),
 };

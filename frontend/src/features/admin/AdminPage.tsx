@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { AdminPanelSettings, PersonAdd, Edit, Block } from "@mui/icons-material";
 import { api } from "../../shared/services/api";
+import { getAccessToken } from "../../shared/services/api";
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -16,8 +17,8 @@ export default function AdminPage() {
 
   const load = () => {
     setLoading(true);
-    fetch("/api/admin/users").then(r => r.json()).then(d => {
-      const list = Array.isArray(d.data) ? d.data : Array.isArray(d) ? d : [];
+    api.listAdminUsers().then(d => {
+      const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
       setUsers(list);
     }).catch(e => setError(e.message)).finally(() => setLoading(false));
   };
@@ -25,11 +26,7 @@ export default function AdminPage() {
   useEffect(() => { load(); }, []);
 
   const addUser = () => {
-    fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newUser)
-    }).then(r => r.json()).then(() => {
+    api.createAdminUser(newUser).then(() => {
       setShowAdd(false);
       setNewUser({ name: "", email: "", password: "", role: "member" });
       load();
@@ -37,19 +34,11 @@ export default function AdminPage() {
   };
 
   const updateStatus = (id: string, status: string) => {
-    fetch(`/api/admin/users/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status })
-    }).then(() => load()).catch(e => setError(e.message));
+    api.updateAdminUser(id, { status }).then(() => load()).catch(e => setError(e.message));
   };
 
   const updateRole = (id: string, role: string) => {
-    fetch(`/api/admin/users/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role })
-    }).then(() => load()).catch(e => setError(e.message));
+    api.updateAdminUser(id, { role }).then(() => load()).catch(e => setError(e.message));
   };
 
   if (loading) return <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}><CircularProgress /></Box>;
