@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { ExpandMore, CheckCircle, Error as ErrorIcon, Schedule, Psychology } from "@mui/icons-material";
 import { api, extractList } from "../../shared/services/api";
+import ProviderConfigSection from "../admin/ProviderConfigSection";
 
 interface AgentRun {
   id: string; agentName: string; status: string;
@@ -184,6 +185,9 @@ export default function AiCenterPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* AI 提供商配置 — Bug 修复：在 AI Center 页面也添加提供商密钥管理功能 */}
+      <ProviderConfigSection />
     </Box>
   );
 }

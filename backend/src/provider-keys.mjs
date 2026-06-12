@@ -68,12 +68,34 @@ export function getStoredProviderSecrets(store) {
 }
 
 export async function saveProviderKey({ store, providerName, apiKey, actor = "user_demo" }) {
-  const provider = store.find("modelProviders", (candidate) => candidate.providerName === providerName);
+  let provider = store.find("modelProviders", (candidate) => candidate.providerName === providerName);
+
+  // Bug 修复：如果 provider 记录不存在，自动创建（upsert 模式）
+  // 这样删除密钥后重新添加时不会因为找不到记录而失败
   if (!provider) {
-    const error = new Error(`Unknown provider: ${providerName}`);
-    error.statusCode = 404;
-    error.code = "not_found";
-    throw error;
+    const DEFAULT_BASE_URLS = {
+      deepseek: "https://api.deepseek.com",
+      openai: "https://api.openai.com/v1",
+      qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    };
+    const baseUrl = DEFAULT_BASE_URLS[providerName];
+    if (!baseUrl) {
+      const error = new Error(`Unknown provider: ${providerName}`);
+      error.statusCode = 404;
+      error.code = "not_found";
+      throw error;
+    }
+
+    const nowValue = new Date().toISOString();
+    provider = {
+      id: `provider_${providerName}`,
+      providerName,
+      baseUrl,
+      status: "needs_key",
+      createdAt: nowValue,
+      updatedAt: nowValue
+    };
+    await store.insert("modelProviders", provider);
   }
 
   const encrypted = encryptProviderKey(apiKey);
@@ -92,10 +114,23 @@ export async function saveProviderKey({ store, providerName, apiKey, actor = "us
 export async function deleteProviderKey({ store, providerName }) {
   const provider = store.find("modelProviders", (candidate) => candidate.providerName === providerName);
   if (!provider) {
-    const error = new Error(`Unknown provider: ${providerName}`);
-    error.statusCode = 404;
-    error.code = "not_found";
-    throw error;
+    // Bug 修复：如果 provider 记录不存在，不再抛出错误，而是返回一个默认的已清除状态
+    // 这避免了删除不存在的记录时导致前端无法操作的边界情况
+    const DEFAULT_BASE_URLS = {
+      deepseek: "https://api.deepseek.com",
+      openai: "https://api.openai.com/v1",
+      qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    };
+    return {
+      id: `provider_${providerName}`,
+      providerName,
+      baseUrl: DEFAULT_BASE_URLS[providerName] || "",
+      status: "needs_key",
+      apiKeyMasked: null,
+      keyUpdatedAt: null,
+      keyUpdatedBy: null,
+      updatedAt: new Date().toISOString()
+    };
   }
 
   const updated = await store.update("modelProviders", provider.id, {

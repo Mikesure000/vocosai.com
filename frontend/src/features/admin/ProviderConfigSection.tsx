@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import {
   Box, Card, CardContent, Typography, CircularProgress, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, TextField, Alert, IconButton, Tooltip,
+  Paper, Button, TextField, Alert, IconButton, Tooltip, Collapse,
 } from "@mui/material";
 import {
   CheckCircle, Cancel, VpnKey, Delete as DeleteIcon,
-  CloudSync as TestIcon, Save as SaveIcon,
+  CloudSync as TestIcon, Save as SaveIcon, Edit as EditIcon,
 } from "@mui/icons-material";
 import { api } from "../../shared/services/api";
 
@@ -36,6 +36,10 @@ export default function ProviderConfigSection() {
   const [apiKeyInputs, setApiKeyInputs] = useState<Record<string, string>>({});
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; message: string }>>({});
+  // Bug 修复：跟踪正在编辑（替换密钥）的提供商，删除后也可直接显示输入框
+  const [editingProvider, setEditingProvider] = useState<string | null>(null);
+  // Bug 修复：跟踪正在删除密钥的提供商，防止删除期间的状态不一致
+  const [deletingProvider, setDeletingProvider] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -61,6 +65,7 @@ export default function ProviderConfigSection() {
       .then(() => {
         setSuccess(`${PROVIDER_LABELS[providerName] || providerName} 密钥已保存`);
         setApiKeyInputs((prev) => ({ ...prev, [providerName]: "" }));
+        setEditingProvider(null);
         load();
       })
       .catch((e) => setError(e.message));
@@ -69,12 +74,16 @@ export default function ProviderConfigSection() {
   const deleteKey = (providerName: string) => {
     setError("");
     setSuccess("");
+    setDeletingProvider(providerName);
     api.deleteProviderKey(providerName)
       .then(() => {
         setSuccess(`${PROVIDER_LABELS[providerName] || providerName} 密钥已删除`);
+        // Bug 修复：删除成功后自动进入编辑模式，让用户可以立即添加新密钥
+        setEditingProvider(providerName);
         load();
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => setDeletingProvider(null));
   };
 
   const testConnection = (providerName: string) => {
@@ -154,6 +163,8 @@ export default function ProviderConfigSection() {
                 const label = PROVIDER_LABELS[provider.providerName] || provider.providerName;
                 const isConfigured = provider.configured;
                 const testInfo = testResult[provider.providerName];
+                // Bug 修复：当编辑模式激活时（删除后或点击替换密钥），显示输入框
+                const showKeyInput = !isConfigured || editingProvider === provider.providerName;
 
                 return (
                   <TableRow key={provider.providerName} hover>
@@ -187,7 +198,7 @@ export default function ProviderConfigSection() {
                       />
                     </TableCell>
                     <TableCell>
-                      {isConfigured ? (
+                      {isConfigured && !showKeyInput ? (
                         <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
                           {provider.keyMasked || "****"}
                         </Typography>
@@ -205,16 +216,33 @@ export default function ProviderConfigSection() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {isConfigured ? (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                        {isConfigured && !showKeyInput ? (
                           <>
                             <Tooltip title="删除密钥">
                               <IconButton
                                 size="small"
                                 color="warning"
                                 onClick={() => deleteKey(provider.providerName)}
+                                disabled={deletingProvider === provider.providerName}
                               >
-                                <DeleteIcon fontSize="small" />
+                                {deletingProvider === provider.providerName ? (
+                                  <CircularProgress size={16} />
+                                ) : (
+                                  <DeleteIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="替换密钥">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => {
+                                  setEditingProvider(provider.providerName);
+                                  setApiKeyInputs((prev) => ({ ...prev, [provider.providerName]: "" }));
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="测试连接">
@@ -232,12 +260,14 @@ export default function ProviderConfigSection() {
                               </IconButton>
                             </Tooltip>
                           </>
-                        ) : (
+                        ) : null}
+                        {/* Bug 修复：密钥输入框在未配置时或编辑模式下都显示 */}
+                        <Collapse in={showKeyInput} orientation="horizontal">
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <TextField
                               size="small"
                               type="password"
-                              placeholder="API Key"
+                              placeholder="输入新 API Key"
                               value={apiKeyInputs[provider.providerName] || ""}
                               onChange={(e) =>
                                 setApiKeyInputs((prev) => ({
@@ -254,10 +284,22 @@ export default function ProviderConfigSection() {
                               onClick={() => saveKey(provider.providerName)}
                               disabled={!apiKeyInputs[provider.providerName]}
                             >
-                              保存
+                              {isConfigured ? "替换" : "保存"}
                             </Button>
+                            {isConfigured && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => {
+                                  setEditingProvider(null);
+                                  setApiKeyInputs((prev) => ({ ...prev, [provider.providerName]: "" }));
+                                }}
+                              >
+                                取消
+                              </Button>
+                            )}
                           </Box>
-                        )}
+                        </Collapse>
                         {testInfo && (
                           <Chip
                             label={testInfo.message}
