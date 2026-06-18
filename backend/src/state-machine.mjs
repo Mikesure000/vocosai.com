@@ -12,7 +12,7 @@ export const TASK_STATUSES = [
 ];
 
 const TRANSITIONS = {
-  draft: ["uploaded", "archived"],
+  draft: ["uploaded", "archived", "analyzing"],
   uploaded: ["mapping_required", "ready", "archived"],
   mapping_required: ["ready", "uploaded", "archived"],
   ready: ["analyzing", "archived"],

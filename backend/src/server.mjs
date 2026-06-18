@@ -190,7 +190,7 @@ export async function createApiServer({ dbPath = "backend/data/vocos.sqlite", sk
         return;
       }
 
-      const result = await route.handler({ store, jobs, body, params: route.params, query: url.searchParams, context, req: request });
+      const result = await route.handler({ store, jobs, parsingTaskIds, body, params: route.params, query: url.searchParams, context, req: request });
       send(response, route.status ?? 200, result, request);
     } catch (error) {
       send(response, error.statusCode ?? 500, {
@@ -1143,7 +1143,7 @@ function csvCell(value) {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
-async function parseComments({ store, params, body, context }) {
+async function parseComments({ store, params, body, context, parsingTaskIds }) {
   requirePermission(context, PERMISSIONS.TASK_WRITE);
   const task = mustGet(store, "tasks", params[0]);
   assertTeamAccess(context, task.teamId);
@@ -1277,7 +1277,7 @@ async function startTaskPipeline({ store, jobs, params, context }) {
     };
   }
 
-  if (task.status !== "ready" && task.status !== "completed" && task.status !== "failed" && task.status !== "partially_failed") {
+  if (task.status !== "draft" && task.status !== "uploaded" && task.status !== "mapping_required" && task.status !== "ready" && task.status !== "completed" && task.status !== "failed" && task.status !== "partially_failed") {
     throw badRequest(`Task cannot start from status: ${task.status}`);
   }
 
@@ -1693,11 +1693,12 @@ async function removeModelProviderKey({ store, params, context }) {
 async function testModelProvider({ store, params, body, context }) {
   requirePermission(context, PERMISSIONS.MODEL_READ);
   const providerName = normalizeProviderName(params[0]);
+  const defaultTimeout = providerName === "ollama" ? 120000 : 20000;
   const result = await testProviderConnection({
     providerName,
     modelName: body.modelName,
     providerRuntime: getStoredProviderSecrets(store),
-    timeoutMs: Number(body.timeoutMs ?? 20000)
+    timeoutMs: Number(body.timeoutMs ?? defaultTimeout)
   });
 
   return {
@@ -1865,7 +1866,7 @@ async function writeAuditLog({ store, context, action, resourceType, resourceId 
 
 function normalizeProviderName(value) {
   const providerName = String(value ?? "").toLowerCase();
-  if (!["deepseek", "openai", "qwen"].includes(providerName)) {
+  if (!["deepseek", "openai", "qwen", "ollama"].includes(providerName)) {
     throw badRequest(`Unsupported model provider: ${value}`);
   }
   return providerName;

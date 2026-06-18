@@ -11,8 +11,8 @@ describe("State Machine", () => {
     expect(canTransition("draft", "uploaded")).toBe(true);
   });
 
-  it("draft → analyzing should be invalid", () => {
-    expect(canTransition("draft", "analyzing")).toBe(false);
+  it("draft → analyzing should be valid", () => {
+    expect(canTransition("draft", "analyzing")).toBe(true);
   });
 
   it("ready → analyzing should be valid", () => {
