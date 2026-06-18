@@ -26,7 +26,7 @@ import { buildCostSummary } from "./cost-governance.mjs";
 import { buildCommentInsights, listCommentSignalMatches } from "./comment-insights.mjs";
 import { buildQualitySummary } from "./quality-governance.mjs";
 import { assertTransition, nextStatusForParsedFile } from "./state-machine.mjs";
-import { parseCommentFileContent, parseCommentFileBuffer } from "./file-parser.mjs";
+import { parseCommentFileContent, parseCommentFileBuffer, detectFormat } from "./file-parser.mjs";
 import { testProviderConnection } from "./model-adapters.mjs";
 import { getModelProviderStatuses, getModelRoutes, getPipelineStages, runAgent } from "./model-gateway.mjs";
 import { sendMessage as chatSendMessage, listSessions as chatListSessions, listMessages as chatListMessages, deleteSession as chatDeleteSession } from "./chat-service.mjs";
@@ -1155,10 +1155,19 @@ async function parseComments({ store, params, body, context, parsingTaskIds }) {
   parsingTaskIds.add(task.id);
   try {
   const upload = normalizeCommentUpload(body, task);
+  const fileFormat = detectFormat(upload.fileName);
+  const needsBinaryParsing = fileFormat === "xlsx" || fileFormat === "xls";
   const parsed = upload.fileBuffer
     ? await parseCommentFileBuffer({
       fileName: upload.fileName,
       fileBuffer: upload.fileBuffer,
+      platform: upload.platform,
+      mapping: upload.mapping
+    })
+    : needsBinaryParsing && upload.fileContent
+    ? await parseCommentFileBuffer({
+      fileName: upload.fileName,
+      fileBuffer: Buffer.from(upload.fileContent, "base64"),
       platform: upload.platform,
       mapping: upload.mapping
     })
@@ -1182,7 +1191,11 @@ async function parseComments({ store, params, body, context, parsingTaskIds }) {
     taskId: task.id,
     storageUrl: `local://${parsed.file.id}/${parsed.file.fileName}`,
     rawContent: upload.fileContent ?? null,
-    rawFileBase64: upload.fileBuffer ? upload.fileBuffer.toString("base64") : null
+    rawFileBase64: upload.fileBuffer
+      ? upload.fileBuffer.toString("base64")
+      : needsBinaryParsing && upload.fileContent
+        ? upload.fileContent
+        : null
   };
   await store.insert("commentFiles", file);
 
@@ -1227,10 +1240,12 @@ async function confirmMapping({ store, params, body, context }) {
   }
 
   const mapping = body.mapping ?? file.mappingConfig;
-  const parsed = file.rawFileBase64
+  const fileFormat = detectFormat(file.fileName);
+  const isBinary = fileFormat === "xlsx" || fileFormat === "xls";
+  const parsed = file.rawFileBase64 || (isBinary && file.rawContent)
     ? await parseCommentFileBuffer({
       fileName: file.fileName,
-      fileBuffer: Buffer.from(file.rawFileBase64, "base64"),
+      fileBuffer: Buffer.from(file.rawFileBase64 || file.rawContent, "base64"),
       platform: task.platform,
       mapping
     })
